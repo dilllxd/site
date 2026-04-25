@@ -1,6 +1,8 @@
 ---
 import { getCollection, render } from "astro:content";
 import SiteLayout from "../../layouts/SiteLayout.astro";
+import { siteConfig } from "../../data/site";
+import { toAbsoluteUrl } from "../../lib/seo";
 
 export async function getStaticPaths() {
   const posts = await getCollection("posts");
@@ -12,9 +14,36 @@ export async function getStaticPaths() {
 
 const { post } = Astro.props;
 const { Content } = await render(post);
+const canonicalUrl = `${siteConfig.siteUrl}/posts/${post.id}/`;
+const structuredData = {
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  headline: post.data.title,
+  description: post.data.excerpt,
+  datePublished: post.data.date.toISOString(),
+  dateModified: post.data.date.toISOString(),
+  mainEntityOfPage: canonicalUrl,
+  author: {
+    "@type": "Person",
+    name: siteConfig.title,
+  },
+  publisher: {
+    "@type": "Person",
+    name: siteConfig.title,
+  },
+  image: [toAbsoluteUrl(siteConfig.defaultSocialImage)],
+};
 ---
 
-<SiteLayout title={`${post.data.title} | Posts | Dylan H`} description={post.data.excerpt}>
+<SiteLayout
+  title={`${post.data.title} | Posts | Dylan H`}
+  description={post.data.excerpt}
+  ogType="article"
+  ogImage={siteConfig.defaultSocialImage}
+  ogImageAlt={siteConfig.defaultSocialImageAlt}
+  publishedTime={post.data.date.toISOString()}
+  structuredData={structuredData}
+>
   <article class="prose-shell">
     <p class="eyebrow">Post</p>
     <h1>{post.data.title}</h1>

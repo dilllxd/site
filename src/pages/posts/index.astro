@@ -1,13 +1,29 @@
 ---
 import { getCollection } from "astro:content";
 import SiteLayout from "../../layouts/SiteLayout.astro";
+import { siteConfig } from "../../data/site";
+import { toAbsoluteUrl } from "../../lib/seo";
 
 const posts = (await getCollection("posts")).sort(
   (a, b) => b.data.date.valueOf() - a.data.date.valueOf(),
 );
+
+const structuredData = {
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  name: "Posts",
+  url: `${siteConfig.siteUrl}/posts/`,
+  description: "Project write-ups, rebuilds, and the occasional longer explanation.",
+  image: toAbsoluteUrl(siteConfig.defaultSocialImage),
+};
 ---
 
-<SiteLayout title="Posts | Dylan H">
+<SiteLayout
+  title="Posts | Dylan H"
+  description="Project write-ups, rebuilds, and the occasional longer explanation."
+  ogImageAlt={siteConfig.defaultSocialImageAlt}
+  structuredData={structuredData}
+>
   <section class="listing-hero">
     <p class="eyebrow">Long-form writing</p>
     <h1>Posts</h1>

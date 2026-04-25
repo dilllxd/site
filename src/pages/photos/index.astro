@@ -1,13 +1,31 @@
 ---
 import { getCollection } from "astro:content";
 import SiteLayout from "../../layouts/SiteLayout.astro";
+import { siteConfig } from "../../data/site";
+import { toAbsoluteUrl } from "../../lib/seo";
 
 const photos = (await getCollection("photos")).sort(
   (a, b) => b.data.date.valueOf() - a.data.date.valueOf(),
 );
+
+const structuredData = {
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  name: "Photos",
+  url: `${siteConfig.siteUrl}/photos/`,
+  description:
+    "A small gallery of the images I actually want to keep around, with each photo shown in its natural proportions.",
+  image: toAbsoluteUrl(siteConfig.defaultSocialImage),
+};
 ---
 
-<SiteLayout title="Photos | Dylan H">
+<SiteLayout
+  title="Photos | Dylan H"
+  description="A small gallery of the images I actually want to keep around, with each photo shown in its natural proportions."
+  ogImage={siteConfig.defaultSocialImage}
+  ogImageAlt={siteConfig.defaultSocialImageAlt}
+  structuredData={structuredData}
+>
   <section class="listing-hero">
     <p class="eyebrow">Photography</p>
     <h1>Photos</h1>

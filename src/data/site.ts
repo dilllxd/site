@@ -1,8 +1,11 @@
 export const siteConfig = {
+  siteUrl: "https://dylanh.dev",
   title: "Dylan H",
   siteName: "dylanh.dev",
   description:
     "A personal site for posts, projects, photography, and a few live slices of the day.",
+  defaultSocialImage: "/images/photos/ngc-2244.png",
+  defaultSocialImageAlt: "Astrophotography image of the Rosette Nebula surrounding the central cluster NGC 2244.",
   location: "South Carolina",
   email: "dylan@dylanh.dev",
   socialLinks: [

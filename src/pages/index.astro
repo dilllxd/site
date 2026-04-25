@@ -2,6 +2,7 @@
 import { getCollection } from "astro:content";
 import SiteLayout from "../layouts/SiteLayout.astro";
 import { siteConfig } from "../data/site";
+import { toAbsoluteUrl } from "../lib/seo";
 
 const [posts, photos] = await Promise.all([
   getCollection("posts"),
@@ -24,9 +25,31 @@ const photoRotationPayload = JSON.stringify(
 );
 
 const widgetConfig = JSON.stringify(siteConfig.widgetConfig);
+const structuredData = [
+  {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    name: siteConfig.title,
+    url: siteConfig.siteUrl,
+    email: siteConfig.email,
+    homeLocation: {
+      "@type": "Place",
+      name: siteConfig.location,
+    },
+    sameAs: siteConfig.socialLinks.map((link) => link.href),
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: siteConfig.siteName,
+    url: siteConfig.siteUrl,
+    description: siteConfig.description,
+    image: toAbsoluteUrl(siteConfig.defaultSocialImage),
+  },
+];
 ---
 
-<SiteLayout>
+<SiteLayout structuredData={structuredData}>
   <section class="intro">
     <div class="intro-copy">
       <h1>CS student, hobbyist developer, infrastructure tinkerer.</h1>

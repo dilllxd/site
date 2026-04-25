@@ -1,6 +1,8 @@
 ---
 import { getCollection } from "astro:content";
 import SiteLayout from "../../layouts/SiteLayout.astro";
+import { siteConfig } from "../../data/site";
+import { toAbsoluteUrl } from "../../lib/seo";
 
 export async function getStaticPaths() {
   const photos = await getCollection("photos");
@@ -12,11 +14,37 @@ export async function getStaticPaths() {
 }
 
 const { photo } = Astro.props;
+const canonicalUrl = `${siteConfig.siteUrl}/photos/${photo.id}/`;
+const structuredData = {
+  "@context": "https://schema.org",
+  "@type": "ImageObject",
+  name: photo.data.title,
+  description: photo.data.caption,
+  contentUrl: toAbsoluteUrl(photo.data.image),
+  url: canonicalUrl,
+  datePublished: photo.data.date.toISOString(),
+  creator: {
+    "@type": "Person",
+    name: siteConfig.title,
+  },
+  creditText: siteConfig.title,
+  ...(photo.data.location
+    ? {
+        contentLocation: {
+          "@type": "Place",
+          name: photo.data.location,
+        },
+      }
+    : {}),
+};
 ---
 
 <SiteLayout
   title={`${photo.data.title} | Photos | Dylan H`}
   description={photo.data.caption}
+  ogImage={photo.data.image}
+  ogImageAlt={photo.data.alt}
+  structuredData={structuredData}
   pageClass="page-photo-detail"
   hideFooter={true}
 >
