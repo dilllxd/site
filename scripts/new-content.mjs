@@ -1,7 +1,8 @@
-import { copyFile, mkdir, writeFile } from "node:fs/promises";
+import { copyFile, mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { createInterface } from "node:readline/promises";
 import { stdin as input, stdout as output } from "node:process";
+import sharp from "sharp";
 
 const [, , type, title, ...rest] = process.argv;
 const interactive = rest.includes("--interactive");
@@ -130,9 +131,14 @@ async function createPhoto({ rootDir, title, slug, date, options, positionalArgs
       const destinationFile = `${slug}${extension.toLowerCase()}`;
       const destinationPath = path.join(rootDir, "public", "images", "photos", destinationFile);
       await ensureDir(path.dirname(destinationPath));
-      await copyFile(sourceImagePath, destinationPath);
+      const sourceBuffer = await readFile(sourceImagePath);
+      const optimized = await sharp(sourceBuffer)
+        .png({ quality: 80, compressionLevel: 9, effort: 10 })
+        .toBuffer();
+      await writeFile(destinationPath, optimized);
+      const saved = ((1 - optimized.length / sourceBuffer.length) * 100).toFixed(1);
       imagePath = `/images/photos/${destinationFile}`;
-      console.log(`Copied image to ${destinationPath}`);
+      console.log(`Compressed image to ${destinationPath} (${saved}% smaller)`);
     }
   }
 
