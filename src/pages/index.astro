@@ -1,0 +1,172 @@
+---
+import { getCollection } from "astro:content";
+import SiteLayout from "../layouts/SiteLayout.astro";
+import { siteConfig } from "../data/site";
+
+const [posts, photos] = await Promise.all([
+  getCollection("posts"),
+  getCollection("photos"),
+]);
+
+const sortedPosts = posts.sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+const latestPosts = sortedPosts.slice(0, 3);
+const sortedPhotos = photos.sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+const latestPhoto = sortedPhotos[0];
+const photoRotationPayload = JSON.stringify(
+  sortedPhotos.map((photo) => ({
+    id: photo.id,
+    title: photo.data.title,
+    date: photo.data.date.toISOString(),
+    image: photo.data.image,
+    alt: photo.data.alt,
+    caption: photo.data.caption,
+  })),
+);
+
+const widgetConfig = JSON.stringify(siteConfig.widgetConfig);
+---
+
+<SiteLayout>
+  <section class="intro">
+    <div class="intro-copy">
+      <h1>CS student, hobbyist developer, infrastructure tinkerer.</h1>
+      <p class="intro-text">
+        I like building useful little things, writing occasionally, and keeping a small place on the web.
+      </p>
+    </div>
+    <div class="intro-mark-shell">
+      <img
+        class="intro-mark"
+        src="/apple-touch-icon.png"
+        alt="Dylan H site mark"
+        width="120"
+        height="120"
+        loading="eager"
+      />
+    </div>
+  </section>
+
+  <section class="links-line">
+    {siteConfig.socialLinks.map((link) => (
+      <a href={link.href} target="_blank" rel="noreferrer">
+        {link.label}
+      </a>
+    ))}
+  </section>
+
+  <section class="info-grid" data-widget-config={widgetConfig}>
+    <div class="info-row">
+      <span>Based in</span>
+      <strong>{siteConfig.location}</strong>
+    </div>
+    <div class="info-row">
+      <span>Current time</span>
+      <strong data-local-time>Loading...</strong>
+    </div>
+    <div class="info-row info-row-feature" data-now-row>
+      <span>Now</span>
+      <div class="status-widget">
+        <div class="status-widget-meta">
+          <div class="status-chip" data-work-chip>
+            <span>Work</span>
+            <strong data-work-status>Checking...</strong>
+          </div>
+          <div class="status-chip" data-discord-chip>
+            <span>Discord</span>
+            <strong data-discord-status>Connecting...</strong>
+          </div>
+          <div class="status-chip status-chip-wide" data-spotify-chip>
+            <span>Listening</span>
+            <strong data-spotify-status>Waiting for presence data...</strong>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="home-grid">
+    <div class="section-heading">
+      <p>Recent posts</p>
+      <a href="/posts/">All posts</a>
+    </div>
+    <div class="home-posts-grid">
+      {latestPosts.map((post) => (
+        <a class="post-card" href={`/posts/${post.id}/`}>
+          <span class="story-date">
+            {post.data.date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" })}
+          </span>
+          <strong>{post.data.title}</strong>
+          <p>{post.data.excerpt}</p>
+          <span class="inline-meta">{post.data.readingTime}</span>
+        </a>
+      ))}
+    </div>
+  </section>
+
+  {latestPhoto && (
+    <section class="photo-feature" data-photo-rotation={photoRotationPayload} data-photo-viewer data-photo-viewer-mode="overlay">
+      <div class="section-heading">
+        <p>Recent photography</p>
+        <a href="/photos/">Gallery</a>
+      </div>
+      <a class="photo-feature-inner" href={`/photos/${latestPhoto.id}/`} data-photo-link>
+        <img
+          src={latestPhoto.data.image}
+          alt={latestPhoto.data.alt}
+          loading="lazy"
+          data-photo-image
+          data-photo-viewer-trigger
+        />
+        <div class="photo-feature-meta">
+          <strong data-photo-title>{latestPhoto.data.title}</strong>
+          <p data-photo-caption>{latestPhoto.data.caption}</p>
+        </div>
+      </a>
+      <div class="photo-preview" aria-hidden="true" data-photo-viewer-overlay>
+        <div class="photo-preview-frame">
+          <div class="photo-preview-topline">
+            <div class="photo-preview-meta">
+              <strong data-photo-preview-title>{latestPhoto.data.title}</strong>
+              <span data-photo-preview-caption>{latestPhoto.data.caption}</span>
+            </div>
+            <div class="photo-preview-actions">
+              <button type="button" data-photo-viewer-zoom-out aria-label="Zoom out">-</button>
+              <button type="button" data-photo-viewer-zoom-reset>100%</button>
+              <button type="button" data-photo-viewer-zoom-in aria-label="Zoom in">+</button>
+              <a
+                href={`/photos/${latestPhoto.id}/`}
+                data-photo-preview-link
+                aria-label={`Open ${latestPhoto.data.title}`}
+              >
+                Open photo
+              </a>
+              <a
+                href={latestPhoto.data.image}
+                target="_blank"
+                rel="noreferrer"
+                data-photo-preview-full
+              >
+                Full size
+              </a>
+              <button type="button" data-photo-viewer-close aria-label="Close preview">Close</button>
+            </div>
+          </div>
+          <div class="photo-preview-viewport" data-photo-viewer-viewport>
+            <img
+              src={latestPhoto.data.image}
+              alt={latestPhoto.data.alt}
+              loading="lazy"
+              data-photo-preview-image
+              data-photo-viewer-image
+              draggable="false"
+            />
+          </div>
+        </div>
+      </div>
+    </section>
+  )}
+
+  <script type="module" src="/scripts/live-widgets.js"></script>
+  <script type="module" src="/scripts/photo-rotation.js"></script>
+  <script type="module" src="/scripts/photo-viewer.js"></script>
+</SiteLayout>

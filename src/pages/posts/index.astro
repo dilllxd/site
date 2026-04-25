@@ -1,0 +1,29 @@
+---
+import { getCollection } from "astro:content";
+import SiteLayout from "../../layouts/SiteLayout.astro";
+
+const posts = (await getCollection("posts")).sort(
+  (a, b) => b.data.date.valueOf() - a.data.date.valueOf(),
+);
+---
+
+<SiteLayout title="Posts | Dylan H">
+  <section class="listing-hero">
+    <p class="eyebrow">Long-form writing</p>
+    <h1>Posts</h1>
+    <p class="hero-text">Project write-ups, rebuilds, and the occasional longer explanation.</p>
+  </section>
+
+  <section class="listing-stack">
+    {posts.map((post) => (
+      <article class="list-entry">
+        <span class="story-date">
+          {post.data.date.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" })}
+        </span>
+        <h2><a href={`/posts/${post.id}/`}>{post.data.title}</a></h2>
+        <p>{post.data.excerpt}</p>
+        <span class="inline-meta">{post.data.readingTime}</span>
+      </article>
+    ))}
+  </section>
+</SiteLayout>

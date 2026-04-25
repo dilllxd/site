@@ -1,0 +1,92 @@
+---
+import { siteConfig } from "../data/site";
+
+interface Props {
+  title?: string;
+  description?: string;
+  pageClass?: string;
+  hideFooter?: boolean;
+}
+
+const {
+  title = `${siteConfig.title} | ${siteConfig.siteName}`,
+  description = siteConfig.description,
+  pageClass = "",
+  hideFooter = false,
+} = Astro.props;
+
+const isHome = Astro.url.pathname === "/";
+---
+
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={description} />
+    <meta name="generator" content={Astro.generator} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="theme-color" content="#0b0d10" />
+    <title>{title}</title>
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/styles/global.css" />
+    <script is:inline>
+      (() => {
+        const stored = localStorage.getItem("theme");
+        const preferred = window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+        document.documentElement.dataset.theme = stored || preferred;
+      })();
+    </script>
+  </head>
+  <body class={pageClass}>
+    <div class={`page-shell ${pageClass}`.trim()}>
+      <header class="site-header">
+        {isHome ? (
+          <div class="brand" aria-label="Site title">
+            <strong>{siteConfig.title}</strong>
+          </div>
+        ) : (
+          <a class="brand" href="/">
+            <strong>{siteConfig.title}</strong>
+            <span>Home</span>
+          </a>
+        )}
+
+        <nav class="site-nav" aria-label="Primary">
+          <a href="/posts/">Posts</a>
+          <a href="/photos/">Photos</a>
+        </nav>
+
+        <button class="theme-toggle" type="button" data-theme-toggle aria-label="Toggle color theme">
+          <span data-theme-toggle-label>Light mode</span>
+        </button>
+      </header>
+
+      <main>
+        <slot />
+      </main>
+
+      {!hideFooter && (
+        <footer class="site-footer">
+          <div class="footer-links">
+            <a href={`mailto:${siteConfig.email}`}>Email</a>
+            <a href="https://github.com/dilllxd" rel="me">GitHub</a>
+            <a href="https://status.dylan.lol" rel="me">Status</a>
+          </div>
+        </footer>
+      )}
+    </div>
+    <script type="module" src="/scripts/theme-toggle.js"></script>
+  </body>
+</html>

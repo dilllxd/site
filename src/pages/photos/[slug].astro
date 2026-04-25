@@ -1,0 +1,70 @@
+---
+import { getCollection } from "astro:content";
+import SiteLayout from "../../layouts/SiteLayout.astro";
+
+export async function getStaticPaths() {
+  const photos = await getCollection("photos");
+
+  return photos.map((photo) => ({
+    params: { slug: photo.id },
+    props: { photo },
+  }));
+}
+
+const { photo } = Astro.props;
+---
+
+<SiteLayout
+  title={`${photo.data.title} | Photos | Dylan H`}
+  description={photo.data.caption}
+  pageClass="page-photo-detail"
+  hideFooter={true}
+>
+  <article class="photo-detail">
+    <div class="photo-detail-layout">
+      <figure class="photo-detail-figure" data-photo-viewer data-photo-viewer-mode="inline">
+        <div class="photo-detail-viewer-controls" aria-label="Photo viewer controls">
+          <button type="button" data-photo-viewer-zoom-out aria-label="Zoom out">-</button>
+          <button type="button" data-photo-viewer-zoom-reset>100%</button>
+          <button type="button" data-photo-viewer-zoom-in aria-label="Zoom in">+</button>
+          <a href={photo.data.image} target="_blank" rel="noreferrer">Open full size</a>
+        </div>
+        <div class="photo-detail-viewport" data-photo-viewer-viewport>
+          <img
+            src={photo.data.image}
+            alt={photo.data.alt}
+            loading="eager"
+            data-photo-viewer-image
+            draggable="false"
+          />
+        </div>
+      </figure>
+
+      <section class="photo-detail-sidebar">
+        <div class="photo-detail-topline">
+          <p class="eyebrow">Photo</p>
+          <a href="/photos/">Back to gallery</a>
+        </div>
+
+        <header class="photo-detail-header">
+          <h1>{photo.data.title}</h1>
+          <p class="photo-detail-copy">{photo.data.caption}</p>
+        </header>
+
+        <dl class="photo-detail-meta-list">
+          <div>
+            <dt>Date</dt>
+            <dd>{photo.data.date.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" })}</dd>
+          </div>
+          {photo.data.location && (
+            <div>
+              <dt>Location</dt>
+              <dd>{photo.data.location}</dd>
+            </div>
+          )}
+        </dl>
+      </section>
+    </div>
+  </article>
+  <script type="module" src="/scripts/photo-viewer.js"></script>
+</SiteLayout>
