@@ -364,6 +364,11 @@ img {
   border-bottom: 1px solid var(--line-soft);
 }
 
+.section-heading a {
+  margin-left: auto;
+  text-align: right;
+}
+
 .entry-list {
   display: grid;
   flex: 1;
@@ -859,12 +864,15 @@ img {
   }
 
   .site-footer,
-  .home-grid,
   .info-grid,
   .photo-note-inner {
     grid-template-columns: 1fr;
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .home-grid {
+    align-items: stretch;
   }
 
   .home-posts-grid {
@@ -882,7 +890,7 @@ img {
 
   .site-header {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-columns: 1fr;
     align-items: start;
     row-gap: 0.9rem;
     column-gap: 1rem;
@@ -900,9 +908,8 @@ img {
   }
 
   .site-nav {
-    grid-column: 1 / -1;
     width: 100%;
-    justify-content: space-between;
+    justify-content: flex-start;
     gap: 0.75rem;
     padding-top: 0.8rem;
     border-top: 1px solid var(--line-soft);
@@ -933,8 +940,8 @@ img {
 
   .theme-toggle {
     margin-left: 0;
-    justify-self: end;
-    align-self: center;
+    justify-self: start;
+    align-self: start;
   }
 
   .intro {
@@ -985,14 +992,6 @@ img {
 }
 
 @media (max-width: 520px) {
-  .site-header {
-    grid-template-columns: 1fr;
-  }
-
-  .theme-toggle {
-    justify-self: start;
-  }
-
   .site-nav {
     justify-content: flex-start;
     gap: 1rem;
