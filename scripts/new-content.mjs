@@ -1,4 +1,4 @@
-import { copyFile, mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { createInterface } from "node:readline/promises";
 import { stdin as input, stdout as output } from "node:process";
@@ -127,8 +127,7 @@ async function createPhoto({ rootDir, title, slug, date, options, positionalArgs
     if (sourceImagePath.startsWith("/")) {
       imagePath = sourceImagePath;
     } else {
-      const extension = path.extname(sourceImagePath) || ".png";
-      const destinationFile = `${slug}${extension.toLowerCase()}`;
+      const destinationFile = `${slug}.png`;
       const destinationPath = path.join(rootDir, "public", "images", "photos", destinationFile);
       await ensureDir(path.dirname(destinationPath));
       const sourceBuffer = await readFile(sourceImagePath);

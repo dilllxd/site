@@ -22,7 +22,6 @@ Useful optional flags:
 - `--slug=my-custom-slug`
 - `--date=2026-04-25`
 - `--excerpt="Short summary"`
-- `--tags="personal, astro"`
 - `--reading-time="4 min read"`
 - `--alt="Accessible alt text"`
 - `--caption="Photo caption"`

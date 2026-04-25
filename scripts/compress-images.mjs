@@ -1,6 +1,4 @@
-import { glob } from "node:fs/promises";
-import { readFile, writeFile } from "node:fs/promises";
-import { dirname } from "node:path";
+import { glob, readFile, writeFile } from "node:fs/promises";
 import sharp from "sharp";
 
 const photoDir = process.argv[2] || "public/images/photos";
@@ -14,7 +12,9 @@ async function compressPng(filePath) {
   if (optimized.length < original.length) {
     await writeFile(filePath, optimized);
     const saved = ((1 - optimized.length / original.length) * 100).toFixed(1);
-    console.log(`✓ ${filePath}: ${(original.length / 1024 / 1024).toFixed(1)}MB → ${(optimized.length / 1024 / 1024).toFixed(1)}MB (${saved}% smaller)`);
+    console.log(
+      `OK ${filePath}: ${(original.length / 1024 / 1024).toFixed(1)}MB -> ${(optimized.length / 1024 / 1024).toFixed(1)}MB (${saved}% smaller)`,
+    );
   } else {
     console.log(`= ${filePath}: already optimized (${(original.length / 1024 / 1024).toFixed(1)}MB)`);
   }
