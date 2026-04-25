@@ -31,3 +31,6 @@ old sites/
 
 # astro dev logs
 .astro-dev*.log
+
+# temp extract folders
+favicon-temp/
