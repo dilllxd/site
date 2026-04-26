@@ -1,0 +1,75 @@
+==================================================================
+https://keybase.io/dilll
+--------------------------------------------------------------------
+
+I hereby claim:
+
+  * I am an admin of https://dylanh.dev
+  * I am dilll (https://keybase.io/dilll) on keybase.
+  * I have a public key with fingerprint 9D2F 65D5 8FE7 5DED 1B8E  3B12 E58D 4317 E154 D022
+
+To do so, I am signing this object:
+
+{
+  "body": {
+    "key": {
+      "eldest_kid": "0120390f95b82550aa978d217eeac984e667e5b39cf01f64dadcd4899090a19919780a",
+      "fingerprint": "9d2f65d58fe75ded1b8e3b12e58d4317e154d022",
+      "host": "keybase.io",
+      "key_id": "e58d4317e154d022",
+      "kid": "0101b1f37fc0a6e762d2f16c51c2cc86129d89630638017cb71f17f23a082b1820130a",
+      "uid": "9432f8a7178f663cc1f70c77cbe51319",
+      "username": "dilll"
+    },
+    "service": {
+      "hostname": "dylanh.dev",
+      "protocol": "https:"
+    },
+    "type": "web_service_binding",
+    "version": 1
+  },
+  "ctime": 1556653778,
+  "expire_in": 157680000,
+  "prev": "6311ea796c2fdce63368d0422d2cd6fd5382355c793a82d8c50cac59ed6f147f",
+  "seqno": 26,
+  "tag": "signature"
+}
+
+which yields the signature:
+
+-----BEGIN PGP MESSAGE-----
+Version: Keybase OpenPGP v2.1.0
+Comment: https://keybase.io/crypto
+
+yMNxAnicbVJtUFRlFAZpS0AUauJjotQLihEf970f7713Z2oCtGITRpNVK2q5H++F
+22676+6ygMCUjSPCxFqSDaPgqINAipKjw4BWG+Q0KCqfDkIwBoOiwAoj1DBE0V0m
+/vX+OfOe8zzPec6Zcz3IzyfA90F5SthIRhfm29FakeuT2V7bU4gJFqkA0xZiRrQc
+kElCdofBqEiYFsMBgZMcLnO0wBI0jfM8x7ASARiEeJFjKQQhg2iB5EQZBzKkJF4S
+JYrlOJzDecBxQIXjPBaHyYo5G9msNsXsUGU5iZAhLdGsjBhaQhIQWEQKgEA0K1Gk
+qg5oSsIJQiXmWOxehmpO4O0oQbGoOfVjWLb3P/gV3zgQgEwysojzEDGQUDsCKNJA
+JESRhYDgJJaDJA5JFgeMKDBABoxMkDzOEgJgCRyQy75zl+U4iiRklmcAw8oQkqII
+ZAYXGZWHaEACzgu0I5uZ/xSpaEkxmUxYcRymppyKiLxb9Y6xUi4w8eacBAk5VZrV
+ZnFYRItJzec4HFa71stzFFi9wDwkGP6TMAiKWVJXqDKcyGZXLGZMC1Sk6FC8moCm
+IaRJhmHjMJRvVWzIoHgRNANZXH3ePmo7LQZJABDPcFAkZElEkCQhK+EUoa5HlKAs
+0SRLkDQtMhzJs4TEijQu8iLNIbUIKEbGvEPtM1swLQFVn3y2qmlXss28I9eGsOK2
+1sxnfHwDfJ7VrPLelk+Af/DKxcHxdUtZ60cTy8I+GvAbWVNwMI9yRHy8uOmRoc2K
+QpdSTsWk1/1eenx39EL96raLMzvwYHdaTs/8wzPRERvHX+0ypZ7YNFdOkUMD5rPj
+o9/de9zx2/PG/ceOFR8Kjvk65OUrT+c2t/j3x1T1pg00zZPV+ANNyJDw1qz+WkYg
+MPZf5ks0h3cc8CTWvH+k4AvLlSRqMcov0zV8acyjzD4patr+bnXClsNJoS80Hj0d
+OxOyt7b8Ubv4yerPS92N+oCUssLMoSeBMc4+c0lo5OWUquRQrqHZHXFPhy8wkXtE
+EGQbvqjv1FygqwbWoG/qg+/3Di7+IGnC83RX689sPbnubtbA3mt/uuZhVHL06+Q/
+Ve6asZjm6Bc9+w52x16PG+zVVfU6dRp+MPL4H+vZ3dUHnvvQuHPL3/517+gGO9eW
+xt9udr3nE7BQCdomw99ugNuoyl+J/TcnUk/0k41Jr3kmPuvKmtXnRuQU6q6eh3u2
+vZQ/fGM67efNp2am6jzdjoyghkuj20/fPxm466nLuatlJL+nqOjQnYo7qypu596t
+qfsxrc9Y/W3ThkrPdGJHi7vol4mptUnp02UftCaFT2rcM+c6Y/v0qXrrzvYvsRGb
+K8/zV2vD0e/HiKGH3c1zG155I95zpCK+5M3Kc1FNG13O2NopA7t4czI5+6v0YPns
+LeW8cuPxraW6n9wwLO/Cv16Pxg0=
+=wUqU
+-----END PGP MESSAGE-----
+
+And finally, I am proving ownership of this host by posting or
+appending to this document.
+
+View my publicly-auditable identity here: https://keybase.io/dilll
+
+==================================================================
