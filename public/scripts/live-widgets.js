@@ -45,27 +45,110 @@ function setLocalTime(timezone) {
   setInterval(render, 30_000);
 }
 
-function getWorkStatusText(schedule) {
-  if (!schedule) return fallbackText.work;
+function shouldIgnoreScheduleEntry(entry, ignoredSources = [], ignoredSummaryPrefixes = []) {
+  if (!entry) return true;
 
-  switch (schedule.status) {
-    case "working":
-      if (schedule.timeRemaining) {
-        return `At work for another ${schedule.timeRemaining.hours}h ${schedule.timeRemaining.minutes}m.`;
-      }
-      return "Currently at work.";
-    case "upcoming":
-      if (schedule.timeRemaining) {
-        return `Working in ${schedule.timeRemaining.hours}h ${schedule.timeRemaining.minutes}m.`;
-      }
-      return "Working later today.";
-    case "done":
-      return "Done with work for today.";
-    case "off":
-      return "Not working today.";
-    default:
-      return fallbackText.work;
+  const source = String(entry.source || "").trim().toLowerCase();
+  if (source && ignoredSources.map((value) => String(value).trim().toLowerCase()).includes(source)) {
+    return true;
   }
+
+  const summary = String(entry.summary || "").trim();
+  if (
+    summary &&
+    ignoredSummaryPrefixes.some((prefix) =>
+      summary.toLowerCase().startsWith(String(prefix).trim().toLowerCase()),
+    )
+  ) {
+    return true;
+  }
+
+  return false;
+}
+
+function getScheduleFilters(config = {}) {
+  const ignoredSources = Array.isArray(config.ignoredScheduleSources)
+    ? config.ignoredScheduleSources
+    : [];
+  const ignoredSummaryPrefixes = Array.isArray(config.ignoredScheduleSummaryPrefixes)
+    ? config.ignoredScheduleSummaryPrefixes
+    : [];
+
+  return { ignoredSources, ignoredSummaryPrefixes };
+}
+
+function normalizeScheduleEvents(events = [], config = {}) {
+  const { ignoredSources, ignoredSummaryPrefixes } = getScheduleFilters(config);
+
+  return events
+    .filter((entry) => !shouldIgnoreScheduleEntry(entry, ignoredSources, ignoredSummaryPrefixes))
+    .map((entry) => ({
+      ...entry,
+      startDate: new Date(entry.start),
+      endDate: new Date(entry.end),
+    }))
+    .filter((entry) => !Number.isNaN(entry.startDate.valueOf()) && !Number.isNaN(entry.endDate.valueOf()))
+    .sort((a, b) => a.startDate.valueOf() - b.startDate.valueOf());
+}
+
+function getWorkStatusTextFromEvents(events) {
+  if (!Array.isArray(events) || events.length === 0) {
+    return "Off today.";
+  }
+
+  const now = new Date();
+  const todayStart = new Date(now);
+  todayStart.setHours(0, 0, 0, 0);
+  const tomorrowStart = new Date(todayStart);
+  tomorrowStart.setDate(todayStart.getDate() + 1);
+  const dayAfterTomorrowStart = new Date(tomorrowStart);
+  dayAfterTomorrowStart.setDate(tomorrowStart.getDate() + 1);
+
+  const currentShift = events.find((entry) => entry.startDate <= now && entry.endDate > now);
+  if (currentShift) {
+    return `At work until ${formatScheduleTime(currentShift.end)}.`;
+  }
+
+  const nextShift = events.find((entry) => entry.startDate > now);
+  if (!nextShift) {
+    return "Off today.";
+  }
+
+  if (nextShift.startDate < tomorrowStart) {
+    return `Working later today at ${formatScheduleTime(nextShift.start)}.`;
+  }
+
+  if (nextShift.startDate < dayAfterTomorrowStart) {
+    return `Work tomorrow at ${formatScheduleTime(nextShift.start)}.`;
+  }
+
+  return `Off today. Next shift ${formatScheduleDateTime(nextShift.start)}.`;
+}
+
+function formatScheduleTime(value) {
+  const date = new Date(value);
+  if (Number.isNaN(date.valueOf())) {
+    return value;
+  }
+
+  return date.toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}
+
+function formatScheduleDateTime(value) {
+  const date = new Date(value);
+  if (Number.isNaN(date.valueOf())) {
+    return value;
+  }
+
+  return date.toLocaleString("en-US", {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
 }
 
 function cleanSpotifyArtists(artistText) {
@@ -87,14 +170,15 @@ function cleanSpotifySongTitle(songTitle) {
     .trim();
 }
 
-async function loadWorkStatus(workScheduleUrl) {
-  if (!workStatusNode || !workScheduleUrl) return;
+async function loadWorkStatus(workScheduleEventsUrl, config = {}) {
+  if (!workStatusNode || !workScheduleEventsUrl) return;
 
   try {
-    const response = await fetch(workScheduleUrl, { cache: "no-store" });
+    const response = await fetch(workScheduleEventsUrl, { cache: "no-store" });
     if (!response.ok) throw new Error(`Work schedule request failed: ${response.status}`);
-    const schedule = await response.json();
-    workStatusNode.textContent = getWorkStatusText(schedule);
+    const payload = await response.json();
+    const events = normalizeScheduleEvents(payload?.events ?? [], config);
+    workStatusNode.textContent = getWorkStatusTextFromEvents(events);
     setChipVisibility(workChip, true);
   } catch (error) {
     console.warn("[widgets] work schedule unavailable", error);
@@ -105,51 +189,130 @@ async function loadWorkStatus(workScheduleUrl) {
   syncNowRowVisibility();
 }
 
+async function loadWorkStatusFromSummary(workScheduleUrl, config = {}) {
+  if (!workStatusNode || !workScheduleUrl) return;
+
+  try {
+    const response = await fetch(workScheduleUrl, { cache: "no-store" });
+    if (!response.ok) throw new Error(`Work schedule request failed: ${response.status}`);
+    const schedule = await response.json();
+    const normalizedEvents = normalizeScheduleEvents(
+      [schedule.current, schedule.next].filter(Boolean),
+      config,
+    );
+    workStatusNode.textContent = getWorkStatusTextFromEvents(normalizedEvents);
+    setChipVisibility(workChip, true);
+  } catch (error) {
+    console.warn("[widgets] work schedule unavailable", error);
+    workStatusNode.textContent = fallbackText.work;
+    setChipVisibility(workChip, false);
+  }
+
+  syncNowRowVisibility();
+}
+
+function getActivityText(activities) {
+  const interestingActivity = activities.find((activity) => {
+    if (!activity?.name) return false;
+    if (activity.type === 2 || activity.type === 4) return false;
+    return true;
+  });
+
+  if (!interestingActivity) {
+    return "";
+  }
+
+  if (interestingActivity.type === 0) {
+    return `Playing ${interestingActivity.name}`;
+  }
+
+  if (interestingActivity.details) {
+    return interestingActivity.details;
+  }
+
+  return interestingActivity.name;
+}
+
 function formatDiscordPresence(payload) {
   const data = payload?.d ?? payload?.data ?? null;
   if (!data) {
     discordNode.textContent = fallbackText.discord;
-    spotifyNode.textContent = fallbackText.spotify;
     setChipVisibility(discordChip, false);
-    setChipVisibility(spotifyChip, false);
     syncNowRowVisibility();
     return;
   }
 
   const discordStatus = data.discord_status || "offline";
   const statusLabel = discordStatus.charAt(0).toUpperCase() + discordStatus.slice(1);
-  discordNode.textContent = statusLabel;
   setChipVisibility(discordChip, discordStatus !== "offline");
 
-  const spotify = data.spotify;
-  if (spotify?.song && spotify?.artist) {
-    const songTitle = cleanSpotifySongTitle(spotify.song);
-    const artistText = cleanSpotifyArtists(spotify.artist);
-    spotifyNode.textContent = `${songTitle || spotify.song} by ${artistText || spotify.artist}`;
-    setChipVisibility(spotifyChip, true);
-    syncNowRowVisibility();
-    return;
-  }
-
   const activities = Array.isArray(data.activities) ? data.activities : [];
-  const interestingActivity = activities.find((activity) => activity?.type !== 4 && activity?.name);
-
-  if (interestingActivity?.details) {
-    spotifyNode.textContent = interestingActivity.details;
-    setChipVisibility(spotifyChip, true);
-  } else if (interestingActivity?.name) {
-    spotifyNode.textContent = interestingActivity.name;
-    setChipVisibility(spotifyChip, true);
-  } else {
-    spotifyNode.textContent = fallbackText.spotify;
-    setChipVisibility(spotifyChip, false);
-  }
+  const activityText = getActivityText(activities);
+  discordNode.textContent = activityText || statusLabel;
+  setChipVisibility(discordChip, Boolean(activityText));
 
   syncNowRowVisibility();
 }
 
+function getSpotifyTextFromNowPlaying(payload) {
+  const spotify = payload?.spotify ?? null;
+  if (!spotify?.track || !spotify?.artist || spotify.isPlaying === false) {
+    return "";
+  }
+
+  const songTitle = cleanSpotifySongTitle(spotify.track);
+  const artistText = cleanSpotifyArtists(spotify.artist);
+  return `${songTitle || spotify.track} by ${artistText || spotify.artist}`;
+}
+
+function getSpotifyTextFromCurrentPlayback(payload) {
+  const spotify = payload?.spotify ?? null;
+  const item = spotify?.item ?? null;
+  if (!item?.name || !Array.isArray(item.artists) || spotify?.is_playing === false) {
+    return "";
+  }
+
+  const songTitle = cleanSpotifySongTitle(item.name);
+  const artistText = cleanSpotifyArtists(item.artists.map((artist) => artist?.name).filter(Boolean).join("; "));
+  return `${songTitle || item.name} by ${artistText}`;
+}
+
+async function loadSpotifyStatus(nowPlayingUrl, currentPlaybackUrl) {
+  if (!spotifyNode) return;
+
+  const urls = [nowPlayingUrl, currentPlaybackUrl].filter(Boolean);
+
+  for (const [index, url] of urls.entries()) {
+    try {
+      const response = await fetch(url, { cache: "no-store" });
+      if (!response.ok) {
+        throw new Error(`Spotify request failed: ${response.status}`);
+      }
+
+      const payload = await response.json();
+      const text =
+        index === 0
+          ? getSpotifyTextFromNowPlaying(payload)
+          : getSpotifyTextFromCurrentPlayback(payload);
+
+      if (text) {
+        spotifyNode.textContent = text;
+        setChipVisibility(spotifyChip, true);
+        syncNowRowVisibility();
+        return;
+      }
+    } catch (error) {
+      console.warn("[widgets] spotify status unavailable", error);
+    }
+  }
+
+  spotifyNode.textContent = fallbackText.spotify;
+  setChipVisibility(spotifyChip, false);
+  syncNowRowVisibility();
+}
+
 async function initLanyard(discordUserId) {
-  if (!discordUserId || !discordNode || !spotifyNode) return;
+  if (!discordUserId || !discordNode) return;
 
   try {
     const initialResponse = await fetch(`https://api.lanyard.rest/v1/users/${discordUserId}`, {
@@ -199,6 +362,11 @@ if (widgetRoot) {
   setChipVisibility(spotifyChip, false);
   syncNowRowVisibility();
   setLocalTime(config.timezone || "America/New_York");
-  loadWorkStatus(config.workScheduleUrl);
+  if (config.workScheduleEventsUrl) {
+    loadWorkStatus(config.workScheduleEventsUrl, config);
+  } else {
+    loadWorkStatusFromSummary(config.workScheduleUrl, config);
+  }
+  loadSpotifyStatus(config.spotifyNowPlayingUrl, config.spotifyCurrentPlaybackUrl);
   initLanyard(config.discordUserId);
 }

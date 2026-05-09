@@ -19,6 +19,12 @@ export const siteConfig = {
   widgetConfig: {
     timezone: "America/New_York",
     discordUserId: "200654056992145408",
-    workScheduleUrl: "https://api.dylanh.dev/activity/schedule",
+    spotifyNowPlayingUrl: "https://api.dylanh.dev/spotify/now-playing",
+    spotifyCurrentPlaybackUrl: "https://api.dylanh.dev/spotify/current-playback",
+    workScheduleUrl: "https://api.dylanh.dev/schedule/status",
+    workScheduleEventsUrl: "https://api.dylanh.dev/schedule/events",
+    workScheduleCalendarUrl: "https://api.dylanh.dev/schedule/calendar.ics",
+    ignoredScheduleSources: ["lily"],
+    ignoredScheduleSummaryPrefixes: ["Lily"],
   },
 };
