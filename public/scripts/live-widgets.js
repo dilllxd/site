@@ -277,6 +277,20 @@ function getSpotifyTextFromCurrentPlayback(payload) {
   return `${songTitle || item.name} by ${artistText}`;
 }
 
+function applySpotifyText(text) {
+  if (!spotifyNode) return;
+
+  if (text) {
+    spotifyNode.textContent = text;
+    setChipVisibility(spotifyChip, true);
+  } else {
+    spotifyNode.textContent = fallbackText.spotify;
+    setChipVisibility(spotifyChip, false);
+  }
+
+  syncNowRowVisibility();
+}
+
 async function loadSpotifyStatus(nowPlayingUrl, currentPlaybackUrl) {
   if (!spotifyNode) return;
 
@@ -296,9 +310,7 @@ async function loadSpotifyStatus(nowPlayingUrl, currentPlaybackUrl) {
           : getSpotifyTextFromCurrentPlayback(payload);
 
       if (text) {
-        spotifyNode.textContent = text;
-        setChipVisibility(spotifyChip, true);
-        syncNowRowVisibility();
+        applySpotifyText(text);
         return;
       }
     } catch (error) {
@@ -306,9 +318,53 @@ async function loadSpotifyStatus(nowPlayingUrl, currentPlaybackUrl) {
     }
   }
 
-  spotifyNode.textContent = fallbackText.spotify;
-  setChipVisibility(spotifyChip, false);
-  syncNowRowVisibility();
+  applySpotifyText("");
+}
+
+function initSpotifySocket(spotifyWebSocketUrl, nowPlayingUrl, currentPlaybackUrl) {
+  if (!spotifyWebSocketUrl || !spotifyNode) {
+    loadSpotifyStatus(nowPlayingUrl, currentPlaybackUrl);
+    return;
+  }
+
+  let hasReceivedSocketPayload = false;
+
+  try {
+    const socket = new WebSocket(spotifyWebSocketUrl);
+
+    socket.addEventListener("message", (event) => {
+      hasReceivedSocketPayload = true;
+
+      try {
+        const payload = JSON.parse(event.data);
+        const text = getSpotifyTextFromNowPlaying(payload);
+        applySpotifyText(text);
+      } catch (error) {
+        console.warn("[widgets] spotify websocket payload invalid", error);
+      }
+    });
+
+    socket.addEventListener("open", () => {
+      // Seed the UI quickly while waiting for the first streamed update.
+      loadSpotifyStatus(nowPlayingUrl, currentPlaybackUrl);
+    });
+
+    socket.addEventListener("error", (error) => {
+      console.warn("[widgets] spotify websocket unavailable", error);
+      if (!hasReceivedSocketPayload) {
+        loadSpotifyStatus(nowPlayingUrl, currentPlaybackUrl);
+      }
+    });
+
+    socket.addEventListener("close", () => {
+      if (!hasReceivedSocketPayload) {
+        loadSpotifyStatus(nowPlayingUrl, currentPlaybackUrl);
+      }
+    });
+  } catch (error) {
+    console.warn("[widgets] spotify websocket setup failed", error);
+    loadSpotifyStatus(nowPlayingUrl, currentPlaybackUrl);
+  }
 }
 
 async function initLanyard(discordUserId) {
@@ -367,6 +423,10 @@ if (widgetRoot) {
   } else {
     loadWorkStatusFromSummary(config.workScheduleUrl, config);
   }
-  loadSpotifyStatus(config.spotifyNowPlayingUrl, config.spotifyCurrentPlaybackUrl);
+  initSpotifySocket(
+    config.spotifyWebSocketUrl,
+    config.spotifyNowPlayingUrl,
+    config.spotifyCurrentPlaybackUrl,
+  );
   initLanyard(config.discordUserId);
 }

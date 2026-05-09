@@ -19,6 +19,7 @@ export const siteConfig = {
   widgetConfig: {
     timezone: "America/New_York",
     discordUserId: "200654056992145408",
+    spotifyWebSocketUrl: "wss://api.dylanh.dev/spotify/ws",
     spotifyNowPlayingUrl: "https://api.dylanh.dev/spotify/now-playing",
     spotifyCurrentPlaybackUrl: "https://api.dylanh.dev/spotify/current-playback",
     workScheduleUrl: "https://api.dylanh.dev/schedule/status",
