@@ -77,31 +77,33 @@ const structuredData = [
     ))}
   </section>
 
-  <section class="info-grid" data-widget-config={widgetConfig}>
-    <div class="info-row">
-      <span>Based in</span>
-      <strong>{siteConfig.location}</strong>
+  <section class="home-status" data-widget-config={widgetConfig}>
+    <div class="utility-strip">
+      <div class="utility-item">
+        <span>Based in</span>
+        <strong>{siteConfig.location}</strong>
+      </div>
+      <div class="utility-item">
+        <span>Current time</span>
+        <strong data-local-time>Loading...</strong>
+      </div>
+      <div class="utility-item" data-work-chip>
+        <span data-work-label>Schedule</span>
+        <strong data-work-status>Checking...</strong>
+      </div>
     </div>
-    <div class="info-row">
-      <span>Current time</span>
-      <strong data-local-time>Loading...</strong>
-    </div>
-    <div class="info-row info-row-feature" data-now-row>
-      <span>Now</span>
-      <div class="status-widget">
-        <div class="status-widget-meta">
-          <div class="status-chip" data-work-chip>
-            <span>Work</span>
-            <strong data-work-status>Checking...</strong>
-          </div>
-          <div class="status-chip" data-discord-chip>
-            <span>Discord</span>
-            <strong data-discord-status>Connecting...</strong>
-          </div>
-          <div class="status-chip status-chip-wide" data-spotify-chip>
-            <span>Listening</span>
-            <strong data-spotify-status>Waiting for presence data...</strong>
-          </div>
+    <div class="live-cluster" data-now-row>
+      <div class="live-cluster-heading">
+        <span>Now</span>
+      </div>
+      <div class="live-cluster-items">
+        <div class="status-chip" data-discord-chip>
+          <span>Discord</span>
+          <strong data-discord-status>Connecting...</strong>
+        </div>
+        <div class="status-chip status-chip-wide" data-spotify-chip>
+          <span>Listening</span>
+          <strong data-spotify-status>Waiting for presence data...</strong>
         </div>
       </div>
     </div>

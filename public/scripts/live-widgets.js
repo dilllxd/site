@@ -1,11 +1,14 @@
 const localTimeNode = document.querySelector("[data-local-time]");
 const workStatusNode = document.querySelector("[data-work-status]");
+const workLabelNode = document.querySelector("[data-work-label]");
 const discordNode = document.querySelector("[data-discord-status]");
 const spotifyNode = document.querySelector("[data-spotify-status]");
 const nowRow = document.querySelector("[data-now-row]");
 const workChip = document.querySelector("[data-work-chip]");
 const discordChip = document.querySelector("[data-discord-chip]");
 const spotifyChip = document.querySelector("[data-spotify-chip]");
+const discordLabelNode = discordChip?.querySelector("span") || null;
+const spotifyLabelNode = spotifyChip?.querySelector("span") || null;
 const widgetRoot = document.querySelector("[data-widget-config]");
 
 const fallbackText = {
@@ -22,7 +25,7 @@ function setChipVisibility(chip, shouldShow) {
 function syncNowRowVisibility() {
   if (!nowRow) return;
 
-  const chips = [workChip, discordChip, spotifyChip].filter(Boolean);
+  const chips = [discordChip, spotifyChip].filter(Boolean);
   const hasVisibleChip = chips.some((chip) => !chip.hidden);
   nowRow.hidden = !hasVisibleChip;
 }
@@ -91,9 +94,29 @@ function normalizeScheduleEvents(events = [], config = {}) {
     .sort((a, b) => a.startDate.valueOf() - b.startDate.valueOf());
 }
 
-function getWorkStatusTextFromEvents(events) {
+function formatRelativeDuration(milliseconds) {
+  const totalMinutes = Math.max(1, Math.round(milliseconds / 60000));
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+
+  if (hours > 0 && minutes > 0) {
+    return `${hours}h ${minutes}m`;
+  }
+
+  if (hours > 0) {
+    return hours === 1 ? "1 hour" : `${hours} hours`;
+  }
+
+  return minutes === 1 ? "1 minute" : `${minutes} minutes`;
+}
+
+function getWorkStatusFromEvents(events) {
   if (!Array.isArray(events) || events.length === 0) {
-    return "Off today.";
+    return {
+      label: "Schedule",
+      text: "Off for the day.",
+      visible: true,
+    };
   }
 
   const now = new Date();
@@ -106,23 +129,60 @@ function getWorkStatusTextFromEvents(events) {
 
   const currentShift = events.find((entry) => entry.startDate <= now && entry.endDate > now);
   if (currentShift) {
-    return `At work until ${formatScheduleTime(currentShift.end)}.`;
+    return {
+      label: "At work",
+      text: `Working for another ${formatRelativeDuration(currentShift.endDate.valueOf() - now.valueOf())}.`,
+      visible: true,
+    };
   }
 
   const nextShift = events.find((entry) => entry.startDate > now);
   if (!nextShift) {
-    return "Off today.";
+    return {
+      label: "Schedule",
+      text: "Off for the day.",
+      visible: true,
+    };
   }
 
   if (nextShift.startDate < tomorrowStart) {
-    return `Working later today at ${formatScheduleTime(nextShift.start)}.`;
+    return {
+      label: "Later today",
+      text: `Working in ${formatRelativeDuration(nextShift.startDate.valueOf() - now.valueOf())}.`,
+      visible: true,
+    };
   }
 
   if (nextShift.startDate < dayAfterTomorrowStart) {
-    return `Work tomorrow at ${formatScheduleTime(nextShift.start)}.`;
+    return {
+      label: "Tomorrow",
+      text: `Working at ${formatScheduleTime(nextShift.start)}.`,
+      visible: true,
+    };
   }
 
-  return `Off today. Next shift ${formatScheduleDateTime(nextShift.start)}.`;
+  return {
+    label: "Schedule",
+    text: `Off for the day. Next shift ${formatScheduleDateTime(nextShift.start)}.`,
+    visible: true,
+  };
+}
+
+function applyWorkStatus(status) {
+  if (!workStatusNode || !workChip) return;
+
+  const nextStatus = status || {
+    label: "Schedule",
+    text: fallbackText.work,
+    visible: false,
+  };
+
+  if (workLabelNode) {
+    workLabelNode.textContent = nextStatus.label;
+  }
+
+  workStatusNode.textContent = nextStatus.text;
+  setChipVisibility(workChip, nextStatus.visible);
 }
 
 function formatScheduleTime(value) {
@@ -178,12 +238,14 @@ async function loadWorkStatus(workScheduleEventsUrl, config = {}) {
     if (!response.ok) throw new Error(`Work schedule request failed: ${response.status}`);
     const payload = await response.json();
     const events = normalizeScheduleEvents(payload?.events ?? [], config);
-    workStatusNode.textContent = getWorkStatusTextFromEvents(events);
-    setChipVisibility(workChip, true);
+    applyWorkStatus(getWorkStatusFromEvents(events));
   } catch (error) {
     console.warn("[widgets] work schedule unavailable", error);
-    workStatusNode.textContent = fallbackText.work;
-    setChipVisibility(workChip, false);
+    applyWorkStatus({
+      label: "Schedule",
+      text: fallbackText.work,
+      visible: false,
+    });
   }
 
   syncNowRowVisibility();
@@ -200,18 +262,20 @@ async function loadWorkStatusFromSummary(workScheduleUrl, config = {}) {
       [schedule.current, schedule.next].filter(Boolean),
       config,
     );
-    workStatusNode.textContent = getWorkStatusTextFromEvents(normalizedEvents);
-    setChipVisibility(workChip, true);
+    applyWorkStatus(getWorkStatusFromEvents(normalizedEvents));
   } catch (error) {
     console.warn("[widgets] work schedule unavailable", error);
-    workStatusNode.textContent = fallbackText.work;
-    setChipVisibility(workChip, false);
+    applyWorkStatus({
+      label: "Schedule",
+      text: fallbackText.work,
+      visible: false,
+    });
   }
 
   syncNowRowVisibility();
 }
 
-function getActivityText(activities) {
+function getDiscordActivityPresence(activities) {
   const interestingActivity = activities.find((activity) => {
     if (!activity?.name) return false;
     if (activity.type === 2 || activity.type === 4) return false;
@@ -219,23 +283,52 @@ function getActivityText(activities) {
   });
 
   if (!interestingActivity) {
-    return "";
+    return null;
   }
 
-  if (interestingActivity.type === 0) {
-    return `Playing ${interestingActivity.name}`;
+  const typeLabel = {
+    0: "Playing",
+    1: "Streaming",
+    3: "Watching",
+    5: "Competing in",
+  }[interestingActivity.type] || "Using";
+
+  const sourceName = interestingActivity.name;
+  const details = String(interestingActivity.details || "").trim();
+  const state = String(interestingActivity.state || "").trim();
+  const episodeInfo = String(interestingActivity.assets?.large_text || "").trim();
+  const parts = [];
+
+  if (details) {
+    parts.push(details);
+  } else if (state) {
+    parts.push(state);
   }
 
-  if (interestingActivity.details) {
-    return interestingActivity.details;
+  if (
+    episodeInfo &&
+    episodeInfo !== details &&
+    episodeInfo !== state &&
+    !/spotify/i.test(sourceName)
+  ) {
+    parts.push(episodeInfo);
   }
 
-  return interestingActivity.name;
+  return {
+    label: sourceName ? `${typeLabel} ${sourceName}` : typeLabel,
+    text: parts.join(" - ") || sourceName || typeLabel,
+  };
 }
 
 function formatDiscordPresence(payload) {
   const data = payload?.d ?? payload?.data ?? null;
   if (!data) {
+    if (discordLabelNode) {
+      discordLabelNode.textContent = "Discord";
+    }
+    if (discordChip) {
+      delete discordChip.dataset.richPresence;
+    }
     discordNode.textContent = fallbackText.discord;
     setChipVisibility(discordChip, false);
     syncNowRowVisibility();
@@ -243,13 +336,28 @@ function formatDiscordPresence(payload) {
   }
 
   const discordStatus = data.discord_status || "offline";
-  const statusLabel = discordStatus.charAt(0).toUpperCase() + discordStatus.slice(1);
-  setChipVisibility(discordChip, discordStatus !== "offline");
-
   const activities = Array.isArray(data.activities) ? data.activities : [];
-  const activityText = getActivityText(activities);
-  discordNode.textContent = activityText || statusLabel;
-  setChipVisibility(discordChip, Boolean(activityText));
+  const presence = getDiscordActivityPresence(activities);
+
+  if (presence) {
+    if (discordLabelNode) {
+      discordLabelNode.textContent = presence.label;
+    }
+    if (discordChip) {
+      discordChip.dataset.richPresence = "true";
+    }
+    discordNode.textContent = presence.text;
+    setChipVisibility(discordChip, true);
+  } else {
+    if (discordLabelNode) {
+      discordLabelNode.textContent = "Discord";
+    }
+    if (discordChip) {
+      delete discordChip.dataset.richPresence;
+    }
+    discordNode.textContent = discordStatus.charAt(0).toUpperCase() + discordStatus.slice(1);
+    setChipVisibility(discordChip, false);
+  }
 
   syncNowRowVisibility();
 }
@@ -281,9 +389,21 @@ function applySpotifyText(text) {
   if (!spotifyNode) return;
 
   if (text) {
+    if (spotifyLabelNode) {
+      spotifyLabelNode.textContent = "Listening to";
+    }
+    if (spotifyChip) {
+      spotifyChip.dataset.richPresence = "true";
+    }
     spotifyNode.textContent = text;
     setChipVisibility(spotifyChip, true);
   } else {
+    if (spotifyLabelNode) {
+      spotifyLabelNode.textContent = "Listening";
+    }
+    if (spotifyChip) {
+      delete spotifyChip.dataset.richPresence;
+    }
     spotifyNode.textContent = fallbackText.spotify;
     setChipVisibility(spotifyChip, false);
   }
