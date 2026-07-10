@@ -13,6 +13,7 @@ const sortedPosts = posts.sort((a, b) => b.data.date.valueOf() - a.data.date.val
 const latestPosts = sortedPosts.slice(0, 3);
 const sortedPhotos = photos.sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
 const latestPhoto = sortedPhotos[0];
+const heroPhoto = sortedPhotos.find((photo) => photo.id === "ngc-2244") ?? latestPhoto;
 const photoRotationPayload = JSON.stringify(
   sortedPhotos.map((photo) => ({
     id: photo.id,
@@ -50,34 +51,49 @@ const structuredData = [
 ---
 
 <SiteLayout structuredData={structuredData}>
-  <section class="intro">
-    <div class="intro-copy">
-      <h1>CS student, hobbyist developer, infrastructure tinkerer.</h1>
-      <p class="intro-text">
-        I like building useful little things, writing occasionally, and keeping a small place on the web.
-      </p>
+  {heroPhoto && (
+    <section class="home-hero" aria-labelledby="home-title">
+      <img class="home-hero-image" src={heroPhoto.data.image} alt="" loading="eager" />
+      <div class="home-hero-copy">
+        <h1 id="home-title">DYLAN H.</h1>
+        <p>Building useful things. Photographing distant ones.</p>
+        <div class="home-hero-links">
+          <a href="/posts/">Notes</a>
+          <a href="/photos/">Photographs</a>
+        </div>
+      </div>
+      <a class="home-scroll" href="#about">Continue</a>
+    </section>
+  )}
+
+  <section class="home-about" id="about">
+    <div class="home-about-copy">
+      <h2>A small place<br />for curious work.</h2>
+      <p>I’m a computer science student, hobbyist developer, and infrastructure tinkerer in South Carolina. This site is where code, field notes, and nights spent looking upward meet.</p>
+      <a href={`mailto:${siteConfig.email}`}>Write to me</a>
     </div>
-    <div class="intro-mark-shell">
+    <figure class="home-portrait">
       <img
-        class="intro-mark"
         src="/apple-touch-icon.png"
         alt="Dylan H site mark"
         width="120"
         height="120"
         loading="eager"
       />
+      <figcaption>Dylan H. · Lancaster, South Carolina</figcaption>
+    </figure>
+    <div class="links-line" aria-label="Social links">
+      {siteConfig.socialLinks.map((link) => (
+        <a href={link.href} target="_blank" rel="noreferrer">{link.label}</a>
+      ))}
     </div>
   </section>
 
-  <section class="links-line">
-    {siteConfig.socialLinks.map((link) => (
-      <a href={link.href} target="_blank" rel="noreferrer">
-        {link.label}
-      </a>
-    ))}
-  </section>
-
   <section class="home-status" data-widget-config={widgetConfig}>
+    <header class="home-status-heading">
+      <h2>Current conditions</h2>
+      <p>A quiet, live view of the day.</p>
+    </header>
     <div class="utility-strip">
       <div class="utility-item">
         <span>Based in</span>
@@ -111,8 +127,8 @@ const structuredData = [
 
   <section class="home-grid">
     <div class="section-heading">
-      <p>Recent posts</p>
-      <a href="/posts/">All posts</a>
+      <h2>Latest notes</h2>
+      <a href="/posts/">All notes</a>
     </div>
     <div class="home-posts-grid">
       {latestPosts.map((post) => (
@@ -120,7 +136,7 @@ const structuredData = [
           <span class="story-date">
             {post.data.date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" })}
           </span>
-          <strong>{post.data.title}</strong>
+          <h3>{post.data.title}</h3>
           <p>{post.data.excerpt}</p>
           <span class="inline-meta">{post.data.readingTime}</span>
         </a>
@@ -131,8 +147,8 @@ const structuredData = [
   {latestPhoto && (
     <section class="photo-feature" data-photo-rotation={photoRotationPayload} data-photo-viewer data-photo-viewer-mode="overlay">
       <div class="section-heading">
-        <p>Recent photography</p>
-        <a href="/photos/">Gallery</a>
+        <h2>Recent light</h2>
+        <a href="/photos/">All photographs</a>
       </div>
       <a class="photo-feature-inner" href={`/photos/${latestPhoto.id}/`} data-photo-link>
         <img
@@ -143,7 +159,7 @@ const structuredData = [
           data-photo-viewer-trigger
         />
         <div class="photo-feature-meta">
-          <strong data-photo-title>{latestPhoto.data.title}</strong>
+          <h3 data-photo-title>{latestPhoto.data.title}</h3>
           <p data-photo-caption>{latestPhoto.data.caption}</p>
         </div>
       </a>

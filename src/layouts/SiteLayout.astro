@@ -56,17 +56,17 @@ const structuredDataJson = stringifyStructuredData(structuredData);
     <meta name="twitter:description" content={description} />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:image" content={socialImageUrl} />
-    <meta name="theme-color" content="#0b0d10" />
+    <meta name="theme-color" content="#090a0a" />
     <title>{title}</title>
     <link rel="icon" href="/favicon.ico" sizes="any" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,400;6..96,500&family=IBM+Plex+Mono:wght@400;500&family=Source+Serif+4:opsz,wght@8..60,400;8..60,500&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="/styles/global.css" />
+    <link rel="stylesheet" href="/styles/global.css?v=20260709c" />
     {structuredDataJson && (
       <script type="application/ld+json" set:html={structuredDataJson}></script>
     )}
@@ -79,26 +79,19 @@ const structuredDataJson = stringifyStructuredData(structuredData);
     </script>
   </head>
   <body class={pageClass}>
-    <div class={`page-shell ${pageClass}`.trim()}>
+    <div class={`page-shell ${isHome ? "page-home" : ""} ${pageClass}`.trim()}>
       <header class="site-header">
-        {isHome ? (
-          <div class="brand" aria-label="Site title">
-            <strong>{siteConfig.title}</strong>
-          </div>
-        ) : (
-          <a class="brand" href="/">
-            <strong>{siteConfig.title}</strong>
-            <span>Home</span>
-          </a>
-        )}
+        <a class="brand" href="/" aria-label={`${siteConfig.title} — Home`}>
+          <strong>Dylan H.</strong>
+        </a>
 
         <nav class="site-nav" aria-label="Primary">
-          <a href="/posts/">Posts</a>
-          <a href="/photos/">Photos</a>
+          <a href="/posts/">Notes</a>
+          <a href="/photos/">Photographs</a>
         </nav>
 
         <button class="theme-toggle" type="button" data-theme-toggle aria-label="Toggle color theme">
-          <span data-theme-toggle-label>Light mode</span>
+          <span data-theme-toggle-label>Light</span>
         </button>
       </header>
 
@@ -108,6 +101,7 @@ const structuredDataJson = stringifyStructuredData(structuredData);
 
       {!hideFooter && (
         <footer class="site-footer">
+          <p>Dylan H. · South Carolina</p>
           <div class="footer-links">
             <a href={`mailto:${siteConfig.email}`}>Email</a>
             <a href="https://github.com/dilllxd" rel="me">GitHub</a>

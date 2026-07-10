@@ -4,7 +4,7 @@ const label = document.querySelector("[data-theme-toggle-label]");
 
 function syncLabel(theme) {
   if (!label) return;
-  label.textContent = theme === "light" ? "Dark mode" : "Light mode";
+  label.textContent = theme === "light" ? "Dark" : "Light";
 }
 
 function applyTheme(theme) {
