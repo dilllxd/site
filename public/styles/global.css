@@ -65,8 +65,8 @@ button { font: inherit; }
 .home-about-copy h2 { font-size: clamp(4.3rem,8vw,8.4rem); line-height: .84; }
 .home-about-copy > p { max-width: 620px; margin: 2rem 0 0 10vw; color: var(--muted); font-size: 1.06rem; line-height: 1.75; }
 .home-about-copy > a { display: inline-block; margin: 2rem 0 0 10vw; padding-bottom: .35rem; border-bottom: 1px solid var(--accent); font: .75rem "IBM Plex Mono", monospace; }
-.home-portrait { align-self: center; margin: 0; }
-.home-portrait img { width: 100%; max-height: 480px; object-fit: cover; filter: grayscale(.15) saturate(.75); }
+.home-portrait { align-self: center; justify-self: end; width: 100%; max-width: 480px; margin: 0; }
+.home-portrait img { display: block; width: 100%; height: auto; object-fit: contain; filter: grayscale(.15) saturate(.75); }
 .home-portrait figcaption { margin-top: .8rem; color: var(--muted); font: .67rem "IBM Plex Mono", monospace; }
 .links-line { grid-column: 1/-1; display: flex; align-items: center; flex-wrap: wrap; gap: 1.1rem 2rem; min-height: 86px; margin-top: 5rem; border-top: 1px solid var(--line); }
 .links-line a { color: var(--muted); font: .72rem "IBM Plex Mono", monospace; }
