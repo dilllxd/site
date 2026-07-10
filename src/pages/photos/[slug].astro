@@ -52,7 +52,6 @@ const structuredData = {
     <div class="photo-detail-layout">
       <figure class="photo-detail-figure" data-photo-viewer data-photo-viewer-mode="inline">
         <div class="photo-detail-viewer-controls" aria-label="Photo viewer controls">
-          <span>Image controls</span>
           <button type="button" data-photo-viewer-zoom-out aria-label="Zoom out">-</button>
           <button type="button" data-photo-viewer-zoom-reset>100%</button>
           <button type="button" data-photo-viewer-zoom-in aria-label="Zoom in">+</button>
@@ -71,8 +70,8 @@ const structuredData = {
 
       <section class="photo-detail-sidebar">
         <div class="photo-detail-topline">
-          <p class="eyebrow">IMAGE_FILE / DEEP_SPACE</p>
-          <a href="/photos/">← All images</a>
+          <p class="eyebrow">Photo</p>
+          <a href="/photos/">Back to gallery</a>
         </div>
 
         <header class="photo-detail-header">
@@ -91,10 +90,6 @@ const structuredData = {
               <dd>{photo.data.location}</dd>
             </div>
           )}
-          <div>
-            <dt>Directory</dt>
-            <dd>/images/space</dd>
-          </div>
         </dl>
       </section>
     </div>

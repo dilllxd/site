@@ -27,27 +27,20 @@ const structuredData = {
   structuredData={structuredData}
 >
   <section class="listing-hero">
-    <div class="listing-hero-index">DIR / IMAGES</div>
-    <div>
-      <p class="eyebrow">Telescope output</p>
-      <h1>Signals from<br /><span>deep space.</span></h1>
-    </div>
-    <p class="hero-text">A growing archive of galaxies, nebulae, and late nights, captured from South Carolina.</p>
+    <p class="eyebrow">Photography</p>
+    <h1>Photos</h1>
+    <p class="hero-text">A small gallery of the images I actually want to keep around, with each photo shown in its natural proportions.</p>
   </section>
 
   <section class="photo-gallery">
-    {photos.map((photo, index) => (
+    {photos.map((photo) => (
       <figure class="gallery-item">
         <a href={`/photos/${photo.id}/`} class="gallery-link">
           <img src={photo.data.image} alt={photo.data.alt} loading="lazy" />
           <span class="gallery-overlay">
-            <span class="gallery-number">IMG_{String(index + 1).padStart(3, "0")}</span>
-            <span class="gallery-copy">
-              <strong>{photo.data.title}</strong>
-              <span>{photo.data.caption}</span>
-              {photo.data.location && <span class="gallery-overlay-meta">{photo.data.location}</span>}
-            </span>
-            <span class="gallery-arrow" aria-hidden="true">↗</span>
+            <strong>{photo.data.title}</strong>
+            <span>{photo.data.caption}</span>
+            {photo.data.location && <span class="gallery-overlay-meta">{photo.data.location}</span>}
           </span>
         </a>
       </figure>
