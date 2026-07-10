@@ -51,20 +51,17 @@ const structuredData = [
 
 <SiteLayout structuredData={structuredData}>
   <section class="intro" aria-labelledby="intro-title">
-    <div class="intro-kicker">
-      <span>Personal index</span>
-      <span>Est. 2025</span>
-    </div>
     <div class="intro-copy">
-      <h1 id="intro-title">Curious by nature.<br /><em>Building by habit.</em></h1>
-      <p class="intro-text">I’m Dylan — a computer science student, hobbyist developer, and infrastructure tinkerer. This is where I keep the projects, observations, and images worth remembering.</p>
+      <p class="eyebrow">Hello from South Carolina <span aria-hidden="true">●</span></p>
+      <h1 id="intro-title">I make things for <span>screens</span> & servers.</h1>
+      <p class="intro-text">CS student, hobbyist developer, infrastructure tinkerer, and occasional astrophotographer. This is my small, live corner of the web.</p>
       <div class="intro-actions">
-        <a class="button button-primary" href="/posts/">Read the journal <span>↗</span></a>
-        <a class="button button-quiet" href="/photos/">View the night sky</a>
+        <a class="button button-primary" href="/posts/">Open notes <span>↗</span></a>
+        <a class="button button-quiet" href={`mailto:${siteConfig.email}`}>Say hello <span>↗</span></a>
       </div>
     </div>
-    <div class="intro-portrait">
-      <span class="orbit-label">34.72° N</span>
+    <div class="intro-portrait" aria-label="A photo of Dylan">
+      <div class="portrait-topbar"><span>ME.JPG</span><span>×</span></div>
       <img
         class="intro-mark"
         src="/apple-touch-icon.png"
@@ -73,46 +70,49 @@ const structuredData = [
         height="120"
         loading="eager"
       />
-      <span class="portrait-caption">Somewhere near<br />Lancaster, SC</span>
+      <div class="portrait-caption"><span>DLN_001</span><span>2026</span></div>
     </div>
   </section>
 
   <section class="links-line" aria-label="Social links">
-    <span class="links-label">Find me elsewhere</span>
+    <span class="links-label">Elsewhere online →</span>
     {siteConfig.socialLinks.map((link) => (
       <a href={link.href} target="_blank" rel="noreferrer">
-        {link.label} <span aria-hidden="true">↗</span>
+        {link.label}
       </a>
     ))}
   </section>
 
   <section class="home-status" data-widget-config={widgetConfig}>
     <div class="status-intro">
-      <p class="eyebrow"><span class="pulse-dot"></span> Live field notes</p>
-      <p>A small, real-time window into my corner of the world.</p>
+      <div>
+        <p class="eyebrow"><span class="pulse-dot"></span> Live signals</p>
+        <h2>What’s happening<br />right now.</h2>
+      </div>
+      <span class="status-code">SYS / 04</span>
     </div>
     <div class="utility-strip">
       <div class="utility-item">
-        <span>Location</span>
+        <span>01 / Location</span>
         <strong>{siteConfig.location}</strong>
       </div>
       <div class="utility-item">
-        <span>Current time</span>
+        <span>02 / Local time</span>
         <strong data-local-time>Loading...</strong>
       </div>
       <div class="utility-item" data-work-chip>
-        <span data-work-label>Schedule</span>
+        <span data-work-label>03 / Schedule</span>
         <strong data-work-status>Checking...</strong>
       </div>
     </div>
     <div class="live-cluster" data-now-row>
       <div class="live-cluster-items">
         <div class="status-chip" data-discord-chip>
-          <span>Discord</span>
+          <span>04 / Discord</span>
           <strong data-discord-status>Connecting...</strong>
         </div>
         <div class="status-chip status-chip-wide" data-spotify-chip>
-          <span>Listening</span>
+          <span>05 / Listening</span>
           <strong data-spotify-status>Waiting for presence data...</strong>
         </div>
       </div>
@@ -122,21 +122,21 @@ const structuredData = [
   <section class="home-grid">
     <div class="section-heading">
       <div>
-        <p>01 / From the journal</p>
-        <h2>Recent notes</h2>
+        <p>From the notebook</p>
+        <h2>Recent transmissions</h2>
       </div>
-      <a href="/posts/">Browse every post <span>↗</span></a>
+      <a href="/posts/">See all notes ↗</a>
     </div>
     <div class="home-posts-grid">
       {latestPosts.map((post, index) => (
         <a class="post-card" href={`/posts/${post.id}/`}>
           <div class="post-card-topline">
-            <span class="story-index">0{index + 1}</span>
+            <span class="story-index">NOTE_{String(index + 1).padStart(2, "0")}</span>
             <span class="story-date">{post.data.date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" })}</span>
           </div>
-          <strong>{post.data.title}<span aria-hidden="true">↗</span></strong>
+          <strong>{post.data.title}</strong>
           <p>{post.data.excerpt}</p>
-          <span class="inline-meta">{post.data.readingTime}</span>
+          <span class="inline-meta">Read it · {post.data.readingTime} ↗</span>
         </a>
       ))}
     </div>
@@ -146,10 +146,10 @@ const structuredData = [
     <section class="photo-feature" data-photo-rotation={photoRotationPayload} data-photo-viewer data-photo-viewer-mode="overlay">
       <div class="section-heading">
         <div>
-          <p>02 / From the observatory</p>
-          <h2>Looking upward</h2>
+          <p>From the telescope</p>
+          <h2>Captured light</h2>
         </div>
-        <a href="/photos/">Enter the full gallery <span>↗</span></a>
+        <a href="/photos/">See all images ↗</a>
       </div>
       <a class="photo-feature-inner" href={`/photos/${latestPhoto.id}/`} data-photo-link>
         <img
@@ -160,10 +160,10 @@ const structuredData = [
           data-photo-viewer-trigger
         />
         <div class="photo-feature-meta">
-          <span class="eyebrow">Latest exposure</span>
+          <span class="eyebrow">Latest file / <span class="live-word">Live</span></span>
           <strong data-photo-title>{latestPhoto.data.title}</strong>
           <p data-photo-caption>{latestPhoto.data.caption}</p>
-          <span class="photo-feature-cta">Open image <span aria-hidden="true">↗</span></span>
+          <span class="photo-feature-cta">Inspect image <span aria-hidden="true">↗</span></span>
         </div>
       </a>
       <div class="photo-preview" aria-hidden="true" data-photo-viewer-overlay>

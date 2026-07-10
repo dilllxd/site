@@ -27,12 +27,12 @@ const structuredData = {
   structuredData={structuredData}
 >
   <section class="listing-hero">
-    <div class="listing-hero-index">02</div>
+    <div class="listing-hero-index">DIR / IMAGES</div>
     <div>
-      <p class="eyebrow">Observatory / Deep sky</p>
-      <h1>Collected<br /><em>starlight.</em></h1>
+      <p class="eyebrow">Telescope output</p>
+      <h1>Signals from<br /><span>deep space.</span></h1>
     </div>
-    <p class="hero-text">A growing record of distant galaxies, nebulae, and late nights — captured from South Carolina and kept in their natural proportions.</p>
+    <p class="hero-text">A growing archive of galaxies, nebulae, and late nights, captured from South Carolina.</p>
   </section>
 
   <section class="photo-gallery">
@@ -41,7 +41,7 @@ const structuredData = {
         <a href={`/photos/${photo.id}/`} class="gallery-link">
           <img src={photo.data.image} alt={photo.data.alt} loading="lazy" />
           <span class="gallery-overlay">
-            <span class="gallery-number">{String(index + 1).padStart(2, "0")}</span>
+            <span class="gallery-number">IMG_{String(index + 1).padStart(3, "0")}</span>
             <span class="gallery-copy">
               <strong>{photo.data.title}</strong>
               <span>{photo.data.caption}</span>

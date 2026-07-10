@@ -58,17 +58,17 @@ const structuredDataJson = stringifyStructuredData(structuredData);
     <meta name="twitter:description" content={description} />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:image" content={socialImageUrl} />
-    <meta name="theme-color" content="#10120f" />
+    <meta name="theme-color" content="#171717" />
     <title>{title}</title>
     <link rel="icon" href="/favicon.ico" sizes="any" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="/styles/global.css?v=20260709" />
+    <link rel="stylesheet" href="/styles/global.css?v=20260709b" />
     {structuredDataJson && (
       <script type="application/ld+json" set:html={structuredDataJson}></script>
     )}
@@ -84,22 +84,18 @@ const structuredDataJson = stringifyStructuredData(structuredData);
     <div class={`page-shell ${pageClass}`.trim()}>
       <header class="site-header">
         <a class="brand" href="/" aria-label={`${siteConfig.title} — Home`}>
-          <span class="brand-mark" aria-hidden="true">DH</span>
-          <span class="brand-copy">
-            <strong>{siteConfig.title}</strong>
-            <span>Field notes from South Carolina</span>
-          </span>
+          <strong>DYLAN<span>.HQ</span></strong>
+          <small>Personal operating system</small>
         </a>
 
         <nav class="site-nav" aria-label="Primary">
-          <a href="/" aria-current={isHome ? "page" : undefined}>Index</a>
-          <a href="/posts/" aria-current={isPosts ? "page" : undefined}>Journal</a>
-          <a href="/photos/" aria-current={isPhotos ? "page" : undefined}>Observatory</a>
+          <a href="/" aria-current={isHome ? "page" : undefined}><span>01</span> Desk</a>
+          <a href="/posts/" aria-current={isPosts ? "page" : undefined}><span>02</span> Notes</a>
+          <a href="/photos/" aria-current={isPhotos ? "page" : undefined}><span>03</span> Images</a>
         </nav>
 
         <button class="theme-toggle" type="button" data-theme-toggle aria-label="Toggle color theme">
-          <span class="theme-dot" aria-hidden="true"></span>
-          <span data-theme-toggle-label>Light mode</span>
+          <span data-theme-toggle-label>Light mode</span><span aria-hidden="true">◐</span>
         </button>
       </header>
 
@@ -110,13 +106,13 @@ const structuredDataJson = stringifyStructuredData(structuredData);
       {!hideFooter && (
         <footer class="site-footer">
           <div class="footer-signoff">
-            <span class="brand-mark" aria-hidden="true">DH</span>
-            <p>Built slowly, kept personal.<br />South Carolina · {new Date().getFullYear()}</p>
+            <strong>DYLAN.HQ</strong>
+            <p>Handmade on the internet<br />South Carolina · {new Date().getFullYear()}</p>
           </div>
           <div class="footer-links" aria-label="Footer links">
-            <a href={`mailto:${siteConfig.email}`}>Email ↗</a>
-            <a href="https://github.com/dilllxd" rel="me">GitHub ↗</a>
-            <a href="https://status.dylan.lol" rel="me">Systems ↗</a>
+            <a href={`mailto:${siteConfig.email}`}>Email</a>
+            <a href="https://github.com/dilllxd" rel="me">GitHub</a>
+            <a href="https://status.dylan.lol" rel="me">System status</a>
           </div>
         </footer>
       )}

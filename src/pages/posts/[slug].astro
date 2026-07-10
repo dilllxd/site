@@ -46,8 +46,8 @@ const structuredData = {
 >
   <article class="prose-shell">
     <header class="prose-header">
-      <a class="back-link" href="/posts/">← Journal</a>
-      <p class="eyebrow">Field note / {post.data.date.getUTCFullYear()}</p>
+      <a class="back-link" href="/posts/">← All notes</a>
+      <p class="eyebrow">NOTE_FILE / {post.data.date.getUTCFullYear()}</p>
       <h1>{post.data.title}</h1>
       <div class="prose-deck">
         <p>{post.data.excerpt}</p>
@@ -56,8 +56,8 @@ const structuredData = {
     </header>
     <div class="prose-content-grid">
       <aside class="prose-rail" aria-label="Article details">
-        <span>Written by</span><strong>Dylan H</strong>
-        <span>Filed under</span><strong>Projects & notes</strong>
+        <span>Author</span><strong>Dylan H</strong>
+        <span>Directory</span><strong>/notes/projects</strong>
       </aside>
       <div class="prose-body">
         <Content />
