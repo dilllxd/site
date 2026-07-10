@@ -36,7 +36,7 @@ button { font: inherit; }
 .page-shell { min-height: 100vh; background: var(--paper); }
 .site-header { position: relative; z-index: 20; min-height: 66px; display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: clamp(1.25rem, 4vw, 4rem); padding: 0 5.4vw; border-bottom: 1px solid var(--line); font-family: "IBM Plex Mono", monospace; animation: header-in 900ms 180ms both; }
 .page-home .site-header { position: absolute; inset: 0 0 auto; color: #f2eee5; border-color: rgba(242,238,229,.3); }
-.brand strong { font-family: "Bodoni Moda", serif; font-size: 1rem; font-weight: 500; letter-spacing: .03em; text-transform: uppercase; }
+.brand strong { font-family: "Fraunces", serif; font-size: 1rem; font-weight: 500; letter-spacing: .03em; text-transform: uppercase; }
 .site-nav { display: flex; align-items: center; gap: clamp(1.3rem,3vw,3rem); }
 .site-nav a, .theme-toggle { font-size: .75rem; letter-spacing: .02em; }
 .site-nav a { position: relative; padding: 1.45rem 0; }
@@ -53,7 +53,7 @@ button { font: inherit; }
 .home-hero::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(4,5,5,.48) 0%, rgba(4,5,5,.13) 48%, rgba(4,5,5,.01) 78%), linear-gradient(0deg, rgba(4,5,5,.45) 0%, transparent 45%); pointer-events: none; }
 .home-hero-image { position: absolute; inset: 0; width: 100%; height: 100%; max-width: none; object-fit: cover; object-position: center 47%; animation: hero-breathe 2.2s cubic-bezier(.2,.75,.25,1) both; }
 .home-hero-copy { position: absolute; z-index: 2; left: 5.4vw; bottom: 7.5vh; }
-.home-hero-copy h1 { margin: 0; font: 400 clamp(6.2rem, 16vw, 15rem)/.68 "Bodoni Moda", serif; letter-spacing: -.075em; white-space: nowrap; animation: rise-in 1s 350ms cubic-bezier(.2,.75,.25,1) both; }
+.home-hero-copy h1 { margin: 0; font: 400 clamp(6.2rem, 16vw, 30rem)/.68 "Fraunces", serif; letter-spacing: -.075em; white-space: nowrap; animation: rise-in 1s 350ms cubic-bezier(.2,.75,.25,1) both; }
 .home-hero-copy p { margin: 1.6rem 0 0; font: 400 clamp(.78rem,1.1vw,.95rem)/1.6 "IBM Plex Mono", monospace; animation: rise-in 800ms 560ms both; }
 .home-hero-links { display: flex; gap: 3rem; margin-top: 1.5rem; animation: rise-in 800ms 680ms both; }
 .home-hero-links a { position: relative; padding: 0 0 .35rem; border-bottom: 1px solid rgba(242,238,229,.45); font: .8rem "IBM Plex Mono", monospace; }
@@ -61,7 +61,7 @@ button { font: inherit; }
 
 .home-about { --text: #171715; --muted: #65625b; --line: rgba(23,23,21,.22); min-height: 820px; display: grid; grid-template-columns: minmax(0,1fr) minmax(300px,34vw); grid-template-rows: 1fr auto; gap: 0 8vw; padding: clamp(5rem,10vw,10rem) 5.4vw 0; color: var(--text); background-color: #e8e2d4; background-image: radial-gradient(circle at 20% 20%, rgba(187,90,78,.09), transparent 40%); }
 .home-about-copy { align-self: center; max-width: 800px; }
-.home-about-copy h2, .home-status-heading h2, .section-heading h2, .listing-hero h1, .prose-shell h1, .photo-detail-header h1 { margin: 0; font-family: "Bodoni Moda", serif; font-weight: 400; letter-spacing: -.055em; }
+.home-about-copy h2, .home-status-heading h2, .section-heading h2, .listing-hero h1, .prose-shell h1, .photo-detail-header h1 { margin: 0; font-family: "Fraunces", serif; font-weight: 400; letter-spacing: -.055em; }
 .home-about-copy h2 { font-size: clamp(4.3rem,8vw,8.4rem); line-height: .84; }
 .home-about-copy > p { max-width: 620px; margin: 2rem 0 0 10vw; color: var(--muted); font-size: 1.06rem; line-height: 1.75; }
 .home-about-copy > a { display: inline-block; margin: 2rem 0 0 10vw; padding-bottom: .35rem; border-bottom: 1px solid var(--accent); font: .75rem "IBM Plex Mono", monospace; }
@@ -95,7 +95,7 @@ button { font: inherit; }
 .section-heading > a { padding-bottom: .35rem; border-bottom: 1px solid var(--accent); font: .72rem "IBM Plex Mono", monospace; }
 .home-posts-grid { border-top: 1px solid var(--line); }
 .post-card { display: grid; grid-template-columns: 150px minmax(0,1fr) minmax(170px,24vw); gap: 2rem; align-items: start; padding: 2rem 0; border-bottom: 1px solid var(--line); }
-.post-card h3 { margin: 0; font: 400 clamp(2.3rem,4.2vw,4.5rem)/.94 "Bodoni Moda", serif; letter-spacing: -.045em; }
+.post-card h3 { margin: 0; font: 400 clamp(2.3rem,4.2vw,4.5rem)/.94 "Fraunces", serif; letter-spacing: -.045em; }
 .post-card p { margin: .45rem 0 0; color: var(--muted); line-height: 1.65; }
 .post-card .inline-meta { text-align: right; }
 
@@ -105,7 +105,7 @@ button { font: inherit; }
 .photo-feature-inner::after { content: ""; position: absolute; inset: 40% 0 0; background: linear-gradient(transparent,rgba(3,4,4,.75)); }
 .photo-feature-inner > img { width: 100%; height: 70vh; object-fit: cover; animation: image-reveal 900ms both; }
 .photo-feature-meta { position: absolute; z-index: 1; left: clamp(1rem,4vw,4rem); right: clamp(1rem,4vw,4rem); bottom: clamp(1rem,3vw,3rem); display: grid; grid-template-columns: 1fr minmax(250px,.45fr); gap: 2rem; align-items: end; }
-.photo-feature-meta h3 { margin: 0; font: 400 clamp(4rem,9vw,9rem)/.78 "Bodoni Moda", serif; letter-spacing: -.06em; }
+.photo-feature-meta h3 { margin: 0; font: 400 clamp(4rem,9vw,9rem)/.78 "Fraunces", serif; letter-spacing: -.06em; }
 .photo-feature-meta p { margin: 0; color: rgba(238,235,226,.72); line-height: 1.55; }
 
 .site-footer { min-height: 190px; display: flex; justify-content: space-between; align-items: end; gap: 2rem; padding: 3rem 5.4vw; background: var(--paper); }
@@ -114,12 +114,12 @@ button { font: inherit; }
 .footer-links a { color: var(--muted); font: .7rem "IBM Plex Mono", monospace; }
 
 /* Index pages */
-.listing-hero { min-height: 58vh; display: grid; grid-template-columns: 1fr minmax(260px,32vw); gap: 8vw; align-items: end; padding: 10vw 5.4vw 5vw; border-bottom: 1px solid var(--line); background-image: radial-gradient(circle at 80% 15%, color-mix(in srgb,var(--coral),transparent 88%),transparent 32%); }
-.listing-hero h1 { font-size: clamp(7rem,18vw,18rem); line-height: .63; }
-.hero-text { margin: 0; padding-bottom: 1rem; color: var(--muted); font-size: 1rem; line-height: 1.7; }
+.listing-hero { min-height: 58vh; display: grid; grid-template-columns: minmax(0,1fr); gap: 3rem; align-items: end; padding: 10vw 5.4vw 5vw; border-bottom: 1px solid var(--line); background-image: radial-gradient(circle at 80% 15%, color-mix(in srgb,var(--coral),transparent 88%),transparent 32%); }
+.listing-hero h1 { min-width: 0; font-size: clamp(5.5rem,15vw,24rem); line-height: .68; overflow-wrap: anywhere; }
+.hero-text { width: min(680px,100%); justify-self: end; margin: 0; padding-bottom: 1rem; color: var(--muted); font-size: 1rem; line-height: 1.7; }
 .listing-stack { padding: 0 5.4vw; }
 .list-entry { display: grid; grid-template-columns: 150px minmax(0,1fr) 130px; gap: 2rem; padding: 2.6rem 0; border-bottom: 1px solid var(--line); }
-.list-entry h2 { margin: .35rem 0 .6rem; font: 400 clamp(2.4rem,5vw,5.2rem)/.92 "Bodoni Moda", serif; letter-spacing: -.05em; }
+.list-entry h2 { margin: .35rem 0 .6rem; font: 400 clamp(2.4rem,5vw,5.2rem)/.92 "Fraunces", serif; letter-spacing: -.05em; }
 .list-entry p { max-width: 680px; margin: 0; color: var(--muted); line-height: 1.65; }
 .list-entry .inline-meta { text-align: right; }
 
@@ -129,7 +129,7 @@ button { font: inherit; }
 .gallery-link img { width: 100%; height: auto; transition: opacity 300ms ease; }
 .gallery-link:hover img { opacity: .78; }
 .gallery-overlay { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 1rem; padding-top: 1rem; }
-.gallery-overlay strong { font: 400 1.7rem "Bodoni Moda", serif; }
+.gallery-overlay strong { font: 400 1.7rem "Fraunces", serif; }
 .gallery-overlay > span { color: var(--muted); font-size: .82rem; line-height: 1.5; }
 .gallery-overlay strong, .gallery-overlay > span:not(.gallery-overlay-meta) { grid-column: 1; }
 .gallery-overlay-meta { grid-column: 2; grid-row: 1; font: .65rem "IBM Plex Mono", monospace; text-transform: uppercase; }
@@ -141,7 +141,7 @@ button { font: inherit; }
 .prose-shell > .story-date { display: block; margin-top: 2rem; }
 .prose-body { max-width: 720px; margin: 5rem auto 0; font-size: 1.08rem; line-height: 1.82; }
 .prose-body > *:first-child { margin-top: 0; }
-.prose-body h2 { margin: 4rem 0 1rem; font: 400 2.7rem/1 "Bodoni Moda", serif; letter-spacing: -.03em; }
+.prose-body h2 { margin: 4rem 0 1rem; font: 400 2.7rem/1 "Fraunces", serif; letter-spacing: -.03em; }
 .prose-body h3 { margin: 2.8rem 0 .8rem; font: 500 1.1rem "IBM Plex Mono", monospace; }
 .prose-body p, .prose-body ul, .prose-body ol, .prose-body blockquote { margin: 0 0 1.35rem; }
 .prose-body ul, .prose-body ol { padding-left: 1.25rem; }
@@ -221,7 +221,8 @@ button { font: inherit; }
   .home-portrait { width: 68%; margin: 5rem 0 0 auto; }
   .links-line { grid-column: 1; gap: 1rem 1.3rem; margin-top: 4rem; }
   .home-status { gap: 3.5rem; padding: 5rem 1rem; }
-  .home-status-heading h2 { font-size: 4rem; }
+  .home-status-heading, .utility-strip, .live-cluster { min-width: 0; }
+  .home-status-heading h2 { font-size: clamp(3rem,15vw,4rem); overflow-wrap: anywhere; }
   .utility-strip { grid-template-columns: 1fr; }
   .utility-item { min-height: 105px; padding: 1rem 0; }
   .utility-item + .utility-item { padding-left: 0; border-left: 0; }
