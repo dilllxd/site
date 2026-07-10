@@ -442,49 +442,84 @@ async function loadSpotifyStatus(nowPlayingUrl, currentPlaybackUrl) {
 }
 
 function initSpotifySocket(spotifyWebSocketUrl, nowPlayingUrl, currentPlaybackUrl) {
-  if (!spotifyWebSocketUrl || !spotifyNode) {
-    loadSpotifyStatus(nowPlayingUrl, currentPlaybackUrl);
-    return;
-  }
+  if (!spotifyNode) return;
 
-  let hasReceivedSocketPayload = false;
+  const pollInterval = 30_000;
+  const reconnectBaseDelay = 2_000;
+  const reconnectMaxDelay = 30_000;
+  let socket = null;
+  let reconnectTimer = null;
+  let reconnectDelay = reconnectBaseDelay;
+  let pollingTimer = null;
+  let stopped = false;
 
-  try {
-    const socket = new WebSocket(spotifyWebSocketUrl);
+  const refresh = () => loadSpotifyStatus(nowPlayingUrl, currentPlaybackUrl);
 
-    socket.addEventListener("message", (event) => {
-      hasReceivedSocketPayload = true;
+  const scheduleReconnect = () => {
+    if (!spotifyWebSocketUrl || stopped || reconnectTimer) return;
 
-      try {
-        const payload = JSON.parse(event.data);
-        const text = getSpotifyTextFromNowPlaying(payload);
-        applySpotifyText(text);
-      } catch (error) {
-        console.warn("[widgets] spotify websocket payload invalid", error);
-      }
-    });
+    reconnectTimer = window.setTimeout(() => {
+      reconnectTimer = null;
+      connect();
+    }, reconnectDelay);
+    reconnectDelay = Math.min(reconnectDelay * 2, reconnectMaxDelay);
+  };
 
-    socket.addEventListener("open", () => {
-      // Seed the UI quickly while waiting for the first streamed update.
-      loadSpotifyStatus(nowPlayingUrl, currentPlaybackUrl);
-    });
+  const connect = () => {
+    if (!spotifyWebSocketUrl || stopped) return;
 
-    socket.addEventListener("error", (error) => {
-      console.warn("[widgets] spotify websocket unavailable", error);
-      if (!hasReceivedSocketPayload) {
-        loadSpotifyStatus(nowPlayingUrl, currentPlaybackUrl);
-      }
-    });
+    try {
+      socket = new WebSocket(spotifyWebSocketUrl);
 
-    socket.addEventListener("close", () => {
-      if (!hasReceivedSocketPayload) {
-        loadSpotifyStatus(nowPlayingUrl, currentPlaybackUrl);
-      }
-    });
-  } catch (error) {
-    console.warn("[widgets] spotify websocket setup failed", error);
-    loadSpotifyStatus(nowPlayingUrl, currentPlaybackUrl);
-  }
+      socket.addEventListener("open", () => {
+        reconnectDelay = reconnectBaseDelay;
+        refresh();
+      });
+
+      socket.addEventListener("message", (event) => {
+        try {
+          const payload = JSON.parse(event.data);
+          const text = getSpotifyTextFromNowPlaying(payload);
+          applySpotifyText(text);
+        } catch (error) {
+          console.warn("[widgets] spotify websocket payload invalid", error);
+        }
+      });
+
+      socket.addEventListener("error", (error) => {
+        console.warn("[widgets] spotify websocket unavailable", error);
+        scheduleReconnect();
+      });
+
+      socket.addEventListener("close", () => {
+        scheduleReconnect();
+      });
+    } catch (error) {
+      console.warn("[widgets] spotify websocket setup failed", error);
+      scheduleReconnect();
+    }
+  };
+
+  refresh();
+  pollingTimer = window.setInterval(refresh, pollInterval);
+  connect();
+
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState !== "visible") return;
+    refresh();
+    if (!socket || socket.readyState === WebSocket.CLOSED) connect();
+  });
+
+  window.addEventListener(
+    "pagehide",
+    () => {
+      stopped = true;
+      if (pollingTimer) window.clearInterval(pollingTimer);
+      if (reconnectTimer) window.clearTimeout(reconnectTimer);
+      socket?.close();
+    },
+    { once: true },
+  );
 }
 
 async function initLanyard(discordUserId) {
