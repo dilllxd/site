@@ -50,14 +50,21 @@ const structuredData = [
 ---
 
 <SiteLayout structuredData={structuredData}>
-  <section class="intro">
-    <div class="intro-copy">
-      <h1>CS student, hobbyist developer, infrastructure tinkerer.</h1>
-      <p class="intro-text">
-        I like building useful little things, writing occasionally, and keeping a small place on the web.
-      </p>
+  <section class="intro" aria-labelledby="intro-title">
+    <div class="intro-kicker">
+      <span>Personal index</span>
+      <span>Est. 2025</span>
     </div>
-    <div class="intro-mark-shell">
+    <div class="intro-copy">
+      <h1 id="intro-title">Curious by nature.<br /><em>Building by habit.</em></h1>
+      <p class="intro-text">I’m Dylan — a computer science student, hobbyist developer, and infrastructure tinkerer. This is where I keep the projects, observations, and images worth remembering.</p>
+      <div class="intro-actions">
+        <a class="button button-primary" href="/posts/">Read the journal <span>↗</span></a>
+        <a class="button button-quiet" href="/photos/">View the night sky</a>
+      </div>
+    </div>
+    <div class="intro-portrait">
+      <span class="orbit-label">34.72° N</span>
       <img
         class="intro-mark"
         src="/apple-touch-icon.png"
@@ -66,21 +73,27 @@ const structuredData = [
         height="120"
         loading="eager"
       />
+      <span class="portrait-caption">Somewhere near<br />Lancaster, SC</span>
     </div>
   </section>
 
-  <section class="links-line">
+  <section class="links-line" aria-label="Social links">
+    <span class="links-label">Find me elsewhere</span>
     {siteConfig.socialLinks.map((link) => (
       <a href={link.href} target="_blank" rel="noreferrer">
-        {link.label}
+        {link.label} <span aria-hidden="true">↗</span>
       </a>
     ))}
   </section>
 
   <section class="home-status" data-widget-config={widgetConfig}>
+    <div class="status-intro">
+      <p class="eyebrow"><span class="pulse-dot"></span> Live field notes</p>
+      <p>A small, real-time window into my corner of the world.</p>
+    </div>
     <div class="utility-strip">
       <div class="utility-item">
-        <span>Based in</span>
+        <span>Location</span>
         <strong>{siteConfig.location}</strong>
       </div>
       <div class="utility-item">
@@ -93,9 +106,6 @@ const structuredData = [
       </div>
     </div>
     <div class="live-cluster" data-now-row>
-      <div class="live-cluster-heading">
-        <span>Now</span>
-      </div>
       <div class="live-cluster-items">
         <div class="status-chip" data-discord-chip>
           <span>Discord</span>
@@ -111,16 +121,20 @@ const structuredData = [
 
   <section class="home-grid">
     <div class="section-heading">
-      <p>Recent posts</p>
-      <a href="/posts/">All posts</a>
+      <div>
+        <p>01 / From the journal</p>
+        <h2>Recent notes</h2>
+      </div>
+      <a href="/posts/">Browse every post <span>↗</span></a>
     </div>
     <div class="home-posts-grid">
-      {latestPosts.map((post) => (
+      {latestPosts.map((post, index) => (
         <a class="post-card" href={`/posts/${post.id}/`}>
-          <span class="story-date">
-            {post.data.date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" })}
-          </span>
-          <strong>{post.data.title}</strong>
+          <div class="post-card-topline">
+            <span class="story-index">0{index + 1}</span>
+            <span class="story-date">{post.data.date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" })}</span>
+          </div>
+          <strong>{post.data.title}<span aria-hidden="true">↗</span></strong>
           <p>{post.data.excerpt}</p>
           <span class="inline-meta">{post.data.readingTime}</span>
         </a>
@@ -131,8 +145,11 @@ const structuredData = [
   {latestPhoto && (
     <section class="photo-feature" data-photo-rotation={photoRotationPayload} data-photo-viewer data-photo-viewer-mode="overlay">
       <div class="section-heading">
-        <p>Recent photography</p>
-        <a href="/photos/">Gallery</a>
+        <div>
+          <p>02 / From the observatory</p>
+          <h2>Looking upward</h2>
+        </div>
+        <a href="/photos/">Enter the full gallery <span>↗</span></a>
       </div>
       <a class="photo-feature-inner" href={`/photos/${latestPhoto.id}/`} data-photo-link>
         <img
@@ -143,8 +160,10 @@ const structuredData = [
           data-photo-viewer-trigger
         />
         <div class="photo-feature-meta">
+          <span class="eyebrow">Latest exposure</span>
           <strong data-photo-title>{latestPhoto.data.title}</strong>
           <p data-photo-caption>{latestPhoto.data.caption}</p>
+          <span class="photo-feature-cta">Open image <span aria-hidden="true">↗</span></span>
         </div>
       </a>
       <div class="photo-preview" aria-hidden="true" data-photo-viewer-overlay>

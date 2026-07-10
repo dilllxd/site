@@ -45,15 +45,23 @@ const structuredData = {
   structuredData={structuredData}
 >
   <article class="prose-shell">
-    <p class="eyebrow">Post</p>
-    <h1>{post.data.title}</h1>
-    <p class="story-date">
-      {post.data.date.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" })}
-      <span class="inline-separator">/</span>
-      {post.data.readingTime}
-    </p>
-    <div class="prose-body">
-      <Content />
+    <header class="prose-header">
+      <a class="back-link" href="/posts/">← Journal</a>
+      <p class="eyebrow">Field note / {post.data.date.getUTCFullYear()}</p>
+      <h1>{post.data.title}</h1>
+      <div class="prose-deck">
+        <p>{post.data.excerpt}</p>
+        <p class="story-date">{post.data.date.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" })}<br />{post.data.readingTime}</p>
+      </div>
+    </header>
+    <div class="prose-content-grid">
+      <aside class="prose-rail" aria-label="Article details">
+        <span>Written by</span><strong>Dylan H</strong>
+        <span>Filed under</span><strong>Projects & notes</strong>
+      </aside>
+      <div class="prose-body">
+        <Content />
+      </div>
     </div>
   </article>
 </SiteLayout>
