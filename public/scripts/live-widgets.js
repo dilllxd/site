@@ -370,19 +370,10 @@ function getSpotifyTextFromNowPlaying(payload) {
 
   const songTitle = cleanSpotifySongTitle(spotify.track);
   const artistText = cleanSpotifyArtists(spotify.artist);
-  return `${songTitle || spotify.track} by ${artistText || spotify.artist}`;
-}
-
-function getSpotifyTextFromCurrentPlayback(payload) {
-  const spotify = payload?.spotify ?? null;
-  const item = spotify?.item ?? null;
-  if (!item?.name || !Array.isArray(item.artists) || spotify?.is_playing === false) {
-    return "";
+  if (spotify.itemType === "episode") {
+    return `${songTitle || spotify.track} — ${artistText || spotify.artist}`;
   }
-
-  const songTitle = cleanSpotifySongTitle(item.name);
-  const artistText = cleanSpotifyArtists(item.artists.map((artist) => artist?.name).filter(Boolean).join("; "));
-  return `${songTitle || item.name} by ${artistText}`;
+  return `${songTitle || spotify.track} by ${artistText || spotify.artist}`;
 }
 
 function applySpotifyText(text) {
@@ -411,37 +402,24 @@ function applySpotifyText(text) {
   syncNowRowVisibility();
 }
 
-async function loadSpotifyStatus(nowPlayingUrl, currentPlaybackUrl) {
-  if (!spotifyNode) return;
+async function loadSpotifyStatus(nowPlayingUrl) {
+  if (!spotifyNode || !nowPlayingUrl) return;
 
-  const urls = [nowPlayingUrl, currentPlaybackUrl].filter(Boolean);
-
-  for (const [index, url] of urls.entries()) {
-    try {
-      const response = await fetch(url, { cache: "no-store" });
-      if (!response.ok) {
-        throw new Error(`Spotify request failed: ${response.status}`);
-      }
-
-      const payload = await response.json();
-      const text =
-        index === 0
-          ? getSpotifyTextFromNowPlaying(payload)
-          : getSpotifyTextFromCurrentPlayback(payload);
-
-      if (text) {
-        applySpotifyText(text);
-        return;
-      }
-    } catch (error) {
-      console.warn("[widgets] spotify status unavailable", error);
+  try {
+    const response = await fetch(nowPlayingUrl, { cache: "no-store" });
+    if (!response.ok) {
+      throw new Error(`Spotify request failed: ${response.status}`);
     }
-  }
 
-  applySpotifyText("");
+    const payload = await response.json();
+    applySpotifyText(getSpotifyTextFromNowPlaying(payload));
+  } catch (error) {
+    console.warn("[widgets] spotify status unavailable", error);
+    applySpotifyText("");
+  }
 }
 
-function initSpotifySocket(spotifyWebSocketUrl, nowPlayingUrl, currentPlaybackUrl) {
+function initSpotifySocket(spotifyWebSocketUrl, nowPlayingUrl) {
   if (!spotifyNode) return;
 
   const pollInterval = 30_000;
@@ -453,7 +431,7 @@ function initSpotifySocket(spotifyWebSocketUrl, nowPlayingUrl, currentPlaybackUr
   let pollingTimer = null;
   let stopped = false;
 
-  const refresh = () => loadSpotifyStatus(nowPlayingUrl, currentPlaybackUrl);
+  const refresh = () => loadSpotifyStatus(nowPlayingUrl);
 
   const scheduleReconnect = () => {
     if (!spotifyWebSocketUrl || stopped || reconnectTimer) return;
@@ -581,7 +559,6 @@ if (widgetRoot) {
   initSpotifySocket(
     config.spotifyWebSocketUrl,
     config.spotifyNowPlayingUrl,
-    config.spotifyCurrentPlaybackUrl,
   );
   initLanyard(config.discordUserId);
 }

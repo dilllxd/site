@@ -21,7 +21,6 @@ export const siteConfig = {
     discordUserId: "200654056992145408",
     spotifyWebSocketUrl: "wss://api.dylanh.dev/spotify/ws",
     spotifyNowPlayingUrl: "https://api.dylanh.dev/spotify/now-playing",
-    spotifyCurrentPlaybackUrl: "https://api.dylanh.dev/spotify/current-playback",
     workScheduleUrl: "https://api.dylanh.dev/schedule/status",
     workScheduleEventsUrl: "https://api.dylanh.dev/schedule/events",
     workScheduleCalendarUrl: "https://api.dylanh.dev/schedule/calendar.ics",
