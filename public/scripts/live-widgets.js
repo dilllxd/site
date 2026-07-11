@@ -9,6 +9,7 @@ const discordChip = document.querySelector("[data-discord-chip]");
 const spotifyChip = document.querySelector("[data-spotify-chip]");
 const discordLabelNode = discordChip?.querySelector("span") || null;
 const spotifyLabelNode = spotifyChip?.querySelector("span") || null;
+const spotifyProgressNode = document.querySelector("[data-spotify-progress]");
 const widgetRoot = document.querySelector("[data-widget-config]");
 
 const fallbackText = {
@@ -402,6 +403,41 @@ function applySpotifyText(text) {
   syncNowRowVisibility();
 }
 
+let spotifyProgressAtReceive = 0;
+let spotifyDuration = 0;
+let spotifyReceivedAt = 0;
+let spotifyProgressPlaying = false;
+
+function applySpotifyPayload(payload) {
+  const spotify = payload?.spotify ?? null;
+  const text = getSpotifyTextFromNowPlaying(payload);
+  applySpotifyText(text);
+
+  if (!text || !spotify) {
+    spotifyProgressAtReceive = 0;
+    spotifyDuration = 0;
+    spotifyProgressPlaying = false;
+    if (spotifyProgressNode) spotifyProgressNode.style.transform = "scaleX(0)";
+    return;
+  }
+
+  spotifyProgressAtReceive = Number(spotify.progressMs) || 0;
+  spotifyDuration = Number(spotify.durationMs) || 0;
+  spotifyReceivedAt = performance.now();
+  spotifyProgressPlaying = spotify.isPlaying !== false;
+}
+
+function drawSpotifyProgress(now) {
+  if (spotifyProgressNode) {
+    const elapsed = spotifyProgressPlaying ? now - spotifyReceivedAt : 0;
+    const value = spotifyDuration > 0
+      ? Math.min(1, (spotifyProgressAtReceive + elapsed) / spotifyDuration)
+      : 0;
+    spotifyProgressNode.style.transform = `scaleX(${value})`;
+  }
+  window.requestAnimationFrame(drawSpotifyProgress);
+}
+
 async function loadSpotifyStatus(nowPlayingUrl) {
   if (!spotifyNode || !nowPlayingUrl) return;
 
@@ -412,7 +448,7 @@ async function loadSpotifyStatus(nowPlayingUrl) {
     }
 
     const payload = await response.json();
-    applySpotifyText(getSpotifyTextFromNowPlaying(payload));
+    applySpotifyPayload(payload);
   } catch (error) {
     console.warn("[widgets] spotify status unavailable", error);
     applySpotifyText("");
@@ -457,8 +493,7 @@ function initSpotifySocket(spotifyWebSocketUrl, nowPlayingUrl) {
       socket.addEventListener("message", (event) => {
         try {
           const payload = JSON.parse(event.data);
-          const text = getSpotifyTextFromNowPlaying(payload);
-          applySpotifyText(text);
+          applySpotifyPayload(payload);
         } catch (error) {
           console.warn("[widgets] spotify websocket payload invalid", error);
         }
@@ -560,5 +595,6 @@ if (widgetRoot) {
     config.spotifyWebSocketUrl,
     config.spotifyNowPlayingUrl,
   );
+  window.requestAnimationFrame(drawSpotifyProgress);
   initLanyard(config.discordUserId);
 }
