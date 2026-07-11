@@ -223,10 +223,10 @@ button { font: inherit; }
   .home-about-copy > p { font-size: .96rem; }
   .home-portrait { width: 68%; margin: 5rem 0 0 auto; }
   .links-line { grid-column: 1; gap: 1rem 1.3rem; margin-top: 4rem; }
-  .home-status { gap: 3.5rem; padding: 5rem 1rem; }
+  .home-status { gap: 0; padding: 5rem 1rem; }
   .home-status-heading, .utility-strip, .live-cluster { min-width: 0; }
   .home-status-heading h2 { font-size: clamp(3rem,15vw,4rem); overflow-wrap: anywhere; }
-  .utility-strip { grid-template-columns: 1fr; }
+  .utility-strip { grid-template-columns: 1fr; margin-top: 3.5rem; }
   .utility-item { min-height: auto; gap: .65rem; padding: 1.2rem 0; }
   .utility-item + .utility-item { padding-left: 0; border-left: 0; }
   .live-cluster-items { grid-template-columns: 1fr; }
