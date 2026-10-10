@@ -138,6 +138,13 @@ h1,h2,h3{font-family:var(--serif);font-weight:500;letter-spacing:-.015em;margin:
  .writing-list li{grid-template-columns:1fr;gap:.3rem}
 }
 @media (max-width:560px){
+ .photo-preview{padding:.6rem}
+ .photo-preview-frame{width:100%;max-height:96dvh;padding:.7rem;gap:.7rem}
+ .photo-preview-topline{flex-direction:column;gap:.6rem}
+ .photo-preview-actions{justify-content:flex-start}
+ .photo-preview-actions button,.photo-preview-actions a{padding:.5rem .75rem;min-height:2.5rem}
+ .photo-preview-meta span{display:none}
+ .photo-preview-viewport img{max-height:68dvh}
  .site-header{flex-wrap:wrap;gap:.6rem 1.2rem}.brand-place{display:none}
  .log-1,.log-3,.archive-entry:nth-child(3n+2){margin-left:10%}
 }

@@ -18,13 +18,9 @@ for (const viewer of viewerRoots) {
   const minZoom = 1;
   const maxZoom = 4;
   const zoomStep = 0.25;
-  const hoverDelayMs = 450;
-  const hoverLeaveDelayMs = 140;
 
   let lastFocus = null;
   let wasVisible = false;
-  let hoverTimer = null;
-  let leaveTimer = null;
   let previewZoom = 1;
   let panX = 0;
   let panY = 0;
@@ -105,43 +101,15 @@ for (const viewer of viewerRoots) {
       return;
     }
 
-    clearTimeout(hoverTimer);
-    clearTimeout(leaveTimer);
     setVisible(true);
   };
 
   const closeViewer = () => {
-    clearTimeout(hoverTimer);
-    clearTimeout(leaveTimer);
     setVisible(false);
     viewer.classList.remove("is-panning");
     isDragging = false;
     movedDuringDrag = false;
     updateZoom(1);
-  };
-
-  const startHoverOpen = () => {
-    if (mode !== "overlay") {
-      return;
-    }
-
-    clearTimeout(hoverTimer);
-    clearTimeout(leaveTimer);
-    hoverTimer = window.setTimeout(() => {
-      setVisible(true);
-    }, hoverDelayMs);
-  };
-
-  const startHoverClose = () => {
-    if (mode !== "overlay") {
-      return;
-    }
-
-    clearTimeout(hoverTimer);
-    clearTimeout(leaveTimer);
-    leaveTimer = window.setTimeout(() => {
-      closeViewer();
-    }, hoverLeaveDelayMs);
   };
 
   if (mode === "overlay" && overlay) {
@@ -153,7 +121,6 @@ for (const viewer of viewerRoots) {
     const openers = viewer.querySelectorAll("[data-photo-viewer-open]");
     for (const opener of openers) {
       opener.addEventListener("click", () => {
-        clearTimeout(leaveTimer);
         setVisible(true);
       });
     }
