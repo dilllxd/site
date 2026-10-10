@@ -48,23 +48,26 @@ for (const viewer of viewerRoots) {
   let lockX = 0;
   let locked = false;
   const root = document.documentElement;
+  let savedRootStyle = "";
+  let savedBodyStyle = "";
   const lockScroll = () => {
     if (locked) return;
     locked = true;
     lockX = window.scrollX;
     lockY = window.scrollY;
-    const gap = window.innerWidth - root.clientWidth;
+    const pageWidth = root.clientWidth;
+    savedRootStyle = root.style.cssText;
+    savedBodyStyle = document.body.style.cssText;
     root.style.overflow = "hidden";
-    root.style.scrollbarGutter = "stable";
-    if (gap > 0) document.body.style.paddingRight = gap + "px";
-    Object.assign(document.body.style, { position: "fixed", top: -lockY + "px", left: -lockX + "px", right: "0", width: "100%" });
+    root.style.scrollbarGutter = "auto";
+    // Preserve the pre-lock layout width instead of compensating twice.
+    Object.assign(document.body.style, { overflow: "hidden", position: "fixed", top: -lockY + "px", left: -lockX + "px", right: "auto", width: pageWidth + "px" });
   };
   const unlockScroll = () => {
     if (!locked) return;
     locked = false;
-    root.style.overflow = "";
-    root.style.scrollbarGutter = "";
-    for (const k of ["paddingRight", "position", "top", "left", "right", "width"]) document.body.style[k] = "";
+    root.style.cssText = savedRootStyle;
+    document.body.style.cssText = savedBodyStyle;
     const prev = root.style.scrollBehavior;
     root.style.scrollBehavior = "auto";
     window.scrollTo(lockX, lockY);
