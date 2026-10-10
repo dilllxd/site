@@ -91,7 +91,7 @@ for (const viewer of viewerRoots) {
     if (nextVisible && !wasVisible) {
       const active = document.activeElement;
       lastFocus = active && active !== document.body && active.matches("button, a[href]") ? active : viewer.querySelector("[data-photo-viewer-open]");
-      window.requestAnimationFrame(() => closeButton?.focus({ preventScroll: true }));
+      closeButton?.focus({ preventScroll: true });
     } else if (!nextVisible && wasVisible) {
       lastFocus?.focus?.({ preventScroll: true });
     }
@@ -163,13 +163,14 @@ for (const viewer of viewerRoots) {
       if (viewport.contains(event.target) && previewZoom > 1) return;
       event.preventDefault();
     }, { passive: false });
-    overlay.addEventListener("keydown", (event) => {
-      if (event.key !== "Tab") return;
+    document.addEventListener("keydown", (event) => {
+      if (!wasVisible || event.key !== "Tab") return;
       const items = [...overlay.querySelectorAll("button:not(:disabled), a[href]")];
       if (!items.length) return;
       const first = items[0];
       const last = items[items.length - 1];
-      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+      if (!overlay.contains(document.activeElement)) { event.preventDefault(); (event.shiftKey ? last : first).focus({ preventScroll: true }); }
+      else if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
       else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
     });
   }
