@@ -103,13 +103,17 @@ const structuredData = [
                 <strong>{heroPhoto.data.title}</strong>
                 <span>{heroPhoto.data.caption}</span>
               </div>
+              <button type="button" class="photo-preview-close" data-photo-viewer-close aria-label="Close preview">Close</button>
               <div class="photo-preview-actions">
-                <button type="button" data-photo-viewer-zoom-out aria-label="Zoom out">-</button>
-                <button type="button" data-photo-viewer-zoom-reset>100%</button>
-                <button type="button" data-photo-viewer-zoom-in aria-label="Zoom in">+</button>
-                <a href={`/photos/${heroPhoto.id}/`}>Photo page</a>
-                <a href={heroPhoto.data.image} target="_blank" rel="noreferrer">Full size</a>
-                <button type="button" data-photo-viewer-close aria-label="Close preview">Close</button>
+                <div class="photo-preview-zoom">
+                  <button type="button" data-photo-viewer-zoom-out aria-label="Zoom out">-</button>
+                  <button type="button" data-photo-viewer-zoom-reset>100%</button>
+                  <button type="button" data-photo-viewer-zoom-in aria-label="Zoom in">+</button>
+                </div>
+                <div class="photo-preview-links">
+                  <a href={`/photos/${heroPhoto.id}/`}>Photo page</a>
+                  <a href={heroPhoto.data.image} target="_blank" rel="noreferrer">Full size</a>
+                </div>
               </div>
             </div>
             <div class="photo-preview-viewport" data-photo-viewer-viewport>
@@ -161,7 +165,7 @@ const structuredData = [
     </ol>
   </section>
 
-  <script type="module" src="/scripts/live-widgets.js?v=20260711a"></script>
+  <script type="module" src="/scripts/live-widgets.js?v=20261010b"></script>
   <script type="module" src="/scripts/photo-rotation.js"></script>
   <script type="module" src="/scripts/photo-viewer.js"></script>
 </SiteLayout>
