@@ -91,7 +91,6 @@ const structuredDataJson = stringifyStructuredData(structuredData);
 
         <nav class="site-nav" aria-label="Primary">
           <a href="/photos/" aria-current={path.startsWith("/photos") ? "page" : undefined}>Observing log</a>
-          <a href="/posts/" aria-current={path.startsWith("/posts") ? "page" : undefined}>Writing</a>
         </nav>
 
         <button class="theme-toggle" type="button" aria-pressed="false" data-theme-toggle aria-label="Toggle color theme">
@@ -105,7 +104,7 @@ const structuredDataJson = stringifyStructuredData(structuredData);
 
       {!hideFooter && (
         <footer class="site-footer">
-          <p>Dylan H. Lancaster, South Carolina. Photos and writing are mine unless noted.</p>
+          <p>Dylan H. Lancaster, South Carolina. Photos are mine unless noted.</p>
           <div class="footer-links">
             <a href={`mailto:${siteConfig.email}`}>Email</a>
             <a href="https://github.com/dilllxd" rel="me">GitHub</a>

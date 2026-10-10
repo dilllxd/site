@@ -5,13 +5,8 @@ import { siteConfig } from "../data/site";
 import { toAbsoluteUrl } from "../lib/seo";
 import { photoDims } from "../lib/images";
 
-const [posts, photos] = await Promise.all([
-  getCollection("posts"),
-  getCollection("photos"),
-]);
+const photos = await getCollection("photos");
 
-const sortedPosts = posts.sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
-const latestPosts = sortedPosts.slice(0, 3);
 const sortedPhotos = photos.sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
 const latestPhoto = sortedPhotos[0];
 const dims = await photoDims(sortedPhotos);
@@ -147,22 +142,6 @@ const structuredData = [
         </figure>
       ))}
     </div>
-  </section>
-
-  <section class="writing-section">
-    <header class="rule-head"><h2>Writing</h2><a href="/posts/">All posts</a></header>
-    <ol class="writing-list">
-      {latestPosts.map((post) => (
-        <li>
-          <time class="story-date" datetime={post.data.date.toISOString()}>{fmt(post.data.date)}</time>
-          <div>
-            <h3><a href={`/posts/${post.id}/`}>{post.data.title}</a></h3>
-            <p>{post.data.excerpt}</p>
-          </div>
-          <span class="inline-meta">{post.data.readingTime}</span>
-        </li>
-      ))}
-    </ol>
   </section>
 
   <script type="module" src="/scripts/live-widgets.js?v=20261010b"></script>
