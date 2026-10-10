@@ -17,16 +17,6 @@ const dims: Record<string, [number, number]> = { "ngc-2244": [2042, 2944], "ngc-
 const fmt = (d: Date) => d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" });
 const logPhotos = sortedPhotos.filter((p) => p.id !== (sortedPhotos.find((x) => x.id === "ngc-2244") ?? latestPhoto).id);
 const heroPhoto = sortedPhotos.find((photo) => photo.id === "ngc-2244") ?? latestPhoto;
-const photoRotationPayload = JSON.stringify(
-  sortedPhotos.map((photo) => ({
-    id: photo.id,
-    title: photo.data.title,
-    date: photo.data.date.toISOString(),
-    image: photo.data.image,
-    alt: photo.data.alt,
-    caption: photo.data.caption,
-  })),
-);
 
 const widgetConfig = JSON.stringify(siteConfig.widgetConfig);
 const structuredData = [
@@ -56,7 +46,7 @@ const structuredData = [
   <div class="home-notebook">
     <aside class="home-side">
       <h1>Dylan H.</h1>
-      <p class="home-lede">I'm a computer science student in Lancaster, South Carolina. I write code, run my own servers, and point a small telescope at nebulae from the backyard.</p>
+      <p class="home-lede">I'm a computer science student in Lancaster, South Carolina. I write code, run my own servers, and photograph nebulae with a small telescope.</p>
       <p class="home-lede">This is where the photos and the write-ups go.</p>
 
       <div class="home-status" data-widget-config={widgetConfig}>
