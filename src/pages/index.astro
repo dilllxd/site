@@ -31,28 +31,37 @@ const structuredData = [
 ];
 ---
 <SiteLayout structuredData={structuredData}>
-  <section class="intro">
-    <div class="intro-line"><p>Computer science student. I write code, run my own servers, and photograph nebulae with a small telescope.</p></div>
-    <p class="home-links">
-      <a href={`mailto:${siteConfig.email}`}>{siteConfig.email}</a>
-      {siteConfig.socialLinks.map((link) => (<a href={link.href} target="_blank" rel="noreferrer">{link.label}</a>))}
-    </p>
-  </section>
+  <div class="board">
+    <div class="board-side">
+      <section class="panel about">
+        <div class="panel-head"><span><b>01</b> About</span></div>
+        <div class="panel-body"><p class="lede">Computer science student. I write code, run my own servers, and photograph nebulae with a small telescope.</p></div>
+      </section>
 
-  <div class="home-status" data-widget-config={widgetConfig}>
-    <div class="status-list">
-      <div><span>Local time</span><strong data-local-time>Loading...</strong></div>
-      <div data-work-chip><span data-work-label>Schedule</span><strong data-work-status>Checking...</strong></div>
-      <div data-discord-chip><span>Discord</span><strong data-discord-status>Connecting...</strong></div>
-      <div data-spotify-chip>
-        <span>Listening</span><strong data-spotify-status>Waiting for presence data...</strong>
-        <div class="spotify-progress" aria-hidden="true"><div data-spotify-progress></div></div>
-      </div>
+      <section class="panel links">
+        <div class="panel-head"><span><b>02</b> Links</span></div>
+        <ul class="link-rows">
+          <li><a href={`mailto:${siteConfig.email}`}>Email<span>{siteConfig.email}</span></a></li>
+          {siteConfig.socialLinks.map((link) => (<li><a href={link.href} target="_blank" rel="noreferrer">{link.label}<span>{new URL(link.href).host.replace(/^www\./, "")}</span></a></li>))}
+        </ul>
+      </section>
+
+      <section class="panel now home-status" data-widget-config={widgetConfig}>
+        <div class="panel-head"><span><b>04</b> Now</span></div>
+        <div class="rows status-list">
+          <div><span>Local time</span><strong data-local-time>Loading...</strong></div>
+          <div data-work-chip><span data-work-label>Schedule</span><strong data-work-status>Checking...</strong></div>
+          <div data-discord-chip><span>Discord</span><strong data-discord-status>Connecting...</strong></div>
+          <div data-spotify-chip>
+            <span>Listening</span><strong data-spotify-status>Waiting for presence data...</strong>
+            <div class="spotify-progress" aria-hidden="true"><div data-spotify-progress></div></div>
+          </div>
+        </div>
+      </section>
     </div>
-  </div>
 
-  <Gallery photos={photos} featured />
-  <p class="featured-more"><a href="/photos/">View the full gallery</a></p>
+    <Gallery photos={photos} featured />
+  </div>
 
   <script type="module" src="/scripts/live-widgets.js?v=20261010b"></script>
 </SiteLayout>
