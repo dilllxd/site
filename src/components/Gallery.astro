@@ -14,10 +14,10 @@ const first = pool[0];
   {featured && first && (
     <a href={`/photos/${first.id}/`} class="featured" data-gallery-tile data-featured data-photos={JSON.stringify(pool)} data-title={first.title} data-caption={first.caption} data-image={first.image} data-alt={first.alt} data-w={first.w} data-h={first.h}>
       <span class="featured-media"><img src={first.image} alt={first.alt} width={first.w} height={first.h} decoding="async" fetchpriority="high" data-featured-img /></span>
-      <span class="featured-text"><small>Featured</small><strong data-featured-title>{first.title}</strong><span data-featured-caption>{first.caption}</span></span>
+      <span class="featured-text"><strong data-featured-title>{first.title}</strong><span data-featured-caption>{first.caption}</span></span>
     </a>
   )}
-  <ul class="gallery">
+  {!featured && (<ul class="gallery">
     {photos.map((photo, i) => (
       <li>
         <a href={`/photos/${photo.id}/`} class="gallery-link" data-gallery-tile data-title={photo.data.title} data-caption={photo.data.caption ?? ""} data-image={photo.data.image} data-alt={photo.data.alt} data-w={dims[photo.id]?.[0]} data-h={dims[photo.id]?.[1]}>
@@ -26,7 +26,7 @@ const first = pool[0];
         </a>
       </li>
     ))}
-  </ul>
+  </ul>)}
   <button type="button" hidden data-photo-viewer-open tabindex="-1" aria-hidden="true"></button>
   <div class="photo-preview" aria-hidden="true" data-photo-viewer-overlay>
     <div class="photo-preview-frame">
