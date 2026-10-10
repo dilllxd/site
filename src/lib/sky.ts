@@ -25,7 +25,9 @@ export function angularSeparation(a: Vec3, b: Vec3): number {
 }
 
 export function formatRa(raDeg: number): string {
-  const totalSec = Math.round((raDeg / 15) * 3600 * 10) / 10;
+  // Wrap before splitting so a value that rounds up to 24h becomes 00h 00m 00.0s.
+  const day = 86400;
+  const totalSec = ((Math.round((((raDeg % 360) + 360) % 360) / 15 * 3600 * 10) / 10) % day + day) % day;
   const h = Math.floor(totalSec / 3600) % 24;
   const m = Math.floor((totalSec % 3600) / 60);
   const s = totalSec - h * 3600 - m * 60;
@@ -33,8 +35,8 @@ export function formatRa(raDeg: number): string {
 }
 
 export function formatDec(decDeg: number): string {
-  const sign = decDeg < 0 ? "-" : "+";
   const t = Math.round(Math.abs(decDeg) * 3600);
+  const sign = decDeg < 0 && t > 0 ? "-" : "+";
   const d = Math.floor(t / 3600);
   const m = Math.floor((t % 3600) / 60);
   const s = t % 60;

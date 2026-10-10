@@ -267,7 +267,7 @@ function init(root: HTMLElement) {
       let moving = false;
       if (flight) {
         const f = flight;
-        const k = Math.min(1, (now - f.t0) / f.ms);
+        const k = reduceMotion() ? 1 : Math.min(1, (now - f.t0) / f.ms);
         const e = k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
         const dir = f.from.clone().lerp(f.to, e);
         if (dir.lengthSq() < 1e-6) dir.copy(f.to);
@@ -281,8 +281,14 @@ function init(root: HTMLElement) {
     }
     controls.addEventListener("change", request);
 
+    function cancelFlight() {
+      if (!flight) return;
+      const f = flight;
+      flight = null;
+      f.done(false);
+    }
     function flyTo(dir: import("three").Vector3, dist: number): Promise<boolean> {
-      flight?.done(false);
+      cancelFlight();
       const from = camera.position.clone().normalize();
       const to = dir.clone().normalize();
       if (reduceMotion()) {
@@ -297,7 +303,7 @@ function init(root: HTMLElement) {
         request();
       });
     }
-    canvas.addEventListener("pointerdown", () => { if (flight) { const f = flight; flight = null; f.done(false); } });
+    canvas.addEventListener("pointerdown", cancelFlight);
 
     // Selection by raycast on click/tap (ignores drags).
     const ray = new THREE.Raycaster();
@@ -384,18 +390,21 @@ function init(root: HTMLElement) {
         if (g && m) selectGroup(g, m, open);
       },
       reset() {
+        cancelFlight();
         ring.visible = false;
         panel.hidden = true;
         panel.replaceChildren();
         flyTo(homeDir, HOME_DIST).then((ok) => ok && say("View reset."));
       },
       zoom(f: number) {
+        cancelFlight();
         const d = Math.min(MAX_D, Math.max(MIN_D, camera.position.length() * f));
         camera.position.setLength(d);
         controls.update();
         request();
       },
       rotate(dxDeg: number, dyDeg: number) {
+        cancelFlight();
         const s = new THREE.Spherical().setFromVector3(camera.position);
         s.theta -= (dxDeg * Math.PI) / 180;
         s.phi = Math.min(Math.PI - 0.05, Math.max(0.05, s.phi + (dyDeg * Math.PI) / 180));

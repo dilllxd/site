@@ -10,6 +10,7 @@
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",
+    "test:sky": "node ./scripts/test-sky.mjs",
     "new:post": "node ./scripts/new-content.mjs post",
     "new:photo": "node ./scripts/new-content.mjs photo",
     "publish:post": "node ./scripts/new-content.mjs post --interactive",
