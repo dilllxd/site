@@ -20,28 +20,26 @@ const structuredData = {
 ---
 
 <SiteLayout
-  title="Photographs | Dylan H"
+  title="Observing log | Dylan H"
   description="A small gallery of the images I actually want to keep around, with each photo shown in its natural proportions."
   ogImage={siteConfig.defaultSocialImage}
   ogImageAlt={siteConfig.defaultSocialImageAlt}
   structuredData={structuredData}
 >
-  <section class="listing-hero">
-    <h1>Photographs</h1>
-    <p class="hero-text">A growing record of galaxies, nebulae, and clear nights from South Carolina.</p>
-  </section>
+  <header class="page-head">
+    <h1>Observing log</h1>
+    <p>Each frame is a few hours of stacked exposures from my backyard in South Carolina, dated and shown at its natural proportions.</p>
+  </header>
 
-  <section class="photo-gallery">
-    {photos.map((photo) => (
-      <figure class="gallery-item">
-        <a href={`/photos/${photo.id}/`} class="gallery-link">
-          <img src={photo.data.image} alt={photo.data.alt} loading="lazy" />
-          <span class="gallery-overlay">
-            <strong>{photo.data.title}</strong>
-            <span>{photo.data.caption}</span>
-            {photo.data.location && <span class="gallery-overlay-meta">{photo.data.location}</span>}
-          </span>
-        </a>
+  <section class="log-archive">
+    {photos.map((photo, i) => (
+      <figure class={`archive-entry archive-${i % 3}`}>
+        <a href={`/photos/${photo.id}/`} class="gallery-link"><img src={photo.data.image} alt={photo.data.alt} loading="lazy" /></a>
+        <figcaption>
+          <span class="plate-no">{photo.data.date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" })}{photo.data.location ? ` · ${photo.data.location}` : ""}</span>
+          <strong><a href={`/photos/${photo.id}/`}>{photo.data.title}</a></strong>
+          <span>{photo.data.caption}</span>
+        </figcaption>
       </figure>
     ))}
   </section>

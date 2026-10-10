@@ -45,11 +45,11 @@ const structuredData = {
   structuredData={structuredData}
 >
   <article class="prose-shell">
-    <a class="back-link" href="/posts/">← All notes</a>
+    <a class="back-link" href="/posts/">← All writing</a>
     <h1>{post.data.title}</h1>
     <p class="story-date">
       {post.data.date.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" })}
-      <span class="inline-separator">/</span>
+      <span class="inline-separator">·</span>
       {post.data.readingTime}
     </p>
     <div class="prose-body">

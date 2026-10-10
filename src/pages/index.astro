@@ -13,6 +13,8 @@ const sortedPosts = posts.sort((a, b) => b.data.date.valueOf() - a.data.date.val
 const latestPosts = sortedPosts.slice(0, 3);
 const sortedPhotos = photos.sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
 const latestPhoto = sortedPhotos[0];
+const fmt = (d: Date) => d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" });
+const logPhotos = sortedPhotos.filter((p) => p.id !== (sortedPhotos.find((x) => x.id === "ngc-2244") ?? latestPhoto).id);
 const heroPhoto = sortedPhotos.find((photo) => photo.id === "ngc-2244") ?? latestPhoto;
 const photoRotationPayload = JSON.stringify(
   sortedPhotos.map((photo) => ({
@@ -212,5 +214,105 @@ const structuredData = [
 
   <script type="module" src="/scripts/live-widgets.js?v=20260711a"></script>
   <script type="module" src="/scripts/photo-rotation.js"></script>
+  <script type="module" src="/scripts/photo-viewer.js"></script>
+</SiteLayout>
+---
+<SiteLayout structuredData={structuredData}>
+  <div class="home-notebook">
+    <aside class="home-side">
+      <h1>Dylan H.</h1>
+      <p class="home-lede">I'm a computer science student in Lancaster, South Carolina. I write code, run my own servers, and point a small telescope at nebulae from the backyard.</p>
+      <p class="home-lede">This is where the photos and the write-ups go.</p>
+
+      <div class="home-status" data-widget-config={widgetConfig}>
+        <div class="status-list">
+          <div><span>Here</span><strong>{siteConfig.location}</strong></div>
+          <div><span>Local time</span><strong data-local-time>Loading...</strong></div>
+          <div data-work-chip><span data-work-label>Schedule</span><strong data-work-status>Checking...</strong></div>
+        </div>
+        <div class="status-list" data-now-row>
+          <div data-discord-chip><span>Discord</span><strong data-discord-status>Connecting...</strong></div>
+          <div data-spotify-chip>
+            <span>Listening</span><strong data-spotify-status>Waiting for presence data...</strong>
+            <div class="spotify-progress" aria-hidden="true"><div data-spotify-progress></div></div>
+          </div>
+        </div>
+      </div>
+
+      <p class="home-links">
+        <a href={`mailto:${siteConfig.email}`}>{siteConfig.email}</a>
+        {siteConfig.socialLinks.map((link) => (<a href={link.href} target="_blank" rel="noreferrer">{link.label}</a>))}
+      </p>
+    </aside>
+
+    {heroPhoto && (
+      <section class="home-plate" data-photo-viewer data-photo-viewer-mode="overlay" aria-label="Featured photograph">
+        <figure>
+          <img src={heroPhoto.data.image} alt={heroPhoto.data.alt} width="2042" height="2944" loading="eager" data-photo-image data-photo-viewer-trigger />
+          <figcaption>
+            <span class="plate-no">{fmt(heroPhoto.data.date)}{heroPhoto.data.location ? ` · ${heroPhoto.data.location}` : ""}</span>
+            <strong>{heroPhoto.data.title}</strong>
+            <span>{heroPhoto.data.caption}</span>
+            <a href={`/photos/${heroPhoto.id}/`}>Photo page</a>
+          </figcaption>
+        </figure>
+        <div class="photo-preview" aria-hidden="true" data-photo-viewer-overlay>
+          <div class="photo-preview-frame">
+            <div class="photo-preview-topline">
+              <div class="photo-preview-meta">
+                <strong>{heroPhoto.data.title}</strong>
+                <span>{heroPhoto.data.caption}</span>
+              </div>
+              <div class="photo-preview-actions">
+                <button type="button" data-photo-viewer-zoom-out aria-label="Zoom out">-</button>
+                <button type="button" data-photo-viewer-zoom-reset>100%</button>
+                <button type="button" data-photo-viewer-zoom-in aria-label="Zoom in">+</button>
+                <a href={`/photos/${heroPhoto.id}/`}>Photo page</a>
+                <a href={heroPhoto.data.image} target="_blank" rel="noreferrer">Full size</a>
+                <button type="button" data-photo-viewer-close aria-label="Close preview">Close</button>
+              </div>
+            </div>
+            <div class="photo-preview-viewport" data-photo-viewer-viewport>
+              <img src={heroPhoto.data.image} alt={heroPhoto.data.alt} loading="lazy" data-photo-viewer-image draggable="false" />
+            </div>
+          </div>
+        </div>
+      </section>
+    )}
+  </div>
+
+  <section class="log-section">
+    <header class="rule-head"><h2>Observing log</h2><a href="/photos/">Everything</a></header>
+    <div class="log-row">
+      {logPhotos.slice(0, 4).map((photo, i) => (
+        <figure class={`log-entry log-${i}`}>
+          <a href={`/photos/${photo.id}/`}><img src={photo.data.image} alt={photo.data.alt} loading="lazy" /></a>
+          <figcaption>
+            <span class="plate-no">{fmt(photo.data.date)}</span>
+            <strong>{photo.data.title}</strong>
+            <span>{photo.data.caption}</span>
+          </figcaption>
+        </figure>
+      ))}
+    </div>
+  </section>
+
+  <section class="writing-section">
+    <header class="rule-head"><h2>Writing</h2><a href="/posts/">All posts</a></header>
+    <ol class="writing-list">
+      {latestPosts.map((post) => (
+        <li>
+          <time class="story-date" datetime={post.data.date.toISOString()}>{fmt(post.data.date)}</time>
+          <div>
+            <h3><a href={`/posts/${post.id}/`}>{post.data.title}</a></h3>
+            <p>{post.data.excerpt}</p>
+          </div>
+          <span class="inline-meta">{post.data.readingTime}</span>
+        </li>
+      ))}
+    </ol>
+  </section>
+
+  <script type="module" src="/scripts/live-widgets.js?v=20260711a"></script>
   <script type="module" src="/scripts/photo-viewer.js"></script>
 </SiteLayout>

@@ -55,7 +55,7 @@ const structuredData = {
           <button type="button" data-photo-viewer-zoom-out aria-label="Zoom out">-</button>
           <button type="button" data-photo-viewer-zoom-reset>100%</button>
           <button type="button" data-photo-viewer-zoom-in aria-label="Zoom in">+</button>
-          <a href={photo.data.image} target="_blank" rel="noreferrer">Open full size</a>
+          <a href={photo.data.image} target="_blank" rel="noreferrer">Full size</a>
         </div>
         <div class="photo-detail-viewport" data-photo-viewer-viewport>
           <img
@@ -70,8 +70,8 @@ const structuredData = {
 
       <section class="photo-detail-sidebar">
         <div class="photo-detail-topline">
-          <p>{photo.data.date.getUTCFullYear()}</p>
-          <a href="/photos/">All photographs</a>
+          <p>Plate, {photo.data.date.getUTCFullYear()}</p>
+          <a href="/photos/">Observing log</a>
         </div>
 
         <header class="photo-detail-header">
