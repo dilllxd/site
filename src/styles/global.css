@@ -136,3 +136,22 @@ h1,h2,h3{font-family:var(--serif);font-weight:500;letter-spacing:-.015em;margin:
 .featured-text span{color:var(--muted);font-size:.9rem;line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .featured:hover strong{text-decoration:underline;text-underline-offset:3px}
 @media (max-width:560px){.featured{grid-template-columns:7.5rem 1fr;gap:.8rem}}
+
+/* light theme polish */
+:root,:root[data-theme="light"]{--bg:#f6f2e9;--paper:#fbf8f1;--paper-2:#ede6d6;--text:#2a241c;--muted:#645b4d;--line:rgba(42,36,28,.2);--line-soft:rgba(42,36,28,.1);--accent:#8a4f0f;--viewer:#fbf8f1;--shadow:0 1px 2px rgba(60,40,10,.08),0 6px 18px -8px rgba(60,40,10,.18)}
+:root[data-theme="dark"]{--shadow:none}
+:root:not([data-theme="dark"]) body{background:linear-gradient(#f8f4ec,#f3eee3) fixed}
+:root:not([data-theme="dark"]) .site-header{border-bottom-color:var(--line)}
+:root:not([data-theme="dark"]) .status-list>div{background:var(--paper);border-color:var(--line-soft);box-shadow:0 1px 1px rgba(60,40,10,.05)}
+:root:not([data-theme="dark"]) .status-list strong{color:var(--text)}
+:root:not([data-theme="dark"]) .spotify-progress{background:rgba(42,36,28,.1)}
+:root:not([data-theme="dark"]) .gallery-link,:root:not([data-theme="dark"]) .featured-media{padding:5px;background:var(--paper);border:1px solid var(--line-soft);border-radius:2px;box-shadow:var(--shadow)}
+:root:not([data-theme="dark"]) .featured-media img{border-radius:1px}
+:root:not([data-theme="dark"]) .gallery-name{left:5px;right:5px;bottom:5px;border-radius:0 0 1px 1px;background:linear-gradient(transparent,rgba(30,22,12,.62))}
+:root:not([data-theme="dark"]) .photo-detail-viewport{background:var(--paper);border-color:var(--line-soft);box-shadow:var(--shadow)}
+:root:not([data-theme="dark"]) .photo-preview{background:rgba(236,229,214,.88);backdrop-filter:blur(6px)}
+:root:not([data-theme="dark"]) .photo-preview-frame{background:var(--paper);border-color:var(--line);box-shadow:0 20px 50px -20px rgba(60,40,10,.4)}
+:root:not([data-theme="dark"]) .photo-preview-viewport{background:var(--paper-2)}
+:root:not([data-theme="dark"]) .photo-preview-close,:root:not([data-theme="dark"]) .photo-preview-actions button,:root:not([data-theme="dark"]) .photo-preview-actions a,:root:not([data-theme="dark"]) .photo-detail-viewer-controls button,:root:not([data-theme="dark"]) .photo-detail-viewer-controls a{background:var(--bg);border-color:var(--line)}
+:root:not([data-theme="dark"]) .site-footer{border-top-color:var(--line-soft)}
+
