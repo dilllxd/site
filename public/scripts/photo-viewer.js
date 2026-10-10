@@ -33,6 +33,17 @@ for (const viewer of viewerRoots) {
   let dragStartY = 0;
   let movedDuringDrag = false;
 
+  const upgradeToFull = () => {
+    const full = image.dataset.fullSrc;
+    if (!full || image.dataset.fullLoaded) return;
+    image.dataset.fullLoaded = "1";
+    const picture = image.closest("picture");
+    picture?.querySelectorAll("source").forEach((s) => s.remove());
+    image.removeAttribute("srcset");
+    image.removeAttribute("sizes");
+    image.src = full;
+  };
+
   const applyTransform = () => {
     image.style.transform = `translate3d(${panX}px, ${panY}px, 0) scale(${previewZoom})`;
   };
@@ -43,15 +54,17 @@ for (const viewer of viewerRoots) {
     }
 
     viewer.classList.toggle("is-photo-preview-visible", nextVisible);
+    if (nextVisible) upgradeToFull();
     if (overlay) {
       overlay.setAttribute("aria-hidden", nextVisible ? "false" : "true");
       overlay.toggleAttribute("inert", !nextVisible);
     }
-    if (nextVisible) {
-      lastFocus = document.activeElement;
-      closeButton?.focus();
-    } else if (lastFocus && viewer.contains(lastFocus) === false || lastFocus) {
-      if (wasVisible) lastFocus?.focus?.();
+    if (nextVisible && !wasVisible) {
+      const active = document.activeElement;
+      lastFocus = active && active !== document.body && active.matches("button, a[href]") ? active : viewer.querySelector("[data-photo-viewer-open]");
+      window.requestAnimationFrame(() => closeButton?.focus());
+    } else if (!nextVisible && wasVisible) {
+      lastFocus?.focus?.();
     }
     wasVisible = nextVisible;
   };
@@ -78,6 +91,7 @@ for (const viewer of viewerRoots) {
 
   const updateZoom = (nextZoom) => {
     previewZoom = Math.min(maxZoom, Math.max(minZoom, nextZoom));
+    if (previewZoom > 1) upgradeToFull();
     if (previewZoom <= 1) {
       resetPan();
     } else {

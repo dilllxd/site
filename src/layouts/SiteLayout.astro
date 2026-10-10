@@ -57,7 +57,9 @@ const structuredDataJson = stringifyStructuredData(structuredData);
     <meta name="twitter:description" content={description} />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:image" content={socialImageUrl} />
-    <meta name="theme-color" content="#f4efe4" />
+    <meta name="theme-color" content="#f4efe4" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#16130f" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#f4efe4" data-theme-color />
     <title>{title}</title>
     <link rel="icon" href="/favicon.ico" sizes="any" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
@@ -75,6 +77,7 @@ const structuredDataJson = stringifyStructuredData(structuredData);
         if (stored !== "light" && stored !== "dark") stored = null;
         const preferred = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
         document.documentElement.dataset.theme = stored || preferred;
+        document.querySelector('meta[data-theme-color]')?.setAttribute('content', document.documentElement.dataset.theme === 'dark' ? '#16130f' : '#f4efe4');
       })();
     </script>
   </head>

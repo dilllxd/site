@@ -11,6 +11,7 @@ function applyTheme(theme) {
   root.dataset.theme = theme;
   try { localStorage.setItem("theme", theme); } catch {}
   syncLabel(theme);
+  document.querySelector('meta[data-theme-color]')?.setAttribute('content', theme === 'dark' ? '#16130f' : '#f4efe4');
 }
 
 syncLabel(root.dataset.theme || "light");

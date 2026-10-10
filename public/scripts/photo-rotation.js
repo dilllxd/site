@@ -33,6 +33,10 @@ if (photoSection) {
 
       photoImage.src = chosenPhoto.image;
       photoImage.alt = chosenPhoto.alt;
+      if (chosenPhoto.width && chosenPhoto.height) {
+        photoImage.width = chosenPhoto.width;
+        photoImage.height = chosenPhoto.height;
+      }
 
       if (photoPreviewImage) {
         photoPreviewImage.src = chosenPhoto.image;
