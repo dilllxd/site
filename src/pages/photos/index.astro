@@ -3,12 +3,11 @@ import { getCollection } from "astro:content";
 import SiteLayout from "../../layouts/SiteLayout.astro";
 import { siteConfig } from "../../data/site";
 import { toAbsoluteUrl } from "../../lib/seo";
-import { photoDims } from "../../lib/images";
+import Gallery from "../../components/Gallery.astro";
 
 const photos = (await getCollection("photos")).sort(
   (a, b) => b.data.date.valueOf() - a.data.date.valueOf(),
 );
-const dims = await photoDims(photos);
 
 const structuredData = {
   "@context": "https://schema.org",
@@ -29,20 +28,9 @@ const structuredData = {
   structuredData={structuredData}
 >
   <header class="page-head">
-    <h1>Observing log</h1>
-    <p>Each frame is a few hours of stacked exposures from South Carolina, dated and shown at its natural proportions.</p>
+    <h1>Photos</h1>
+    <p>Each frame is stacked exposures from South Carolina.</p>
   </header>
 
-  <section class="log-archive">
-    {photos.map((photo, i) => (
-      <figure class={`archive-entry archive-${i % 3}`}>
-        <a href={`/photos/${photo.id}/`} class="gallery-link"><img src={photo.data.image} alt={photo.data.alt} width={dims[photo.id]?.[0]} height={dims[photo.id]?.[1]} loading="lazy" decoding="async" /></a>
-        <figcaption>
-          <span class="plate-no">{photo.data.date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" })}{photo.data.location ? ` · ${photo.data.location}` : ""}</span>
-          <strong><a href={`/photos/${photo.id}/`}>{photo.data.title}</a></strong>
-          <span>{photo.data.caption}</span>
-        </figcaption>
-      </figure>
-    ))}
-  </section>
+  <Gallery photos={photos} />
 </SiteLayout>
