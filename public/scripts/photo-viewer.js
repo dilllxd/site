@@ -44,6 +44,33 @@ for (const viewer of viewerRoots) {
     image.style.transform = `translate3d(${panX}px, ${panY}px, 0) scale(${previewZoom})`;
   };
 
+  let lockY = 0;
+  let lockX = 0;
+  let locked = false;
+  const root = document.documentElement;
+  const lockScroll = () => {
+    if (locked) return;
+    locked = true;
+    lockX = window.scrollX;
+    lockY = window.scrollY;
+    const gap = window.innerWidth - root.clientWidth;
+    root.style.overflow = "hidden";
+    root.style.scrollbarGutter = "stable";
+    if (gap > 0) document.body.style.paddingRight = gap + "px";
+    Object.assign(document.body.style, { position: "fixed", top: -lockY + "px", left: -lockX + "px", right: "0", width: "100%" });
+  };
+  const unlockScroll = () => {
+    if (!locked) return;
+    locked = false;
+    root.style.overflow = "";
+    root.style.scrollbarGutter = "";
+    for (const k of ["paddingRight", "position", "top", "left", "right", "width"]) document.body.style[k] = "";
+    const prev = root.style.scrollBehavior;
+    root.style.scrollBehavior = "auto";
+    window.scrollTo(lockX, lockY);
+    root.style.scrollBehavior = prev;
+  };
+
   const setVisible = (nextVisible) => {
     if (mode !== "overlay") {
       return;
@@ -55,12 +82,15 @@ for (const viewer of viewerRoots) {
       overlay.setAttribute("aria-hidden", nextVisible ? "false" : "true");
       overlay.toggleAttribute("inert", !nextVisible);
     }
+    if (mode === "overlay") {
+      if (nextVisible) lockScroll(); else unlockScroll();
+    }
     if (nextVisible && !wasVisible) {
       const active = document.activeElement;
       lastFocus = active && active !== document.body && active.matches("button, a[href]") ? active : viewer.querySelector("[data-photo-viewer-open]");
-      window.requestAnimationFrame(() => closeButton?.focus());
+      window.requestAnimationFrame(() => closeButton?.focus({ preventScroll: true }));
     } else if (!nextVisible && wasVisible) {
-      lastFocus?.focus?.();
+      lastFocus?.focus?.({ preventScroll: true });
     }
     wasVisible = nextVisible;
   };
@@ -125,6 +155,11 @@ for (const viewer of viewerRoots) {
       });
     }
     trigger?.addEventListener("click", () => setVisible(true));
+    overlay.addEventListener("touchmove", (event) => {
+      if (event.touches.length > 1) return;
+      if (viewport.contains(event.target) && previewZoom > 1) return;
+      event.preventDefault();
+    }, { passive: false });
     overlay.addEventListener("keydown", (event) => {
       if (event.key !== "Tab") return;
       const items = [...overlay.querySelectorAll("button:not(:disabled), a[href]")];

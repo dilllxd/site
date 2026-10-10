@@ -69,7 +69,7 @@ h1,h2,h3{font-family:var(--serif);font-weight:500;letter-spacing:-.015em;margin:
 .photo-detail-meta-list div{display:grid;grid-template-columns:5.5rem 1fr;gap:1rem;padding:.55rem 0;border-bottom:1px solid var(--line-soft);font-size:.88rem}
 .photo-detail-meta-list dt{color:var(--muted)}.photo-detail-meta-list dd{margin:0}
 
-.photo-preview{position:fixed;inset:0;z-index:40;display:grid;place-items:center;padding:2rem;opacity:0;visibility:hidden;pointer-events:none;background:rgba(20,16,10,.82);transition:opacity 200ms,visibility 0s 200ms}
+.photo-preview{overscroll-behavior:contain;position:fixed;inset:0;z-index:40;display:grid;place-items:center;padding:2rem;opacity:0;visibility:hidden;pointer-events:none;background:rgba(20,16,10,.82);transition:opacity 200ms,visibility 0s 200ms}
 .photo-preview-viewport{min-height:0;display:grid;place-items:center;overflow:hidden;touch-action:none}
 .photo-preview-viewport img{max-width:100%;max-height:76vh;object-fit:contain;pointer-events:none;user-select:none;will-change:transform}
 [data-photo-viewer].is-photo-preview-visible .photo-preview{opacity:1;visibility:visible;pointer-events:auto;transition-delay:0s}
