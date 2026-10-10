@@ -104,7 +104,7 @@ h1,h2,h3{font-family:var(--serif);font-weight:500;letter-spacing:-.015em;margin:
 
 .intro{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:.6rem 2rem;padding:1.6rem 0 1rem}
 .intro-line{display:flex;flex-wrap:wrap;align-items:baseline;gap:.2rem .7rem;max-width:46rem}
-.intro-line h1{font:600 1.15rem var(--sans);letter-spacing:0}
+.intro-line h1{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .intro-line p{margin:0;color:var(--muted);font-size:.98rem;line-height:1.5}
 .home-links{display:flex;flex-wrap:wrap;gap:.2rem 1rem;margin:0;font-size:.85rem;color:var(--muted)}
 .home-links a{text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:.25em}

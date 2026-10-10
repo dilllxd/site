@@ -2,18 +2,75 @@
 import { photoDims } from "../lib/images";
 
 interface Props {
-  photos: { id: string; data: { title: string; image: string; alt: string } }[];
+  photos: { id: string; data: { title: string; image: string; alt: string; caption?: string } }[];
 }
 const { photos } = Astro.props;
 const dims = await photoDims(photos);
 ---
-<ul class="gallery">
-  {photos.map((photo, i) => (
-    <li>
-      <a href={`/photos/${photo.id}/`} class="gallery-link">
-        <img src={photo.data.image} alt={photo.data.alt} width={dims[photo.id]?.[0]} height={dims[photo.id]?.[1]} loading={i < 2 ? "eager" : "lazy"} decoding="async" />
-        <span class="gallery-name">{photo.data.title}</span>
-      </a>
-    </li>
-  ))}
-</ul>
+<div class="gallery-viewer" data-photo-viewer data-photo-viewer-mode="overlay">
+  <ul class="gallery">
+    {photos.map((photo, i) => (
+      <li>
+        <a href={`/photos/${photo.id}/`} class="gallery-link" data-gallery-tile data-title={photo.data.title} data-caption={photo.data.caption ?? ""} data-image={photo.data.image} data-alt={photo.data.alt} data-w={dims[photo.id]?.[0]} data-h={dims[photo.id]?.[1]}>
+          <img src={photo.data.image} alt={photo.data.alt} width={dims[photo.id]?.[0]} height={dims[photo.id]?.[1]} loading={i < 2 ? "eager" : "lazy"} decoding="async" />
+          <span class="gallery-name">{photo.data.title}</span>
+        </a>
+      </li>
+    ))}
+  </ul>
+  <button type="button" hidden data-photo-viewer-open tabindex="-1" aria-hidden="true"></button>
+  <div class="photo-preview" aria-hidden="true" data-photo-viewer-overlay>
+    <div class="photo-preview-frame">
+      <div class="photo-preview-topline">
+        <div class="photo-preview-meta">
+          <strong data-gallery-title></strong>
+          <span data-gallery-caption></span>
+        </div>
+        <button type="button" class="photo-preview-close" data-photo-viewer-close aria-label="Close preview">Close</button>
+        <div class="photo-preview-actions">
+          <div class="photo-preview-zoom">
+            <button type="button" data-photo-viewer-zoom-out aria-label="Zoom out">-</button>
+            <button type="button" data-photo-viewer-zoom-reset>100%</button>
+            <button type="button" data-photo-viewer-zoom-in aria-label="Zoom in">+</button>
+          </div>
+          <div class="photo-preview-links">
+            <a href="#" data-gallery-page>Photo page</a>
+            <a href="#" target="_blank" rel="noreferrer" data-gallery-full>Full size</a>
+          </div>
+        </div>
+      </div>
+      <div class="photo-preview-viewport" data-photo-viewer-viewport>
+        <img src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" alt="" data-photo-viewer-image draggable="false" />
+      </div>
+    </div>
+  </div>
+</div>
+<script type="module" src="/scripts/photo-viewer.js"></script>
+<script>
+  const root = document.querySelector(".gallery-viewer");
+  if (root) {
+    const q = (s) => root.querySelector(s);
+    const img = q("[data-photo-viewer-image]");
+    const opener = q("[data-photo-viewer-open]");
+    const title = q("[data-gallery-title]");
+    const caption = q("[data-gallery-caption]");
+    const page = q("[data-gallery-page]");
+    const full = q("[data-gallery-full]");
+    root.querySelectorAll("[data-gallery-tile]").forEach((tile) => {
+      tile.addEventListener("click", (e) => {
+        if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+        if (!img || !opener) return;
+        e.preventDefault();
+        const d = tile.dataset;
+        img.src = d.image; img.alt = d.alt || "";
+        if (d.w) img.width = +d.w; if (d.h) img.height = +d.h;
+        if (title) title.textContent = d.title || "";
+        if (caption) caption.textContent = d.caption || "";
+        if (page) page.href = tile.getAttribute("href");
+        if (full) full.href = d.image;
+        tile.focus();
+        opener.click();
+      });
+    });
+  }
+</script>
