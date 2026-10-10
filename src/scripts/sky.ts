@@ -164,14 +164,21 @@ function init(root: HTMLElement) {
       t.colorSpace = THREE.SRGBColorSpace;
       return { t, w: c.width, h: c.height };
     };
-    const addLabel = (text: string, pos: import("three").Vector3, color: string, height = 0.034, anchor: [number, number] = [0.5, 0.5], px = 44) => {
+    type Item = { s: import("three").Sprite; dir: import("three").Vector3; r: number };
+    type LabelItem = Item & { kind: "target" | "grid"; aspect: number; base: number; anchor: [number, number] };
+    const labelItems: LabelItem[] = [];
+    const markerItems: Item[] = [];
+    const addLabel = (text: string, pos: import("three").Vector3, color: string, height = 0.034, anchor: [number, number] = [0.5, 0.5], px = 44, kind: "target" | "grid" = "grid") => {
       const { t, w, h } = textTex(text, color, px);
-      const mat = track(new THREE.SpriteMaterial({ map: t, transparent: true, depthWrite: false, sizeAttenuation: false }));
+      // depthTest off: the opaque globe body must never clip a label. Back-side hiding is done by hand in frame().
+      const mat = track(new THREE.SpriteMaterial({ map: t, transparent: true, depthWrite: false, depthTest: false, sizeAttenuation: false }));
       const s = new THREE.Sprite(mat);
       s.scale.set((height * w) / h, height, 1);
       s.center.set(anchor[0], anchor[1]);
       s.position.copy(pos);
+      s.renderOrder = 12;
       scene.add(s);
+      labelItems.push({ s, dir: pos.clone().normalize(), r: pos.length(), kind, aspect: w / h, base: height, anchor });
       return s;
     };
     for (let h = 0; h < 24; h += 2) addLabel(`${h}h`, vecOf(h * 15, 0).multiplyScalar(1.06), "#7fb9b0", 0.03);
@@ -219,7 +226,7 @@ function init(root: HTMLElement) {
       ctx.stroke();
       return track(new THREE.CanvasTexture(c));
     })();
-    const markerMat = track(new THREE.SpriteMaterial({ map: glow, transparent: true, depthWrite: false, sizeAttenuation: false, blending: THREE.AdditiveBlending }));
+    const markerMat = track(new THREE.SpriteMaterial({ map: glow, transparent: true, depthWrite: false, depthTest: false, sizeAttenuation: false, blending: THREE.AdditiveBlending }));
     const markers: import("three").Sprite[] = [];
     const groupOf = new Map<import("three").Object3D, SkyGroup>();
     const dotPts: number[] = [];
@@ -227,10 +234,12 @@ function init(root: HTMLElement) {
       const s = new THREE.Sprite(markerMat);
       s.scale.setScalar(g.members.length > 1 ? 0.11 : 0.085);
       s.position.copy(V(g.center)).multiplyScalar(1.004);
+      s.renderOrder = 10;
       scene.add(s);
       markers.push(s);
+      markerItems.push({ s, dir: V(g.center), r: 1.004 });
       groupOf.set(s, g);
-      addLabel(g.members.map((m) => m.title).join(" + "), s.position.clone(), "#e6f5f1", 0.03, [-0.08, 1.35]);
+      addLabel(g.members.map((m) => m.title).join(" + "), s.position.clone(), "#e6f5f1", 0.032, [-0.08, 1.35], 44, "target");
       for (const m of g.members) dotPts.push(...vecOf(m.ra, m.dec).multiplyScalar(1.003).toArray());
     }
     if (dotPts.length) {
@@ -238,9 +247,10 @@ function init(root: HTMLElement) {
       g.setAttribute("position", new THREE.Float32BufferAttribute(dotPts, 3));
       scene.add(new THREE.Points(g, track(new THREE.PointsMaterial({ color: 0xffffff, size: 4, sizeAttenuation: false, depthWrite: false }))));
     }
-    const ring = new THREE.Sprite(track(new THREE.SpriteMaterial({ map: ringTex, transparent: true, depthWrite: false, sizeAttenuation: false })));
+    const ring = new THREE.Sprite(track(new THREE.SpriteMaterial({ map: ringTex, transparent: true, depthWrite: false, depthTest: false, sizeAttenuation: false })));
     ring.scale.setScalar(0.13);
     ring.visible = false;
+    ring.renderOrder = 11;
     scene.add(ring);
 
     // Camera + controls, render on demand.
@@ -276,10 +286,71 @@ function init(root: HTMLElement) {
         if (k >= 1) { flight = null; f.done(true); } else moving = true;
       }
       if (controls.update()) moving = true;
+      layoutOverlay();
       renderer.render(scene, camera);
       if (moving) request();
     }
     controls.addEventListener("change", request);
+
+    // Labels/halos are depthTest:false sprites. Hide anything on the far side by hand: a point at radius r is
+    // visible from a camera at distance d only if dot(unit, camDir) > 1 / (r * d) (tangent plane of the unit sphere).
+    // Then lay labels out in screen space: target labels first (stacked down when they collide), grid labels
+    // that touch a target label or halo are dropped, and every label is kept inside the canvas.
+    type Rect = { x0: number; y0: number; x1: number; y1: number };
+    const hit = (a: Rect, b: Rect, pad = 3) => a.x0 < b.x1 + pad && a.x1 > b.x0 - pad && a.y0 < b.y1 + pad && a.y1 > b.y0 - pad;
+    const tmp = new THREE.Vector3();
+    function layoutOverlay() {
+      const W = view.clientWidth, H = view.clientHeight;
+      if (!W || !H) return;
+      const camDir = camera.position.clone().normalize();
+      const d = camera.position.length();
+      const front = (it: Item) => it.dir.dot(camDir) > 1 / (it.r * d) + 0.012;
+      const screen = (it: Item) => {
+        tmp.copy(it.dir).multiplyScalar(it.r).project(camera);
+        return { x: (tmp.x * 0.5 + 0.5) * W, y: (-tmp.y * 0.5 + 0.5) * H };
+      };
+      const taken: Rect[] = [];
+      for (const m of markerItems) {
+        m.s.visible = front(m);
+        if (!m.s.visible) continue;
+        const p = screen(m), rad = (m.s.scale.y * H) / 2;
+        taken.push({ x0: p.x - rad * 0.5, y0: p.y - rad * 0.5, x1: p.x + rad * 0.5, y1: p.y + rad * 0.5 });
+      }
+      const rectOf = (l: LabelItem, p: { x: number; y: number }, cx: number, cy: number): Rect => {
+        const hpx = l.s.scale.y * H, wpx = l.s.scale.x * H;
+        const x0 = p.x - cx * wpx, y1 = p.y + cy * hpx;
+        return { x0, x1: x0 + wpx, y0: y1 - hpx, y1 };
+      };
+      const placed: Rect[] = [];
+      const order = [...labelItems].sort((a, b) => (a.kind === b.kind ? 0 : a.kind === "target" ? -1 : 1));
+      for (const l of order) {
+        l.s.visible = front(l);
+        if (!l.s.visible) continue;
+        const hpx = Math.max(l.base * H, 12);
+        l.s.scale.set((hpx * l.aspect) / H, hpx / H, 1);
+        const p = screen(l);
+        let [cx, cy] = l.anchor;
+        let r = rectOf(l, p, cx, cy);
+        const wpx = r.x1 - r.x0;
+        if (r.x0 < 4) cx -= (4 - r.x0) / wpx;
+        else if (r.x1 > W - 4) cx += (r.x1 - (W - 4)) / wpx;
+        if (l.kind === "target") {
+          // try the default slot, then further below the marker, then above
+          const steps = [0, -1.15, -2.3, 1.15, 2.3];
+          for (const st of steps) {
+            const cand = rectOf(l, p, cx, cy + st);
+            if (!placed.some((o) => hit(cand, o))) { cy += st; r = cand; break; }
+            if (st === steps[steps.length - 1]) r = cand;
+          }
+          placed.push(r);
+        } else {
+          r = rectOf(l, p, cx, cy);
+          if (placed.some((o) => hit(r, o)) || taken.some((o) => hit(r, o, 2))) { l.s.visible = false; continue; }
+          placed.push(r);
+        }
+        l.s.center.set(cx, cy);
+      }
+    }
 
     function cancelFlight() {
       if (!flight) return;
@@ -313,7 +384,7 @@ function init(root: HTMLElement) {
       const r = canvas.getBoundingClientRect();
       ndc.set(((cx - r.left) / r.width) * 2 - 1, -((cy - r.top) / r.height) * 2 + 1);
       ray.setFromCamera(ndc, camera);
-      const hits = ray.intersectObjects([body, ...markers], false);
+      const hits = ray.intersectObjects([body, ...markers.filter((m) => m.visible)], false);
       return hits.length && hits[0].object !== body ? groupOf.get(hits[0].object) ?? null : null;
     };
     canvas.addEventListener("pointerdown", (e) => { down = { x: e.clientX, y: e.clientY, t: performance.now() }; });
