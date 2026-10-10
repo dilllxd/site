@@ -201,3 +201,15 @@ main:focus{outline:none}
  .photo-preview-viewport img{max-height:calc(100dvh - var(--pv-chrome) - 1.2rem)}
 }
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation:none!important;transition-duration:.01ms!important}}
+
+/* Order the actual viewer wrapper, not its nested photo panel. */
+@media (max-width:900px){
+ .board{grid-template-columns:minmax(0,1fr)}
+ .board-side{display:contents}
+ .board .now,.board .about,.board .links,.board>.gallery-viewer{grid-column:1/-1;grid-row:auto}
+ .board .now{order:1}
+ .board .about{order:2}
+ .board>.gallery-viewer{order:3}
+ .board .links{order:4}
+ .board .shot-text{display:grid}
+}
