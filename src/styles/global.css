@@ -213,3 +213,49 @@ main:focus{outline:none}
  .board .links{order:4}
  .board .shot-text{display:grid}
 }
+
+/* minimal terminal home */
+.term{display:flex;flex-direction:column;justify-content:center;gap:1rem;min-height:calc(100dvh - 8rem);max-width:34rem;padding:1rem 0 2rem}
+.term-line{margin:0;color:var(--muted)}
+.term-prompt{color:var(--accent)}
+.term-links{list-style:none;margin:0;padding:0;border-top:1px solid var(--line-soft)}
+.term-links li{border-bottom:1px solid var(--line-soft)}
+.term-links a{display:flex;justify-content:space-between;gap:1rem;padding:.5rem .1rem;font-size:1.05rem}
+.term-links a span{color:var(--muted);font-size:.85rem;text-align:right;min-width:0;overflow-wrap:anywhere}
+.term-links a:hover,.term-links a:focus-visible{background:var(--accent);color:var(--on-accent);padding-inline:.5rem}
+.term-links a:hover span,.term-links a:focus-visible span{color:inherit}
+.term-status{margin:0;color:var(--muted);font-size:.85rem}
+.term-status [data-local-time]{color:var(--accent);font-variant-numeric:tabular-nums}
+
+/* sky globe */
+.sky{margin:0 0 var(--gap,1rem);--sky-bg:#03090b;--sky-fg:#d4ece7;--sky-line:rgba(111,208,179,.35)}
+.sky-bar{display:flex;flex-wrap:wrap;justify-content:space-between;gap:.2rem 1rem;padding:.3rem .75rem;border:1px solid var(--line);border-bottom:0;background:var(--panel-2);font-size:.78rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.sky-bar h2{font:inherit;color:var(--accent)}
+.sky-stage{position:relative;height:clamp(20rem,calc(100dvh - 13rem),56rem);min-height:min(20rem,70dvh);background:radial-gradient(120% 90% at 50% 40%,#06161a,var(--sky-bg) 70%);border:1px solid var(--line);color:var(--sky-fg);overflow:hidden;contain:layout paint}
+:root[data-theme="light"] .sky-stage{border:2px solid var(--text);outline:1px solid var(--line);outline-offset:3px;margin:3px}
+.sky-view{position:absolute;inset:0;touch-action:none}
+.sky-view canvas{display:block;width:100%;height:100%;cursor:grab;touch-action:none}
+.sky-view:focus-visible{outline:2px solid #6fd0b3;outline-offset:-3px}
+.sky-message{position:absolute;inset:0;display:grid;place-content:center;justify-items:center;gap:.8rem;padding:1rem;text-align:center;pointer-events:none;font-size:.9rem;color:var(--sky-fg)}
+.sky-message p{margin:0;max-width:26rem}
+.sky-message .sky-btn{pointer-events:auto}
+.sky-controls{position:absolute;right:max(.6rem,env(safe-area-inset-right));bottom:max(.6rem,env(safe-area-inset-bottom));display:flex;gap:.3rem}
+.sky-btn{min-width:2.2rem;height:2.2rem;padding:0 .7rem;border:1px solid var(--sky-line);border-radius:0;background:rgba(3,9,11,.82);color:var(--sky-fg);font:400 .82rem/1 var(--mono);cursor:pointer}
+.sky-btn:hover{background:#6fd0b3;color:#03090b;border-color:#6fd0b3}
+.sky-btn:focus-visible{outline:2px solid #ffd27a;outline-offset:2px}
+.sky-status{margin:0;padding:.45rem .75rem;border:1px solid var(--line);border-top:0;background:var(--panel);font-size:.85rem;color:var(--muted);min-height:2.4rem}
+.sky-panel{display:flex;flex-wrap:wrap;gap:.4rem;padding:.5rem .75rem;border:1px solid var(--line);border-top:0;background:var(--panel)}
+.sky-panel .sky-btn{height:auto;min-height:2.2rem;padding:.4rem .7rem;text-align:left;white-space:normal;overflow-wrap:anywhere;background:var(--panel-2);color:var(--text);border-color:var(--line)}
+.sky-panel .sky-btn:hover{background:var(--accent);color:var(--on-accent)}
+.sky-regions{list-style:none;margin:0;padding:.5rem .75rem;border:1px solid var(--line);border-top:0;background:var(--panel);font-size:.82rem;color:var(--muted)}
+.sky-regions ul{margin:.2rem 0 0;padding-left:1rem}
+.sky-regions strong{color:var(--text);font-weight:500}
+.gallery li{display:flex;flex-direction:column;gap:.3rem}
+.gallery-link{flex:1}
+.gallery-coords{padding:0 .6rem .5rem;font-size:.72rem;color:var(--muted);overflow-wrap:anywhere;margin-top:auto}
+.gallery-link{flex-wrap:nowrap}
+.gallery-link .gallery-name{flex:0 0 auto}
+.sky-fly{height:2rem;border:1px solid var(--line);background:var(--panel);color:var(--text);font:400 .8rem var(--mono);cursor:pointer}
+.sky-fly:hover{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
+@media (max-width:560px){.sky-stage{height:min(70dvh,34rem)}.sky-btn{min-width:2.75rem;height:2.75rem}}
+@media (max-height:520px) and (orientation:landscape){.sky-stage{height:calc(100dvh - 5rem);min-height:15rem}}

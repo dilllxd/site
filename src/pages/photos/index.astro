@@ -4,6 +4,7 @@ import SiteLayout from "../../layouts/SiteLayout.astro";
 import { siteConfig } from "../../data/site";
 import { toAbsoluteUrl } from "../../lib/seo";
 import Gallery from "../../components/Gallery.astro";
+import SkyStage from "../../components/SkyStage.astro";
 
 const photos = (await getCollection("photos")).sort(
   (a, b) => b.data.date.valueOf() - a.data.date.valueOf(),
@@ -29,8 +30,10 @@ const structuredData = {
 >
   <header class="page-head">
     <h1>Photos</h1>
-    <p>Each frame is stacked exposures from South Carolina.</p>
+    <p>Stacked exposures from South Carolina, placed at their real RA/Dec.</p>
   </header>
 
-  <Gallery photos={photos} />
+  <Gallery photos={photos}>
+    <SkyStage photos={photos} />
+  </Gallery>
 </SiteLayout>

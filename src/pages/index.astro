@@ -1,11 +1,8 @@
 ---
-import { getCollection } from "astro:content";
 import SiteLayout from "../layouts/SiteLayout.astro";
-import Gallery from "../components/Gallery.astro";
 import { siteConfig } from "../data/site";
 import { toAbsoluteUrl } from "../lib/seo";
 
-const photos = (await getCollection("photos")).sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
 const widgetConfig = JSON.stringify(siteConfig.widgetConfig);
 const structuredData = [
   {
@@ -14,10 +11,7 @@ const structuredData = [
     name: siteConfig.title,
     url: siteConfig.siteUrl,
     email: siteConfig.email,
-    homeLocation: {
-      "@type": "Place",
-      name: siteConfig.location,
-    },
+    homeLocation: { "@type": "Place", name: siteConfig.location },
     sameAs: siteConfig.socialLinks.map((link) => link.href),
   },
   {
@@ -29,39 +23,21 @@ const structuredData = [
     image: toAbsoluteUrl(siteConfig.defaultSocialImage),
   },
 ];
+const links = [
+  { label: "Photos", href: "/photos/", note: "sky globe" },
+  { label: "Email", href: `mailto:${siteConfig.email}`, note: siteConfig.email },
+  ...siteConfig.socialLinks.map((l) => ({ label: l.label, href: l.href, note: new URL(l.href).host.replace(/^www\./, "") })),
+];
 ---
-<SiteLayout structuredData={structuredData}>
-  <div class="board">
-    <div class="board-side">
-      <section class="panel about">
-        <div class="panel-head"><span><b>01</b> About</span></div>
-        <div class="panel-body"><p class="lede">Computer science student. I write code, run my own servers, and photograph nebulae with a small telescope.</p></div>
-      </section>
-
-      <section class="panel links">
-        <div class="panel-head"><span><b>02</b> Links</span></div>
-        <ul class="link-rows">
-          <li><a href={`mailto:${siteConfig.email}`}>Email<span>{siteConfig.email}</span></a></li>
-          {siteConfig.socialLinks.map((link) => (<li><a href={link.href} target="_blank" rel="noreferrer">{link.label}<span>{new URL(link.href).host.replace(/^www\./, "")}</span></a></li>))}
-        </ul>
-      </section>
-
-      <section class="panel now home-status" data-widget-config={widgetConfig}>
-        <div class="panel-head"><span><b>04</b> Now</span></div>
-        <div class="rows status-list">
-          <div><span>Local time</span><strong data-local-time>Loading...</strong></div>
-          <div data-work-chip><span data-work-label>Schedule</span><strong data-work-status>Checking...</strong></div>
-          <div data-discord-chip><span>Discord</span><strong data-discord-status>Connecting...</strong></div>
-          <div data-spotify-chip>
-            <span>Listening</span><strong data-spotify-status>Waiting for presence data...</strong>
-            <div class="spotify-progress" aria-hidden="true"><div data-spotify-progress></div></div>
-          </div>
-        </div>
-      </section>
-    </div>
-
-    <Gallery photos={photos} featured />
+<SiteLayout structuredData={structuredData} hideFooter={true}>
+  <div class="term" data-widget-config={widgetConfig}>
+    <p class="term-line"><span class="term-prompt" aria-hidden="true">$</span> ls ~/links</p>
+    <ul class="term-links">
+      {links.map((l) => (
+        <li><a href={l.href} target={l.href.startsWith("http") ? "_blank" : undefined} rel={l.href.startsWith("http") ? "noreferrer" : undefined}>{l.label}<span>{l.note}</span></a></li>
+      ))}
+    </ul>
+    <p class="term-status"><span data-local-time>--:--</span> <span aria-hidden="true">/</span> <span data-work-status>checking schedule</span></p>
   </div>
-
   <script type="module" src="/scripts/live-widgets.js?v=20261010b"></script>
 </SiteLayout>

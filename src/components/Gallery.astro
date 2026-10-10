@@ -1,9 +1,10 @@
 ---
 import { photoDims } from "../lib/images";
+import { formatRa, formatDec } from "../lib/sky";
 
 interface Props {
   featured?: boolean;
-  photos: { id: string; data: { title: string; image: string; alt: string; caption?: string } }[];
+  photos: { id: string; data: { title: string; image: string; alt: string; caption?: string; ra?: number; dec?: number } }[];
 }
 const { photos, featured = false } = Astro.props;
 const dims = await photoDims(photos);
@@ -21,13 +22,16 @@ const first = pool[0];
       <script is:inline set:html={`(function(){var f=document.querySelector("[data-featured]");if(!f)return;try{var p=JSON.parse(f.dataset.photos||"[]");if(p.length<2)return;var c=p[Math.floor(Math.random()*p.length)];var i=f.querySelector("[data-featured-img]");i.src=c.image;i.alt=c.alt;if(c.w&&c.h){i.width=c.w;i.height=c.h}f.querySelector("[data-featured-title]").textContent=c.title;f.querySelector("[data-featured-caption]").textContent=c.caption;f.href="/photos/"+c.id+"/";f.dataset.title=c.title;f.dataset.caption=c.caption;f.dataset.image=c.image;f.dataset.alt=c.alt;f.dataset.w=c.w||"";f.dataset.h=c.h||""}catch(e){}})()`}></script>
     </div>
   )}
+  <slot />
   {!featured && (<ul class="gallery">
     {photos.map((photo, i) => (
-      <li>
-        <a href={`/photos/${photo.id}/`} class="gallery-link" data-gallery-tile data-title={photo.data.title} data-caption={photo.data.caption ?? ""} data-image={photo.data.image} data-alt={photo.data.alt} data-w={dims[photo.id]?.[0]} data-h={dims[photo.id]?.[1]}>
+      <li data-sky-item={photo.id}>
+        <a href={`/photos/${photo.id}/`} class="gallery-link" data-gallery-tile data-slug={photo.id} data-title={photo.data.title} data-caption={photo.data.caption ?? ""} data-image={photo.data.image} data-alt={photo.data.alt} data-w={dims[photo.id]?.[0]} data-h={dims[photo.id]?.[1]}>
           <img src={photo.data.image} alt={photo.data.alt} width={dims[photo.id]?.[0]} height={dims[photo.id]?.[1]} loading={i < 2 ? "eager" : "lazy"} decoding="async" />
           <span class="gallery-name">{photo.data.title}</span>
+          <span class="gallery-coords">{photo.data.ra !== undefined && photo.data.dec !== undefined ? `RA ${formatRa(photo.data.ra)}  Dec ${formatDec(photo.data.dec)}` : "No sky position"}</span>
         </a>
+        {photo.data.ra !== undefined && <button type="button" class="sky-fly" data-sky-fly={photo.id} hidden>Show on globe</button>}
       </li>
     ))}
   </ul>)}
