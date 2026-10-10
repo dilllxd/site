@@ -37,7 +37,7 @@ const links = [
         <li><a href={l.href} target={l.href.startsWith("http") ? "_blank" : undefined} rel={l.href.startsWith("http") ? "noreferrer" : undefined}>{l.label}<span>{l.note}</span></a></li>
       ))}
     </ul>
-    <p class="term-status" data-work-chip><span data-local-time>--:--</span> <span aria-hidden="true">/</span> <span data-work-status>checking schedule</span></p>
+    <p class="term-status"><span data-local-time>--:--</span> <span data-work-chip><span aria-hidden="true">/</span> <span data-work-status>checking schedule</span></span></p>
   </div>
   <script type="module" src="/scripts/live-widgets.js?v=20261010b"></script>
 </SiteLayout>
