@@ -156,6 +156,8 @@ function init(root: HTMLElement) {
       ctx.font = font;
       c.width = Math.ceil(ctx.measureText(text).width) + 16;
       c.height = Math.ceil(px * 1.5);
+      ctx.fillStyle = "rgba(3,9,11,.94)";
+      ctx.fillRect(0, 0, c.width, c.height);
       ctx.font = font;
       ctx.textBaseline = "middle";
       ctx.fillStyle = color;
@@ -165,10 +167,10 @@ function init(root: HTMLElement) {
       return { t, w: c.width, h: c.height };
     };
     type Item = { s: import("three").Sprite; dir: import("three").Vector3; r: number };
-    type LabelItem = Item & { kind: "target" | "grid"; aspect: number; base: number; anchor: [number, number] };
+    type LabelItem = Item & { kind: "target" | "grid"; own?: number; aspect: number; base: number; anchor: [number, number] };
     const labelItems: LabelItem[] = [];
     const markerItems: Item[] = [];
-    const addLabel = (text: string, pos: import("three").Vector3, color: string, height = 0.034, anchor: [number, number] = [0.5, 0.5], px = 44, kind: "target" | "grid" = "grid") => {
+    const addLabel = (text: string, pos: import("three").Vector3, color: string, height = 0.034, anchor: [number, number] = [0.5, 0.5], px = 44, kind: "target" | "grid" = "grid", own?: number) => {
       const { t, w, h } = textTex(text, color, px);
       // depthTest off: the opaque globe body must never clip a label. Back-side hiding is done by hand in frame().
       const mat = track(new THREE.SpriteMaterial({ map: t, transparent: true, depthWrite: false, depthTest: false, sizeAttenuation: false }));
@@ -178,7 +180,7 @@ function init(root: HTMLElement) {
       s.position.copy(pos);
       s.renderOrder = 12;
       scene.add(s);
-      labelItems.push({ s, dir: pos.clone().normalize(), r: pos.length(), kind, aspect: w / h, base: height, anchor });
+      labelItems.push({ s, dir: pos.clone().normalize(), r: pos.length(), kind, own, aspect: w / h, base: height, anchor });
       return s;
     };
     for (let h = 0; h < 24; h += 2) addLabel(`${h}h`, vecOf(h * 15, 0).multiplyScalar(1.06), "#7fb9b0", 0.03);
@@ -239,7 +241,7 @@ function init(root: HTMLElement) {
       markers.push(s);
       markerItems.push({ s, dir: V(g.center), r: 1.004 });
       groupOf.set(s, g);
-      addLabel(g.members.map((m) => m.title).join(" + "), s.position.clone(), "#e6f5f1", 0.032, [-0.08, 1.35], 44, "target");
+      addLabel(g.members.map((m) => m.title).join(" + "), s.position.clone(), "#e6f5f1", 0.032, [-0.08, 1.35], 44, "target", markerItems.length - 1);
       for (const m of g.members) dotPts.push(...vecOf(m.ra, m.dec).multiplyScalar(1.003).toArray());
     }
     if (dotPts.length) {
@@ -309,13 +311,17 @@ function init(root: HTMLElement) {
         tmp.copy(it.dir).multiplyScalar(it.r).project(camera);
         return { x: (tmp.x * 0.5 + 0.5) * W, y: (-tmp.y * 0.5 + 0.5) * H };
       };
-      const taken: Rect[] = [];
+      // Full halo rectangle of every visible marker (index-aligned with markerItems) and its core only.
+      const halos: (Rect | null)[] = [];
+      const cores: (Rect | null)[] = [];
       for (const m of markerItems) {
         m.s.visible = front(m);
-        if (!m.s.visible) continue;
+        if (!m.s.visible) { halos.push(null); cores.push(null); continue; }
         const p = screen(m), rad = (m.s.scale.y * H) / 2;
-        taken.push({ x0: p.x - rad * 0.5, y0: p.y - rad * 0.5, x1: p.x + rad * 0.5, y1: p.y + rad * 0.5 });
+        halos.push({ x0: p.x - rad, y0: p.y - rad, x1: p.x + rad, y1: p.y + rad });
+        cores.push({ x0: p.x - rad * 0.4, y0: p.y - rad * 0.4, x1: p.x + rad * 0.4, y1: p.y + rad * 0.4 });
       }
+      const blocked = (cand: Rect, own?: number) => halos.some((h, i) => h && hit(cand, i === own ? (cores[i] as Rect) : h, 2));
       const rectOf = (l: LabelItem, p: { x: number; y: number }, cx: number, cy: number): Rect => {
         const hpx = l.s.scale.y * H, wpx = l.s.scale.x * H;
         const x0 = p.x - cx * wpx, y1 = p.y + cy * hpx;
@@ -339,13 +345,13 @@ function init(root: HTMLElement) {
           const steps = [0, -1.15, -2.3, 1.15, 2.3];
           for (const st of steps) {
             const cand = rectOf(l, p, cx, cy + st);
-            if (!placed.some((o) => hit(cand, o))) { cy += st; r = cand; break; }
+            if (!placed.some((o) => hit(cand, o)) && !blocked(cand, l.own)) { cy += st; r = cand; break; }
             if (st === steps[steps.length - 1]) r = cand;
           }
           placed.push(r);
         } else {
           r = rectOf(l, p, cx, cy);
-          if (placed.some((o) => hit(r, o)) || taken.some((o) => hit(r, o, 2))) { l.s.visible = false; continue; }
+          if (placed.some((o) => hit(r, o)) || blocked(r)) { l.s.visible = false; continue; }
           placed.push(r);
         }
         l.s.center.set(cx, cy);
