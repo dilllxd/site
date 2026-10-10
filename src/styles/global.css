@@ -168,3 +168,74 @@ h1,h2,h3{font-family:var(--serif);font-weight:500;letter-spacing:-.015em;margin:
  .photo-preview-meta span{display:none}
  .photo-preview-viewport img{max-height:70dvh}
 }
+/* responsive pass: fluid type/space, ultrawide, short, tiny and landscape screens */
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+.page-shell{--gutter:clamp(1rem,4vw,3rem);max-width:1240px;padding-left:max(var(--gutter),env(safe-area-inset-left));padding-right:max(var(--gutter),env(safe-area-inset-right));padding-bottom:env(safe-area-inset-bottom)}
+@media (min-width:1700px){html{font-size:112.5%}.page-shell{max-width:1360px}}
+@media (min-width:2300px){html{font-size:131%}.page-shell{max-width:1500px}}
+@media (min-width:3200px){html{font-size:150%}.page-shell{max-width:1640px}}
+.site-header{min-width:0;flex-wrap:wrap;row-gap:.4rem}
+.brand{min-width:0;flex-wrap:wrap}
+.brand-name{white-space:nowrap}
+.site-nav{flex-wrap:wrap;gap:.2rem 1.2rem}
+.intro-line p{font-size:clamp(.95rem,.9rem + .25vw,1.12rem);max-width:42rem}
+.home-links{min-width:0;overflow-wrap:anywhere}
+.status-list>div{min-width:0}
+.featured-media{aspect-ratio:auto;height:clamp(15rem,calc(100dvh - 15rem),56rem);width:100%}
+.featured-media img{max-width:100%;max-height:100%}
+.featured-text span{max-width:46rem}
+.gallery{columns:17rem}
+@media (min-width:1700px){.gallery{columns:20rem}}
+@media (min-width:2300px){.gallery{columns:22rem}}
+@media (max-width:700px) and (orientation:portrait){.featured-media{height:auto;aspect-ratio:4/3;max-height:60dvh}}
+@media (max-height:520px) and (orientation:landscape){
+ .site-header{padding:.5rem 0 .4rem}
+ .intro{padding:.7rem 0 .5rem}
+ .home-status{margin-bottom:.7rem}
+ .featured-media{height:max(11rem,calc(100dvh - 8rem))}
+}
+@media (max-width:360px){
+ .site-header{gap:.3rem .9rem;font-size:.82rem}
+ .brand-place{display:none}
+ .site-nav a,.theme-toggle{font-size:.8rem}
+ .status-list>div{border-radius:14px}
+ .photo-detail-meta-list div{grid-template-columns:4.5rem 1fr;gap:.6rem}
+}
+@media (max-width:300px){
+ .site-header{padding:.8rem 0 .6rem}
+ .intro-line p{font-size:.9rem}
+ .home-links{font-size:.8rem;gap:.2rem .7rem}
+}
+
+/* photo overlay, fit any viewport */
+.photo-preview{--pv-chrome:4.6rem;padding:max(.75rem,env(safe-area-inset-top)) max(.75rem,env(safe-area-inset-right)) max(.75rem,env(safe-area-inset-bottom)) max(.75rem,env(safe-area-inset-left))}
+.photo-preview-frame{width:min(94vw,1320px);max-height:calc(100dvh - 1.5rem)}
+.photo-preview-viewport img{max-height:calc(100dvh - var(--pv-chrome) - 3rem);max-width:100%}
+@media (min-width:1700px){.photo-preview-frame{width:min(92vw,1700px)}}
+@media (min-width:2300px){.photo-preview-frame{width:min(90vw,2200px)}}
+@media (min-width:3200px){.photo-preview-frame{width:min(88vw,2800px)}}
+@media (max-width:560px){
+ .photo-preview{--pv-chrome:7.2rem;padding:max(.4rem,env(safe-area-inset-top)) max(.4rem,env(safe-area-inset-right)) max(.4rem,env(safe-area-inset-bottom)) max(.4rem,env(safe-area-inset-left))}
+ .photo-preview-frame{width:100%;max-height:calc(100dvh - .8rem)}
+ .photo-preview-viewport img{max-height:calc(100dvh - var(--pv-chrome) - 1.6rem)}
+ .photo-preview-actions{flex-wrap:wrap}
+}
+@media (max-width:330px){
+ .photo-preview-zoom{gap:.2rem}
+ .photo-preview-actions button,.photo-preview-actions a{padding:0 .4rem}
+ .photo-preview-actions{justify-content:flex-start;gap:.3rem}
+ .photo-preview-close{min-width:3.2rem}
+}
+@media (max-height:520px) and (orientation:landscape){
+ .photo-preview{--pv-chrome:3.2rem;padding-top:max(.3rem,env(safe-area-inset-top));padding-bottom:max(.3rem,env(safe-area-inset-bottom))}
+ .photo-preview-frame{width:min(100%,1320px);max-height:calc(100dvh - .6rem);padding:.35rem;gap:.35rem}
+ .photo-preview-meta span{display:none}
+ .photo-preview-topline{display:flex;gap:.5rem}
+ .photo-preview-actions{flex-wrap:nowrap;width:auto;margin-left:auto}
+ .photo-preview-close{order:3;height:var(--pv-ctl);min-width:var(--pv-ctl);margin:0}
+ .photo-preview-actions button,.photo-preview-actions a{height:var(--pv-ctl)}
+ .photo-preview-viewport img{max-height:calc(100dvh - var(--pv-chrome) - 1.2rem)}
+}
+@media (max-height:520px) and (orientation:landscape) and (max-width:560px){
+ .photo-preview-topline{display:flex}.photo-preview-meta{flex:1 1 0}
+}
