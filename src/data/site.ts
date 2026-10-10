@@ -24,6 +24,7 @@ export const siteConfig = {
     workScheduleUrl: "https://api.dylanh.dev/schedule/status",
     workScheduleEventsUrl: "https://api.dylanh.dev/schedule/events",
     workScheduleCalendarUrl: "https://api.dylanh.dev/schedule/calendar.ics",
+    includedScheduleSources: ["walmart"],
     ignoredScheduleSources: ["lily"],
     ignoredScheduleSummaryPrefixes: ["Lily"],
   },

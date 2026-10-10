@@ -84,7 +84,12 @@ function getScheduleFilters(config = {}) {
 function normalizeScheduleEvents(events = [], config = {}) {
   const { ignoredSources, ignoredSummaryPrefixes } = getScheduleFilters(config);
 
+  const includedSources = Array.isArray(config.includedScheduleSources)
+    ? config.includedScheduleSources.map((source) => String(source).trim().toLowerCase())
+    : [];
+
   return events
+    .filter((entry) => !includedSources.length || includedSources.includes(String(entry?.source || "").trim().toLowerCase()))
     .filter((entry) => !shouldIgnoreScheduleEntry(entry, ignoredSources, ignoredSummaryPrefixes))
     .map((entry) => ({
       ...entry,
@@ -240,30 +245,6 @@ async function loadWorkStatus(workScheduleEventsUrl, config = {}) {
     const payload = await response.json();
     const events = normalizeScheduleEvents(payload?.events ?? [], config);
     applyWorkStatus(getWorkStatusFromEvents(events));
-  } catch (error) {
-    console.warn("[widgets] work schedule unavailable", error);
-    applyWorkStatus({
-      label: "Schedule",
-      text: fallbackText.work,
-      visible: false,
-    });
-  }
-
-  syncNowRowVisibility();
-}
-
-async function loadWorkStatusFromSummary(workScheduleUrl, config = {}) {
-  if (!workStatusNode || !workScheduleUrl) return;
-
-  try {
-    const response = await fetch(workScheduleUrl, { cache: "no-store" });
-    if (!response.ok) throw new Error(`Work schedule request failed: ${response.status}`);
-    const schedule = await response.json();
-    const normalizedEvents = normalizeScheduleEvents(
-      [schedule.current, schedule.next].filter(Boolean),
-      config,
-    );
-    applyWorkStatus(getWorkStatusFromEvents(normalizedEvents));
   } catch (error) {
     console.warn("[widgets] work schedule unavailable", error);
     applyWorkStatus({
@@ -586,11 +567,8 @@ if (widgetRoot) {
   setChipVisibility(spotifyChip, false);
   syncNowRowVisibility();
   setLocalTime(config.timezone || "America/New_York");
-  if (config.workScheduleEventsUrl) {
-    loadWorkStatus(config.workScheduleEventsUrl, config);
-  } else {
-    loadWorkStatusFromSummary(config.workScheduleUrl, config);
-  }
+  // The combined summary can belong to another calendar. Always filter the full events feed.
+  loadWorkStatus(config.workScheduleEventsUrl, config);
   initSpotifySocket(
     config.spotifyWebSocketUrl,
     config.spotifyNowPlayingUrl,
