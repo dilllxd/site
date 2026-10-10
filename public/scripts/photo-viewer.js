@@ -21,6 +21,8 @@ for (const viewer of viewerRoots) {
   const hoverDelayMs = 450;
   const hoverLeaveDelayMs = 140;
 
+  let lastFocus = null;
+  let wasVisible = false;
   let hoverTimer = null;
   let leaveTimer = null;
   let previewZoom = 1;
@@ -41,6 +43,17 @@ for (const viewer of viewerRoots) {
     }
 
     viewer.classList.toggle("is-photo-preview-visible", nextVisible);
+    if (overlay) {
+      overlay.setAttribute("aria-hidden", nextVisible ? "false" : "true");
+      overlay.toggleAttribute("inert", !nextVisible);
+    }
+    if (nextVisible) {
+      lastFocus = document.activeElement;
+      closeButton?.focus();
+    } else if (lastFocus && viewer.contains(lastFocus) === false || lastFocus) {
+      if (wasVisible) lastFocus?.focus?.();
+    }
+    wasVisible = nextVisible;
   };
 
   const resetPan = () => {
@@ -117,15 +130,32 @@ for (const viewer of viewerRoots) {
     }, hoverLeaveDelayMs);
   };
 
-  if (trigger) {
-    trigger.addEventListener("mouseenter", startHoverOpen);
-    trigger.addEventListener("mouseleave", startHoverClose);
-    trigger.addEventListener("focus", startHoverOpen);
-    trigger.addEventListener("blur", startHoverClose);
+  if (mode === "overlay" && overlay) {
+    overlay.setAttribute("aria-hidden", "true");
+    overlay.setAttribute("inert", "");
+    overlay.setAttribute("role", "dialog");
+    overlay.setAttribute("aria-modal", "true");
+    overlay.setAttribute("aria-label", "Photo viewer");
+    const openers = viewer.querySelectorAll("[data-photo-viewer-open]");
+    for (const opener of openers) {
+      opener.addEventListener("click", () => {
+        clearTimeout(leaveTimer);
+        setVisible(true);
+      });
+    }
+    trigger?.addEventListener("click", () => setVisible(true));
+    overlay.addEventListener("keydown", (event) => {
+      if (event.key !== "Tab") return;
+      const items = [...overlay.querySelectorAll("button:not(:disabled), a[href]")];
+      if (!items.length) return;
+      const first = items[0];
+      const last = items[items.length - 1];
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+    });
   }
 
   if (overlay) {
-    overlay.addEventListener("mouseenter", keepOpen);
     overlay.addEventListener("click", (event) => {
       if (event.target === overlay) {
         closeViewer();
@@ -232,7 +262,7 @@ for (const viewer of viewerRoots) {
   });
 
   document.addEventListener("keydown", (event) => {
-    if (event.key === "Escape" && mode === "overlay") {
+    if (event.key === "Escape" && mode === "overlay" && viewer.classList.contains("is-photo-preview-visible")) {
       closeViewer();
     }
   });

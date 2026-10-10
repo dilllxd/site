@@ -26,6 +26,7 @@ const {
   structuredData,
 } = Astro.props;
 
+const path = Astro.url.pathname;
 const isHome = Astro.url.pathname === "/";
 const canonicalUrl = new URL(Astro.url.pathname, siteConfig.siteUrl).toString();
 const socialImageUrl = toAbsoluteUrl(ogImage);
@@ -69,13 +70,16 @@ const structuredDataJson = stringifyStructuredData(structuredData);
     )}
     <script is:inline>
       (() => {
-        const stored = localStorage.getItem("theme");
+        let stored = null;
+        try { stored = localStorage.getItem("theme"); } catch {}
+        if (stored !== "light" && stored !== "dark") stored = null;
         const preferred = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
         document.documentElement.dataset.theme = stored || preferred;
       })();
     </script>
   </head>
   <body class={pageClass}>
+    <a class="skip-link" href="#main">Skip to content</a>
     <div class={`page-shell ${isHome ? "page-home" : ""} ${pageClass}`.trim()}>
       <header class="site-header">
         <a class="brand" href="/" aria-label={`${siteConfig.title} — Home`}>
@@ -83,16 +87,16 @@ const structuredDataJson = stringifyStructuredData(structuredData);
         </a>
 
         <nav class="site-nav" aria-label="Primary">
-          <a href="/photos/">Observing log</a>
-          <a href="/posts/">Writing</a>
+          <a href="/photos/" aria-current={path.startsWith("/photos") ? "page" : undefined}>Observing log</a>
+          <a href="/posts/" aria-current={path.startsWith("/posts") ? "page" : undefined}>Writing</a>
         </nav>
 
-        <button class="theme-toggle" type="button" data-theme-toggle aria-label="Toggle color theme">
-          <span data-theme-toggle-label>Light</span>
+        <button class="theme-toggle" type="button" aria-pressed="false" data-theme-toggle aria-label="Toggle color theme">
+          <span data-theme-toggle-label>Dark mode</span>
         </button>
       </header>
 
-      <main>
+      <main id="main" tabindex="-1">
         <slot />
       </main>
 

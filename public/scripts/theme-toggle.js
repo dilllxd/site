@@ -3,19 +3,18 @@ const toggle = document.querySelector("[data-theme-toggle]");
 const label = document.querySelector("[data-theme-toggle-label]");
 
 function syncLabel(theme) {
-  if (!label) return;
-  label.textContent = theme === "light" ? "Dark" : "Light";
+  if (label) label.textContent = theme === "light" ? "Dark mode" : "Light mode";
+  toggle?.setAttribute("aria-pressed", theme === "dark" ? "true" : "false");
 }
 
 function applyTheme(theme) {
   root.dataset.theme = theme;
-  localStorage.setItem("theme", theme);
+  try { localStorage.setItem("theme", theme); } catch {}
   syncLabel(theme);
 }
 
-syncLabel(root.dataset.theme || "dark");
+syncLabel(root.dataset.theme || "light");
 
 toggle?.addEventListener("click", () => {
-  const nextTheme = root.dataset.theme === "light" ? "dark" : "light";
-  applyTheme(nextTheme);
+  applyTheme(root.dataset.theme === "light" ? "dark" : "light");
 });
