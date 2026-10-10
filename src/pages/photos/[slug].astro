@@ -3,6 +3,7 @@ import { getCollection } from "astro:content";
 import SiteLayout from "../../layouts/SiteLayout.astro";
 import { siteConfig } from "../../data/site";
 import { toAbsoluteUrl } from "../../lib/seo";
+import { photoDims } from "../../lib/images";
 
 export async function getStaticPaths() {
   const photos = await getCollection("photos");
@@ -14,7 +15,7 @@ export async function getStaticPaths() {
 }
 
 const { photo } = Astro.props;
-const dims: Record<string, [number, number]> = { "ngc-2244": [2042, 2944], "ngc-2024": [1709, 2472], "m65": [915, 1010], "orion-nebula": [1113, 1920], "ngc-1893": [1107, 1920], "rosette-nebula": [1080, 1920] };
+const dims = await photoDims([photo]);
 const canonicalUrl = `${siteConfig.siteUrl}/photos/${photo.id}/`;
 const structuredData = {
   "@context": "https://schema.org",

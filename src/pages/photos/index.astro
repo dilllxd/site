@@ -3,12 +3,13 @@ import { getCollection } from "astro:content";
 import SiteLayout from "../../layouts/SiteLayout.astro";
 import { siteConfig } from "../../data/site";
 import { toAbsoluteUrl } from "../../lib/seo";
+import { photoDims } from "../../lib/images";
 
 const photos = (await getCollection("photos")).sort(
   (a, b) => b.data.date.valueOf() - a.data.date.valueOf(),
 );
+const dims = await photoDims(photos);
 
-const dims: Record<string, [number, number]> = { "ngc-2244": [2042, 2944], "ngc-2024": [1709, 2472], "m65": [915, 1010], "orion-nebula": [1113, 1920], "ngc-1893": [1107, 1920], "rosette-nebula": [1080, 1920] };
 const structuredData = {
   "@context": "https://schema.org",
   "@type": "CollectionPage",

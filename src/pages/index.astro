@@ -3,6 +3,7 @@ import { getCollection } from "astro:content";
 import SiteLayout from "../layouts/SiteLayout.astro";
 import { siteConfig } from "../data/site";
 import { toAbsoluteUrl } from "../lib/seo";
+import { photoDims } from "../lib/images";
 
 const [posts, photos] = await Promise.all([
   getCollection("posts"),
@@ -13,9 +14,11 @@ const sortedPosts = posts.sort((a, b) => b.data.date.valueOf() - a.data.date.val
 const latestPosts = sortedPosts.slice(0, 3);
 const sortedPhotos = photos.sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
 const latestPhoto = sortedPhotos[0];
-const dims: Record<string, [number, number]> = { "ngc-2244": [2042, 2944], "ngc-2024": [1709, 2472], "m65": [915, 1010], "orion-nebula": [1113, 1920], "ngc-1893": [1107, 1920], "rosette-nebula": [1080, 1920] };
+const dims = await photoDims(sortedPhotos);
+const logPhotos = sortedPhotos.filter((p) => p.id !== (sortedPhotos.find((x) => x.id === "ngc-2244") ?? latestPhoto).id);
+const rotationStart = logPhotos[0] ?? latestPhoto;
 const photoRotationPayload = JSON.stringify(
-  sortedPhotos.map((photo) => ({
+  logPhotos.map((photo) => ({
     id: photo.id,
     title: photo.data.title,
     date: photo.data.date.toISOString(),
@@ -27,7 +30,6 @@ const photoRotationPayload = JSON.stringify(
   })),
 );
 const fmt = (d: Date) => d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" });
-const logPhotos = sortedPhotos.filter((p) => p.id !== (sortedPhotos.find((x) => x.id === "ngc-2244") ?? latestPhoto).id);
 const heroPhoto = sortedPhotos.find((photo) => photo.id === "ngc-2244") ?? latestPhoto;
 
 const widgetConfig = JSON.stringify(siteConfig.widgetConfig);
@@ -123,11 +125,11 @@ const structuredData = [
     <header class="rule-head"><h2>Observing log</h2><a href="/photos/">Everything</a></header>
     <div class="log-row">
       <figure class="log-entry log-0" data-photo-rotation={photoRotationPayload}>
-          <a href={`/photos/${latestPhoto.id}/`} data-photo-link><img src={latestPhoto.data.image} alt={latestPhoto.data.alt} width={dims[latestPhoto.id]?.[0]} height={dims[latestPhoto.id]?.[1]} loading="lazy" decoding="async" data-photo-image /></a>
+          <a href={`/photos/${rotationStart.id}/`} data-photo-link><img src={rotationStart.data.image} alt={rotationStart.data.alt} width={dims[rotationStart.id]?.[0]} height={dims[rotationStart.id]?.[1]} loading="lazy" decoding="async" data-photo-image /></a>
           <figcaption>
             <span class="plate-no">From the archive, changes daily</span>
-            <strong data-photo-title>{latestPhoto.data.title}</strong>
-            <span data-photo-caption>{latestPhoto.data.caption}</span>
+            <strong data-photo-title>{rotationStart.data.title}</strong>
+            <span data-photo-caption>{rotationStart.data.caption}</span>
           </figcaption>
         </figure>
       {logPhotos.slice(0, 3).map((photo, i) => (
