@@ -26,6 +26,11 @@ Useful optional flags:
 - `--alt="Accessible alt text"`
 - `--caption="Photo caption"`
 - `--location="South Carolina"`
+- `--ra=97.98 --dec=4.94` (J2000 decimal degrees of the frame centre; RA 0 to <360, which is hours x 15; Dec -90 to 90)
+
+## Photo sky coordinates
+
+Every photo needs `ra` and `dec` frontmatter (J2000/ICRS, decimal degrees) to appear on the /photos sky globe. Without them the photo is still listed and viewable, just not plotted. Get coordinates from SIMBAD (simbad.cds.unistra.fr) for the object centre. Nothing else is needed: markers, overlap grouping, and the list are all built from the collection. Targets closer than 1.5 degrees share one region marker and keep their own true coordinates.
 
 ## Agent Expectations
 
