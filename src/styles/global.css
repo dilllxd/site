@@ -42,20 +42,16 @@ main:focus{outline:none}
 .panel-head b{font-weight:500;color:var(--accent)}
 .panel-body{padding:.8rem .75rem}
 
-.board{--gap:clamp(.6rem,1.2vw,1rem);--frame-h:clamp(20rem,calc(100dvh - 11.5rem),62rem);display:grid;grid-template-columns:minmax(0,1fr) minmax(0,calc(var(--frame-h)*.72 + 2px));gap:var(--gap);align-items:stretch}
-.board-side{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:auto minmax(0,1fr);gap:var(--gap)}
+.board{--gap:clamp(.6rem,1.2vw,1rem);--frame-h:clamp(20rem,calc(100dvh - 11.5rem),48rem);display:grid;grid-template-columns:minmax(0,1fr) minmax(0,calc(var(--frame-h)*.72 + 2px));gap:var(--gap);align-items:start}
+.board-side{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--gap);align-content:start;align-items:start}
 .board-side .now{grid-column:1/-1;grid-row:1}
-.board-side .about{grid-column:1;grid-row:2}.board-side .links{grid-column:2;grid-row:2}
-.board-side .about,.board-side .links{display:flex;flex-direction:column}
-.board-side .about .panel-body{flex:1;display:flex;align-items:center}
-.board-side .link-rows{flex:1;display:flex;flex-direction:column}
-.board-side .link-rows li{flex:1;display:flex}
-.board-side .link-rows a{flex:1;align-items:center}
+.board-side .about,.board-side .links{grid-row:2}
+.board-side .about{grid-column:1}.board-side .links{grid-column:2}
 .lede{margin:0;font-size:clamp(1.05rem,.9rem + .55vw,1.5rem);line-height:1.4;letter-spacing:-.01em;max-width:34em}
 .link-rows{list-style:none;margin:0;padding:0}
 .link-rows li{border-bottom:1px solid var(--line-soft)}
 .link-rows li:last-child{border-bottom:0}
-.link-rows a{display:flex;justify-content:space-between;gap:1rem;padding:.38rem .75rem;font-size:.92rem;overflow-wrap:anywhere}
+.link-rows a{display:flex;justify-content:space-between;gap:1rem;padding:.38rem .75rem;font-size:.92rem;overflow-wrap:break-word}
 .link-rows a span{color:var(--muted);text-align:right;min-width:0}
 .link-rows a:hover{background:var(--accent);color:var(--on-accent)}
 .link-rows a:hover span{color:inherit}
@@ -70,7 +66,7 @@ main:focus{outline:none}
 .rows>div{display:grid;grid-template-columns:5.8rem minmax(0,1fr);gap:.2rem .75rem;padding:.42rem .75rem;border-bottom:1px solid var(--line-soft);font-size:.92rem}
 .rows>div:last-child{border-bottom:0}
 .rows span{color:var(--muted)}
-.rows strong{font-weight:500;min-width:0;overflow-wrap:anywhere}
+.rows strong{font-weight:500;min-width:0;overflow-wrap:break-word}
 .rows [data-local-time]{font-variant-numeric:tabular-nums}
 .spotify-progress{grid-column:1/-1;height:2px;background:var(--line-soft);overflow:hidden}
 .spotify-progress>div{height:100%;width:100%;background:var(--accent);transform:scaleX(0);transform-origin:0 50%}
@@ -147,6 +143,7 @@ main:focus{outline:none}
 @media (max-width:900px){
  .board{--frame-h:auto;grid-template-columns:minmax(0,1fr)}
  .board-side{display:contents}
+ .board .now,.board .about,.board .links,.board .shot-panel{grid-column:auto;grid-row:auto}
  .board .now{order:1}.board .about{order:2}.board .shot-panel{order:3}.board .links{order:4}
  .board-side .about .panel-body{display:block}
  .now .rows>div{min-height:4.4rem}
@@ -157,7 +154,7 @@ main:focus{outline:none}
 }
 @media (min-width:560px) and (max-width:900px){
  .board{grid-template-columns:repeat(2,minmax(0,1fr))}
- .board .now,.board .about,.board .shot-panel{grid-column:1/-1}
+ .board .now,.board .about,.board .shot-panel,.board .links{grid-column:1/-1}
  .shot-frame{aspect-ratio:16/11}
 }
 @media (max-width:560px){
@@ -186,8 +183,7 @@ main:focus{outline:none}
  .site-header{min-height:0;padding:.3rem 0}
  .board{--frame-h:max(10rem,calc(100dvh - 6.2rem));grid-template-columns:minmax(0,1fr) minmax(0,calc(var(--frame-h)*.72 + 2px))}
  .board-side{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
- .board .now,.board .about,.board .links,.board .shot-panel{order:0}
- .board .shot-panel{grid-column:auto}
+ .board .now{grid-column:1/-1;grid-row:1;order:0}.board .about{grid-column:1;grid-row:2;order:0}.board .links{grid-column:2;grid-row:2;order:0}.board .shot-panel{grid-column:auto;grid-row:auto;order:0}
  .now .rows>div{min-height:3.6rem;padding:.4rem .6rem}
  .now .rows [data-local-time]{font-size:1.3rem}
  .shot-frame{height:var(--frame-h);aspect-ratio:auto;max-height:none;padding:.4rem}
