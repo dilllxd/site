@@ -41,7 +41,6 @@ const structuredData = [
 
   <div class="home-status" data-widget-config={widgetConfig}>
     <div class="status-list">
-      <div><span>Here</span><strong>{siteConfig.location}</strong></div>
       <div><span>Local time</span><strong data-local-time>Loading...</strong></div>
       <div data-work-chip><span data-work-label>Schedule</span><strong data-work-status>Checking...</strong></div>
       <div data-discord-chip><span>Discord</span><strong data-discord-status>Connecting...</strong></div>
@@ -52,7 +51,7 @@ const structuredData = [
     </div>
   </div>
 
-  <Gallery photos={photos} />
+  <Gallery photos={photos} featured />
 
   <script type="module" src="/scripts/live-widgets.js?v=20261010b"></script>
 </SiteLayout>

@@ -2,12 +2,21 @@
 import { photoDims } from "../lib/images";
 
 interface Props {
+  featured?: boolean;
   photos: { id: string; data: { title: string; image: string; alt: string; caption?: string } }[];
 }
-const { photos } = Astro.props;
+const { photos, featured = false } = Astro.props;
 const dims = await photoDims(photos);
+const pool = photos.map((p) => ({ id: p.id, title: p.data.title, caption: p.data.caption ?? "", image: p.data.image, alt: p.data.alt, w: dims[p.id]?.[0], h: dims[p.id]?.[1] }));
+const first = pool[0];
 ---
 <div class="gallery-viewer" data-photo-viewer data-photo-viewer-mode="overlay">
+  {featured && first && (
+    <a href={`/photos/${first.id}/`} class="featured" data-gallery-tile data-featured data-photos={JSON.stringify(pool)} data-title={first.title} data-caption={first.caption} data-image={first.image} data-alt={first.alt} data-w={first.w} data-h={first.h}>
+      <span class="featured-media"><img src={first.image} alt={first.alt} width={first.w} height={first.h} decoding="async" fetchpriority="high" data-featured-img /></span>
+      <span class="featured-text"><small>Featured</small><strong data-featured-title>{first.title}</strong><span data-featured-caption>{first.caption}</span></span>
+    </a>
+  )}
   <ul class="gallery">
     {photos.map((photo, i) => (
       <li>
@@ -56,6 +65,22 @@ const dims = await photoDims(photos);
     const caption = q("[data-gallery-caption]");
     const page = q("[data-gallery-page]");
     const full = q("[data-gallery-full]");
+    const feat = root.querySelector("[data-featured]");
+    if (feat) {
+      try {
+        const pool = JSON.parse(feat.dataset.photos || "[]");
+        if (pool.length > 1) {
+          const p = pool[Math.floor(Math.random() * pool.length)];
+          const fi = feat.querySelector("[data-featured-img]");
+          fi.src = p.image; fi.alt = p.alt;
+          if (p.w && p.h) { fi.width = p.w; fi.height = p.h; }
+          feat.querySelector("[data-featured-title]").textContent = p.title;
+          feat.querySelector("[data-featured-caption]").textContent = p.caption;
+          feat.href = "/photos/" + p.id + "/";
+          Object.assign(feat.dataset, { title: p.title, caption: p.caption, image: p.image, alt: p.alt, w: p.w ?? "", h: p.h ?? "" });
+        }
+      } catch (e) { console.warn("[featured] random pick failed", e); }
+    }
     root.querySelectorAll("[data-gallery-tile]").forEach((tile) => {
       tile.addEventListener("click", (e) => {
         if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
