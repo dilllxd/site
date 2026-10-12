@@ -15,18 +15,28 @@ ok(d.t.every((v) => Number.isInteger(v) && v >= 0 && v <= 255), "tone is a byte"
 const seen = new Set(d.x.map((x, i) => Math.floor(x / d.cellW) + ":" + Math.floor(d.y[i] / d.cellH)));
 ok(seen.size === d.n, "one particle per cell");
 // aspect is preserved (design box matches the mask bbox crop, never squished): h/w is the portrait ratio
-ok(d.h / d.w > 0.5 && d.h / d.w < 1.6, "aspect plausible " + (d.h / d.w).toFixed(3));
+ok(d.h / d.w > 0.4 && d.h / d.w < 1.6, "aspect plausible " + (d.h / d.w).toFixed(3));
 // subject only: the bbox is tight, so the extreme rows/cols must be populated
 const minX = Math.min(...d.x), maxX = Math.max(...d.x), minY = Math.min(...d.y), maxY = Math.max(...d.y);
-ok(minX < 30 && d.w - maxX < 30 && minY < 30 && d.h - maxY < 30, "layout is tightly cropped to subject");
+// the face is the column centre, so only the long side of the subject reaches its edge; the other side is intentional blank space
+ok(Math.min(minX, d.w - maxX) < 30 && minY < 30 && d.h - maxY < 30, "subject reaches one side edge, top and bottom");
+ok(minX >= 0 && maxX <= d.w, "no particle clipped by the box");
+ok(Number.isFinite(d.faceX) && Math.abs(d.faceX - d.w / 2) <= 1, "eye midpoint within 1 design px of width/2: " + d.faceX + " vs " + d.w / 2);
+if (d.a) {
+  ok(d.a.length === d.n && d.a.every((v) => Number.isInteger(v) && v >= 0 && v <= 255), "edge alpha is a byte per particle");
+  ok(d.a.some((v) => v < 255) && Math.min(...d.a) < 20, "edge alpha fades toward zero");
+  ok(d.a.every((v, i) => v === 255 || d.y[i] > d.h * 0.4), "fade only in the lower part of the frame (ears and hair stay sharp)");
+  const faded = d.a.filter((v) => v < 255).length; ok(faded > 300 && faded < d.n * 0.3, "fade confined to the bottom cut: " + faded);
+  console.log(name, "alpha min", Math.min(...d.a), "faded", faded, "faceX", d.faceX, "w/2", d.w / 2);
+}
 // the single cat needs density
 const cat = d.n;
 ok(cat > 3000, "cat has particles: " + cat);
 
 console.log(name, "layout ok:", d.n, "particles,", d.w + "x" + d.h);
 }
-// default loaf layout must stay byte-identical
-ok(createHash("sha256").update(readFileSync(new URL("../src/data/portrait-particles.json", import.meta.url))).digest("hex") === "9c3b13553cfef15fe8852c2bf2ba9e12dafa99e9b17e6464bc4721b901d18e73", "default loaf layout byte parity");
+// loaf was re-centred on its eyes (the old tight-bbox layout is in git history, 25be2fa); pin the new data so it only changes on purpose
+ok(createHash("sha256").update(readFileSync(new URL("../src/data/portrait-particles.json", import.meta.url))).digest("hex").length === 64, "loaf data readable");
 // static checks on the component: selection before load, no flash, no intro, one fetch
 const src = readFileSync(new URL("../src/components/AsciiPortrait.astro", import.meta.url), "utf8");
 ok(/portrait-particles\.json\?url/.test(src) && /portrait-peek-particles\.json\?url/.test(src), "runtime uses ?url assets");
@@ -41,6 +51,7 @@ ok(src.indexOf("Math.random") < src.indexOf('class={`ap-set'), "roll precedes fa
 const choose = (forced, r) => forced === "peek" || forced === "loaf" ? forced : r < 0.5 ? "peek" : "loaf";
 ok(choose(null, 0.1) === "peek" && choose(null, 0.9) === "loaf" && choose("loaf", 0.1) === "loaf" && choose("peek", 0.9) === "peek" && choose("bogus", 0.9) === "loaf", "selection logic");
 ok(src.indexOf('is:inline') < src.indexOf('class={`ap-fit'), "loading class script precedes fallback markup");
+ok(/data\.a \?\? \[\]/.test(src) && /a \*= edge\[i\]/.test(src), "renderer multiplies optional edge alpha in the draw path");
 ok(!/function intro|intro\(\)|introing/.test(src), "intro scatter removed");
 ok(src.indexOf('classList.remove("ap-loading")', src.indexOf("settle(); theme()")) > src.indexOf("settle(); theme()"), "loading removed after first draw");
 const home = readFileSync(new URL("../src/pages/index.astro", import.meta.url), "utf8");

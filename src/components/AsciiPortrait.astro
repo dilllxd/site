@@ -47,14 +47,14 @@ const order = ["desktop", "mobile", "phone"] as const;
       ))}
     </div>
   ))}
-  <canvas class="ap-canvas" data-ap-canvas width="480" height={particles.h} aria-hidden="true"></canvas>
+  <canvas class="ap-canvas" data-ap-canvas width={Math.round(particles.w)} height={particles.h} aria-hidden="true"></canvas>
 </figure>
 
 <script>
   import loafUrl from "../data/portrait-particles.json?url";
   import peekUrl from "../data/portrait-peek-particles.json?url";
 
-  type PortraitData = { w: number; h: number; n: number; cellW: number; x: number[]; y: number[]; t: number[]; c: string };
+  type PortraitData = { w: number; h: number; n: number; cellW: number; x: number[]; y: number[]; t: number[]; c: string; a?: number[]; faceX?: number };
 
   const fig = document.querySelector<HTMLElement>("[data-ascii-portrait]");
   // the early inline script already made the single choice; never re-roll or re-read the query here
@@ -84,9 +84,12 @@ const order = ["desktop", "mobile", "phone"] as const;
     const BUCKETS = [".'`,", "-:~", ";!i*", "+=r1", "ctlI?", "%#oe", "8&@$B"];
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)");
 
-    // per-particle state in design coordinates (480 wide)
+    // per-particle state in design coordinates (DW wide; the face centre sits at DW/2)
     const bx = Float32Array.from(data.x), by = Float32Array.from(data.y);
     const tone = Float32Array.from(data.t, (v) => v / 255);
+    // optional per-particle edge alpha (soft bottom cut); multiplies the final opacity of every palette and of displaced glyphs, so motion never restores the hard edge
+    const edge = Float32Array.from(data.a ?? [], (v) => v / 255);
+    const hasEdge = edge.length === N;
     const px = new Float32Array(N), py = new Float32Array(N), vx = new Float32Array(N), vy = new Float32Array(N);
     const dens = new Float32Array(N), pick = new Uint8Array(N);
     const tint = new Float32Array(N * 3);
@@ -152,6 +155,7 @@ const order = ["desktop", "mobile", "phone"] as const;
           const k = Math.min(1, d2 / 900);
           col = css(k > 0.55 ? accent : hot); a = Math.min(1, a + 0.35 * k + 0.2);
         }
+        if (hasEdge) a *= edge[i];
         ctx.globalAlpha = a; ctx.fillStyle = col;
         ctx.fillText(glyph[i], px[i] * scale, py[i] * scale);
       }

@@ -64,15 +64,23 @@ function represent(t) {
 }
 
 async function build(name, v) {
-  const c = v.crop;
+  let c = v.crop, cols = v.cols;
+  if (cfg.faceX != null) {
+    // centre the eye midpoint (fraction of upright width) on the grid's middle column: symmetric extents, grid widened so the cat keeps its resolution
+    const half = Math.max(cfg.faceX - c.left, c.left + c.width - cfg.faceX);
+    cols = 2 * Math.round(v.cols * (2 * half) / c.width / 2);
+    c = { ...c, left: cfg.faceX - half, width: 2 * half };
+  }
   const region = { left: Math.round(c.left * W), top: Math.round(c.top * H), width: Math.round(c.width * W), height: Math.round(c.height * H) };
-  const cols = v.cols;
+  // a region past the photo edge is padded blank (masked), never clipped
+  const padL = Math.max(0, -region.left), padR = Math.max(0, region.left + region.width - W);
+  const ex = async (input, opts) => { if (!padL && !padR) return { input, opts, region }; const b = await sharp(input, opts).extend({ left: padL, right: padR, background: "#000" }).png().toBuffer(); return { input: b, opts: undefined, region: { ...region, left: region.left + padL } }; };
   const rows = Math.round((cols * region.height / region.width) * cfg.cellAspect);
   const SS = 4;
-  const { data: big, info } = await sharp(upright.data).extract(region).resize(cols * SS, rows * SS, { fit: "fill", kernel: "lanczos3" }).greyscale().raw().toBuffer({ resolveWithObject: true });
-  const rawIn = { raw: { width: W, height: H, channels: 1 } };
-  const { data: tbig } = await sharp(toneSrc, rawIn).extract(region).resize(cols * SS, rows * SS, { fit: "fill", kernel: "lanczos3" }).greyscale().raw().toBuffer({ resolveWithObject: true });
-  const { data: mbig } = await sharp(maskRaw, rawIn).extract(region).resize(cols * SS, rows * SS, { fit: "fill", kernel: "cubic" }).greyscale().raw().toBuffer({ resolveWithObject: true });
+  const eu = await ex(upright.data), et = await ex(toneSrc, { raw: { width: W, height: H, channels: 1 } }), em = await ex(maskRaw, { raw: { width: W, height: H, channels: 1 } });
+  const { data: big, info } = await sharp(eu.input).extract(eu.region).resize(cols * SS, rows * SS, { fit: "fill", kernel: "lanczos3" }).greyscale().raw().toBuffer({ resolveWithObject: true });
+  const { data: tbig } = await sharp(et.input, et.opts).extract(et.region).resize(cols * SS, rows * SS, { fit: "fill", kernel: "lanczos3" }).greyscale().raw().toBuffer({ resolveWithObject: true });
+  const { data: mbig } = await sharp(em.input, em.opts).extract(em.region).resize(cols * SS, rows * SS, { fit: "fill", kernel: "cubic" }).greyscale().raw().toBuffer({ resolveWithObject: true });
   const alpha = new Float32Array(cols * rows);
   // linear-light average per cell
   const lum = new Float32Array(cols * rows);
@@ -106,13 +114,26 @@ async function build(name, v) {
     const px = Buffer.from(Array.from(tone, (t) => t < 0 ? 0 : Math.round(30 + t * 225)));
     await sharp(px, { raw: { width: cols, height: rows, channels: 1 } }).resize(cols * 8, rows * 16, { kernel: "nearest" }).png().toFile(path.join(proofDir, name + "-gray8x.png"));
   }
+  // optional soft bottom cut (cfg.bottomFeather = fraction of rows): same rule as the particle build, applied to glyph opacity so both palettes fade to paper
+  const fade = new Float32Array(cols * rows).fill(1);
+  if (cfg.bottomFeather > 0) {
+    const gate = rows * 0.55, fr = rows * cfg.bottomFeather;
+    for (let x = 0; x < cols; x++) {
+      let b = -1; for (let y = rows - 1; y >= 0; y--) if (inSub(y * cols + x)) { b = y; break; }
+      if (b < gate) continue;
+      const k = Math.min(1, (b - gate) / (rows * 0.08)), w = k * k * (3 - 2 * k);
+      for (let y = 0; y <= b; y++) { const u = Math.min(1, Math.max(0, (b - y + 0.5) / fr)); fade[y * cols + x] = 1 - w * (1 - u * u * (3 - 2 * u)); }
+    }
+  }
   const mk = (inv) => {
     const chars = [], lv = [];
     for (let y = 0; y < rows; y++) {
       let a = "", b = "";
       for (let x = 0; x < cols; x++) {
         const t = tone[y * cols + x];
-        const r = t < 0 ? { g: 0, o: 0 } : represent(inv ? 1 - t : t);
+        let r = t < 0 ? { g: 0, o: 0 } : represent(inv ? 1 - t : t);
+        const fv = fade[y * cols + x];
+        if (fv < 1 && t >= 0) r = fv < 0.05 ? { g: 0, o: 0 } : { g: r.g, o: Math.max(0, Math.min(LEVELS - 1, Math.round((r.o + 1) * fv) - 1)) };
         a += cfg.ramp[r.g]; b += r.o.toString(16);
       }
       chars.push(a); lv.push(b);
