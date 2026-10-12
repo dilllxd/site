@@ -33,7 +33,13 @@ ok(/portrait-particles\.json\?url/.test(src) && /portrait-peek-particles\.json\?
 ok(!/import (loaf|peek) from/.test(src), "no inline client JSON imports");
 ok(src.indexOf("location.search") < src.indexOf("fetch("), "query read before fetch");
 ok((src.match(/fetch\(/g) || []).length === 1, "exactly one fetch");
-ok(/get\("p"\) === "peek"/.test(src) && /isPeek \? peekUrl : loafUrl/.test(src), "whitelist: only p=peek picks peek");
+ok(/forced === "peek" \|\| forced === "loaf"/.test(src) && /Math\.random\(\) < 0\.5 \? "peek" : "loaf"/.test(src), "forced whitelist, else 50/50 roll");
+ok((src.match(/Math\.random\(/g) || []).length === 1, "exactly one random call");
+ok(/dataset\.portraitChoice/.test(src) && !/URLSearchParams[^\n]*\n[^]*<script>[^]*URLSearchParams/.test(src.split("<script>").slice(1).join("")) , "runtime reads stored choice");
+ok(!/URLSearchParams|localStorage/.test(src.slice(src.lastIndexOf("<script>"))), "runtime never re-reads query or storage");
+ok(src.indexOf("Math.random") < src.indexOf('class={`ap-set'), "roll precedes fallback markup");
+const choose = (forced, r) => forced === "peek" || forced === "loaf" ? forced : r < 0.5 ? "peek" : "loaf";
+ok(choose(null, 0.1) === "peek" && choose(null, 0.9) === "loaf" && choose("loaf", 0.1) === "loaf" && choose("peek", 0.9) === "peek" && choose("bogus", 0.9) === "loaf", "selection logic");
 ok(src.indexOf('is:inline') < src.indexOf('class={`ap-fit'), "loading class script precedes fallback markup");
 ok(!/function intro|intro\(\)|introing/.test(src), "intro scatter removed");
 ok(src.indexOf('classList.remove("ap-loading")', src.indexOf("settle(); theme()")) > src.indexOf("settle(); theme()"), "loading removed after first draw");

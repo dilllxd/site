@@ -1,5 +1,6 @@
 ---
 import portrait from "../data/ascii-portrait.json";
+import peekPortrait from "../data/ascii-portrait-peek.json";
 import particles from "../data/portrait-particles.json";
 import peekDimensions from "../data/portrait-peek-particles.json";
 
@@ -23,19 +24,27 @@ const grid = (g: { chars: string[]; lv: string[] }) =>
     })
     .join("\n");
 
-const { ramp, variants } = portrait;
+const sets = [{ id: "peek", variants: peekPortrait.variants }, { id: "loaf", variants: portrait.variants }];
 const order = ["desktop", "mobile", "phone"] as const;
 ---
 <figure class="ap" data-ascii-portrait data-aspect={`${particles.w}/${particles.h}`} data-peek-aspect={`${peekDimensions.w}/${peekDimensions.h}`} role="img" aria-label="ASCII portrait of Amber">
   <script is:inline>const portraitFigure = document.currentScript.parentElement;
-    const portraitAspect = new URLSearchParams(location.search).get("p") === "peek" ? portraitFigure.dataset.peekAspect : portraitFigure.dataset.aspect;
+    // the one and only layout choice: ?p=peek / ?p=loaf force it, anything else is a fresh 50/50 roll on every load
+    const forced = new URLSearchParams(location.search).get("p");
+    const portraitChoice = forced === "peek" || forced === "loaf" ? forced : Math.random() < 0.5 ? "peek" : "loaf";
+    const portraitAspect = portraitChoice === "loaf" ? portraitFigure.dataset.aspect : portraitFigure.dataset.peekAspect;
+    portraitFigure.dataset.portraitChoice = portraitChoice;
     portraitFigure.dataset.aspect = portraitAspect;
     portraitFigure.style.setProperty("--portrait-aspect", portraitAspect);
     portraitFigure.classList.add("ap-loading")</script>
-  {order.map((k) => (
-    <div class={`ap-fit ap-v-${k}`} style={`--cols:${variants[k].cols}`}>
-      <pre class="ap-grid ap-dark" data-mode="dark" data-cols={variants[k].cols} data-rows={variants[k].rows} aria-hidden="true" set:html={grid(variants[k].dark)} />
-      <pre class="ap-grid ap-light" data-mode="light" data-cols={variants[k].cols} data-rows={variants[k].rows} aria-hidden="true" set:html={grid(variants[k].light)} />
+  {sets.map((st) => (
+    <div class={`ap-set ap-set-${st.id}`}>
+      {order.map((k) => (
+        <div class={`ap-fit ap-v-${k}`} style={`--cols:${st.variants[k].cols}`}>
+          <pre class="ap-grid ap-dark" data-mode="dark" data-cols={st.variants[k].cols} data-rows={st.variants[k].rows} aria-hidden="true" set:html={grid(st.variants[k].dark)} />
+          <pre class="ap-grid ap-light" data-mode="light" data-cols={st.variants[k].cols} data-rows={st.variants[k].rows} aria-hidden="true" set:html={grid(st.variants[k].light)} />
+        </div>
+      ))}
     </div>
   ))}
   <canvas class="ap-canvas" data-ap-canvas width="480" height={particles.h} aria-hidden="true"></canvas>
@@ -47,11 +56,11 @@ const order = ["desktop", "mobile", "phone"] as const;
 
   type PortraitData = { w: number; h: number; n: number; cellW: number; x: number[]; y: number[]; t: number[]; c: string };
 
-  // fixed whitelist, read before any layout loads: only ?p=peek switches layouts, anything else is the default
-  const isPeek = new URLSearchParams(location.search).get("p") === "peek";
+  const fig = document.querySelector<HTMLElement>("[data-ascii-portrait]");
+  // the early inline script already made the single choice; never re-roll or re-read the query here
+  const isPeek = fig?.dataset.portraitChoice !== "loaf";
   const url = isPeek ? peekUrl : loafUrl;
 
-  const fig = document.querySelector<HTMLElement>("[data-ascii-portrait]");
   const canvas = fig?.querySelector<HTMLCanvasElement>("[data-ap-canvas]");
   const ctx = canvas?.getContext("2d");
   if (fig && canvas && ctx) {
@@ -63,8 +72,8 @@ const order = ["desktop", "mobile", "phone"] as const;
       })
       .catch((e) => {
         console.warn("portrait unavailable", e);
-        // peek never falls back to the loaf; the default keeps its static grid
-        if (!isPeek) fig.classList.remove("ap-loading");
+        // the static grid of the chosen layout is revealed; the other layout is never shown
+        fig.classList.remove("ap-loading");
       });
   } else fig?.classList.remove("ap-loading");
 
