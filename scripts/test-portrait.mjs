@@ -19,15 +19,18 @@ ok(d.h / d.w > 0.4 && d.h / d.w < 1.6, "aspect plausible " + (d.h / d.w).toFixed
 // subject only: the bbox is tight, so the extreme rows/cols must be populated
 const minX = Math.min(...d.x), maxX = Math.max(...d.x), minY = Math.min(...d.y), maxY = Math.max(...d.y);
 // the face is the column centre, so only the long side of the subject reaches its edge; the other side is intentional blank space
-ok(Math.min(minX, d.w - maxX) < 30 && minY < 30 && d.h - maxY < 30, "subject reaches one side edge, top and bottom");
+ok(minX < 40 && d.w - maxX < 80 && minY < 30 && d.h - maxY < 30, "layout is cropped to the subject, small blank margins only");
 ok(minX >= 0 && maxX <= d.w, "no particle clipped by the box");
-ok(Number.isFinite(d.faceX) && Math.abs(d.faceX - d.w / 2) <= 1, "eye midpoint within 1 design px of width/2: " + d.faceX + " vs " + d.w / 2);
+const isPeek = name.includes("peek");
+if (isPeek) if (d.cx != null) ok(Math.abs(d.cx - d.w / 2) < 12 && Number.isFinite(d.eyeX), "centre anchor is a small nudge from the box middle: cx " + d.cx + " eye " + d.eyeX);
+else ok(d.faceX === undefined, "loaf has no face-point requirement");
+{ const cx = (minX + maxX) / 2; ok(Math.abs(cx - d.w / 2) <= d.w * 0.07, "data bbox roughly centred (runtime centres exact visible pixels): " + cx.toFixed(1) + " vs " + d.w / 2); }
 if (d.a) {
   ok(d.a.length === d.n && d.a.every((v) => Number.isInteger(v) && v >= 0 && v <= 255), "edge alpha is a byte per particle");
   ok(d.a.some((v) => v < 255) && Math.min(...d.a) < 20, "edge alpha fades toward zero");
   ok(d.a.every((v, i) => v === 255 || d.y[i] > d.h * 0.4), "fade only in the lower part of the frame (ears and hair stay sharp)");
   const faded = d.a.filter((v) => v < 255).length; ok(faded > 300 && faded < d.n * 0.3, "fade confined to the bottom cut: " + faded);
-  console.log(name, "alpha min", Math.min(...d.a), "faded", faded, "faceX", d.faceX, "w/2", d.w / 2);
+  console.log(name, "alpha min", Math.min(...d.a), "faded", faded, "cx", d.cx);
 }
 // the single cat needs density
 const cat = d.n;
@@ -35,8 +38,8 @@ ok(cat > 3000, "cat has particles: " + cat);
 
 console.log(name, "layout ok:", d.n, "particles,", d.w + "x" + d.h);
 }
-// loaf was re-centred on its eyes (the old tight-bbox layout is in git history, 25be2fa); pin the new data so it only changes on purpose
-ok(createHash("sha256").update(readFileSync(new URL("../src/data/portrait-particles.json", import.meta.url))).digest("hex").length === 64, "loaf data readable");
+ok(createHash("sha256").update(readFileSync(new URL("../src/data/portrait-particles.json", import.meta.url))).digest("hex") === "9c3b13553cfef15fe8852c2bf2ba9e12dafa99e9b17e6464bc4721b901d18e73", "loaf layout unchanged (centring is done by the renderer from drawn extents)");
+ok(/function recentre/.test(readFileSync(new URL("../src/components/AsciiPortrait.astro", import.meta.url), "utf8")), "renderer centres drawn extents");
 // static checks on the component: selection before load, no flash, no intro, one fetch
 const src = readFileSync(new URL("../src/components/AsciiPortrait.astro", import.meta.url), "utf8");
 ok(/portrait-particles\.json\?url/.test(src) && /portrait-peek-particles\.json\?url/.test(src), "runtime uses ?url assets");

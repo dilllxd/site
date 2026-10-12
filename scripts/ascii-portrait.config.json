@@ -43,7 +43,7 @@
   "mix": 1
  },
  "alphaThreshold": 0.4,
- "catLift": 1,
+ "catLift": 1.0,
  "stretch": [
   0.02,
   0.99
@@ -56,6 +56,5 @@
  "particles": {
   "cellW": 3.4,
   "cellH": 5.1
- },
- "faceX": 0.628
+ }
 }

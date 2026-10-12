@@ -13,6 +13,10 @@ const P = { designW: 480, cellW: 4.2, cellH: 6.3, pad: 6, alpha: 0.45, ...(cfg.p
 // optional face centring: ASCII_PORTRAIT_FACE_X is the eye-midpoint column in upright source pixels (measured, not the bbox centre).
 // ASCII_PORTRAIT_FEATHER (design px, default 0 = off) fades only the diagonal bottom cut of the mask; see the alpha pass below.
 const faceX = process.env.ASCII_PORTRAIT_FACE_X ? Number(process.env.ASCII_PORTRAIT_FACE_X) : null;
+// ASCII_PORTRAIT_EYE_X (+ optional ASCII_PORTRAIT_NUDGE, default 0.25): keep the tight bbox layout and only record a centre anchor 'cx' for the
+// visible particles: their bbox centre nudged that fraction of the way toward the eye midpoint. The renderer centres the drawn extents on cx.
+const eyeX = process.env.ASCII_PORTRAIT_EYE_X ? Number(process.env.ASCII_PORTRAIT_EYE_X) : null;
+const nudge = Number(process.env.ASCII_PORTRAIT_NUDGE ?? 0.25);
 const featherPx = Number(process.env.ASCII_PORTRAIT_FEATHER || 0);
 const source = process.env.ASCII_PORTRAIT_SOURCE, maskPath = process.env.ASCII_PORTRAIT_MASK;
 if (!source || !maskPath) { console.error("Set ASCII_PORTRAIT_SOURCE and ASCII_PORTRAIT_MASK"); process.exit(1); }
@@ -104,6 +108,11 @@ for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) {
 }
 const out = { w: faceX != null ? Math.round(cols * P.cellW * 10) / 10 : P.designW, h: Math.round(rows * P.cellH), cellW: P.cellW, cellH: P.cellH, n: xs.length, x: xs, y: ys, t: ts, c: cs };
 if (as.some((v) => v < 255)) out.a = as;
+if (eyeX != null) {
+  const f = cols * P.cellW / region.width, mn = Math.min(...xs), mx = Math.max(...xs), pc = (mn + mx) / 2, ex = (eyeX - region.left) * f;
+  out.eyeX = Math.round(ex * 10) / 10; out.cx = Math.round((pc + nudge * (ex - pc)) * 10) / 10;
+  console.log("particle bbox x", mn, mx, "centre", pc, "eye", out.eyeX, "eye-centre delta", (ex - pc).toFixed(1), "cx", out.cx, "nudge", nudge);
+}
 if (faceX != null) out.faceX = Math.round((faceX - region.left) / region.width * cols * P.cellW * 10) / 10;
 console.log("region", JSON.stringify(region), "frac", JSON.stringify({ left: region.left / W, top: region.top / H, width: region.width / W, height: region.height / H }), "faceX", out.faceX, "w/2", out.w / 2, "fade min/count", Math.min(...as), as.filter((v) => v < 255).length);
 await writeFile(path.join(root, process.env.ASCII_PORTRAIT_OUT || "src/data/portrait-particles.json"), JSON.stringify(out) + "\n");

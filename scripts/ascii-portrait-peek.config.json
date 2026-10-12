@@ -1,5 +1,5 @@
 {
- "source": "Peek photo (4000x3000 landscape, EXIF upright). faceX is the eye midpoint as a fraction of upright width; crop is the mask bbox. Set ASCII_PORTRAIT_SOURCE/MASK; run with ASCII_CFG=scripts/ascii-portrait-peek.config.json ASCII_OUT=src/data/ascii-portrait-peek.json.",
+ "source": "Peek photo (4000x3000, EXIF upright); crop = mask bbox. Run: ASCII_CFG=scripts/ascii-portrait-peek.config.json ASCII_PORTRAIT_SOURCE/MASK set.",
  "cellAspect": 0.5,
  "ramp": " .-:*+=#%@",
  "levels": 16,
@@ -57,6 +57,5 @@
   "cellW": 3.4,
   "cellH": 5.1
  },
- "faceX": 0.5761,
  "bottomFeather": 0.1
 }

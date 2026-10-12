@@ -54,7 +54,7 @@ const order = ["desktop", "mobile", "phone"] as const;
   import loafUrl from "../data/portrait-particles.json?url";
   import peekUrl from "../data/portrait-peek-particles.json?url";
 
-  type PortraitData = { w: number; h: number; n: number; cellW: number; x: number[]; y: number[]; t: number[]; c: string; a?: number[]; faceX?: number };
+  type PortraitData = { w: number; h: number; n: number; cellW: number; x: number[]; y: number[]; t: number[]; c: string; a?: number[]; cx?: number; eyeX?: number };
 
   const fig = document.querySelector<HTMLElement>("[data-ascii-portrait]");
   // the early inline script already made the single choice; never re-roll or re-read the query here
@@ -85,7 +85,7 @@ const order = ["desktop", "mobile", "phone"] as const;
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)");
 
     // per-particle state in design coordinates (DW wide; the face centre sits at DW/2)
-    const bx = Float32Array.from(data.x), by = Float32Array.from(data.y);
+    const bx0 = Float32Array.from(data.x), bx = Float32Array.from(data.x), by = Float32Array.from(data.y);
     const tone = Float32Array.from(data.t, (v) => v / 255);
     // optional per-particle edge alpha (soft bottom cut); multiplies the final opacity of every palette and of displaced glyphs, so motion never restores the hard edge
     const edge = Float32Array.from(data.a ?? [], (v) => v / 255);
@@ -131,6 +131,27 @@ const order = ["desktop", "mobile", "phone"] as const;
         const r = tint[i * 3], g = tint[i * 3 + 1], bl = tint[i * 3 + 2], l = (r + g + bl) / 3;
         colour[i] = css([ink[0] + tintAmt * (r - l), ink[1] + tintAmt * (g - l), ink[2] + tintAmt * (bl - l)]);
       }
+      recentre();
+    }
+    // centre the DRAWN resting extents (live glyphs with visible edge alpha, plus half a glyph) on data.cx (default the box middle),
+    // per palette, because tone culling differs between ink and paper. Base positions only: the pointer never moves the anchor.
+    // The shift is clamped so nothing is clipped. Measured via window.__ap.extent() for the browser check.
+    let shiftX = 0;
+    const HALF = data.cellW * 0.45, VIS = 12 / 255;
+    function extent() {
+      let mn = Infinity, mx = -Infinity;
+      for (let i = 0; i < N; i++) { if (!live[i] || (hasEdge && edge[i] < VIS)) continue; if (bx[i] < mn) mn = bx[i]; if (bx[i] > mx) mx = bx[i]; }
+      return { left: mn - HALF, right: mx + HALF };
+    }
+    function recentre() {
+      let mn = Infinity, mx = -Infinity;
+      for (let i = 0; i < N; i++) { if (!live[i] || (hasEdge && edge[i] < VIS)) continue; if (bx0[i] < mn) mn = bx0[i]; if (bx0[i] > mx) mx = bx0[i]; }
+      if (!(mx >= mn)) return;
+      mn -= HALF; mx += HALF;
+      const want = (data.cx ?? DW / 2) - (mn + mx) / 2;
+      const off = Math.max(-mn, Math.min(DW - mx, want)), d = off - shiftX;
+      for (let i = 0; i < N; i++) { bx[i] = bx0[i] + off; px[i] += d; }
+      shiftX = off;
     }
 
     let scale = 1, cssW = 0;
@@ -230,6 +251,6 @@ const order = ["desktop", "mobile", "phone"] as const;
     settle(); theme(); resize(); draw();
     fig.classList.remove("ap-loading");
     // test hook for the layout/renderer checks
-    (fig as any).__ap = { count: () => N, drawnCount: () => live.reduce((a, b) => a + b, 0) };
+    (fig as any).__ap = { count: () => N, drawnCount: () => live.reduce((a, b) => a + b, 0), extent, shift: () => shiftX, dw: DW, dh: DH };
   }
 </script>
