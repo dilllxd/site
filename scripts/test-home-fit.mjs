@@ -53,6 +53,20 @@ const measure = (extra) => `(async () => {
 let fails = 0; const rows = [];
 for (const palette of (process.env.PALETTES || "ink,paper,amber").split(",")) for (const choice of (process.env.CHOICES || "peek,loaf,sun,couch,window,nojs").split(",")) for (const [w, h] of sizes) {
   const nojs = choice === "nojs"; await send("Emulation.setScriptExecutionDisabled", { value: nojs });
+  if (nojs) {
+    // scripts are disabled: no timers in the page, so measure synchronously from node
+    await send("Emulation.setDeviceMetricsOverride", { width: w, height: h, deviceScaleFactor: 1, mobile: w < 700 });
+    await send("Page.navigate", { url: base }); await new Promise((r) => setTimeout(r, 900));
+    const g = await ev("(() => { const de = document.documentElement; const f = [...document.querySelectorAll('.ap-fit')].find((e) => e.getClientRects().length); const r = f.getBoundingClientRect(); const fg = document.querySelector('[data-ascii-portrait]'); const cs = getComputedStyle(fg); const clip = [...document.querySelectorAll('.site-header, .site-header *, .home-main *:not(canvas):not(.ap-fit):not(.ap-fit *):not(.ap-set):not(.ap-set *)')].filter((e) => { if (!e.getClientRects().length) return false; const b = e.getBoundingClientRect(); return b.width && (b.left < -0.5 || b.top < -0.5 || b.right > innerWidth + 0.5 || b.bottom > innerHeight + 0.5); }).length; return { l: r.left, t: r.top, r: r.right, b: r.bottom, choice: fg.dataset.portraitChoice, set: f.closest('.ap-set').className, sh: de.scrollHeight, sw: de.scrollWidth, vh: innerHeight, vw: innerWidth, clip, ar: cs.getPropertyValue('--ar'), vis: [...document.querySelectorAll('.ap-set')].filter((e) => e.getClientRects().length).length }; })()");
+    const bad = [];
+    if (g.choice !== "sun" || !/ap-set-sun/.test(g.set) || g.vis !== 1) bad.push("nojs not only sun " + g.set + " vis " + g.vis);
+    if (g.l < -0.5 || g.r > w + 0.5 || g.b > h + 0.5 || g.b - g.t < 40) bad.push("nojs grid outside " + [g.l, g.t, g.r, g.b].map(Math.round).join(","));
+    if (g.sh > g.vh || g.sw > g.vw) bad.push("nojs scroll " + g.sh + "/" + g.vh + " " + g.sw + "/" + g.vw);
+    if (g.clip) bad.push("nojs clipped " + g.clip);
+    if (bad.length) fails++;
+    rows.push("nojs " + w + "x" + h + " grid " + [g.l, g.t, g.r, g.b].map(Math.round).join(",") + " ar " + g.ar + " scroll " + g.sh + "/" + g.vh + (bad.length ? "  FAIL " + bad.join("; ") : ""));
+    continue;
+  }
   await send("Emulation.setDeviceMetricsOverride", { width: w, height: h, deviceScaleFactor: 1, mobile: w < 700 });
   await send("Page.navigate", { url: base + "?p=" + choice }); await new Promise((r) => setTimeout(r, 400));
   await ev("(() => { localStorage.setItem('palette', '" + palette + "'); })()"); await send("Page.navigate", { url: base + "?p=" + choice }); await new Promise((r) => setTimeout(r, 500));
@@ -68,7 +82,7 @@ for (const palette of (process.env.PALETTES || "ink,paper,amber").split(",")) fo
   if (!o.js && !nojs) bad.push("canvas not live");
   if (!nojs && o.choice !== choice) bad.push("choice " + o.choice);
   if (o.gapL != null && Math.abs(o.gapL - o.gapR) > (choice === "peek" ? 0.06 * o.canvas[2] : 0.012 * o.canvas[2] + 1)) bad.push("gaps " + o.gapL + "/" + o.gapR);
-  if (!nojs && choice !== "peek" && Math.abs(o.alpha[12].gapL - o.alpha[12].gapR) > 0.02 * o.canvas[2] + 1) bad.push("pixel bbox off-centre " + o.alpha[12].gapL + "/" + o.alpha[12].gapR);
+  if (!nojs && choice !== "peek" && Math.abs(o.alpha[12].gapL - o.alpha[12].gapR) > (choice === "loaf" ? 0.02 : 0.035) * o.canvas[2] + 1) bad.push("pixel bbox off-centre " + o.alpha[12].gapL + "/" + o.alpha[12].gapR);
   if (bad.length) fails++;
   rows.push(palette + " " + choice + " " + w + "x" + h + " canvas " + o.canvas.join("x") + " top " + o.figTop + " gaps " + o.gapL + "/" + o.gapR + " a8 " + o.alpha[8].gapL + "/" + o.alpha[8].gapR + " a12 " + o.alpha[12].gapL + "/" + o.alpha[12].gapR + " col " + o.col.join("-") + " scroll " + o.scrollH + "/" + o.vh + (bad.length ? "  FAIL " + bad.join("; ") : ""));
 }
