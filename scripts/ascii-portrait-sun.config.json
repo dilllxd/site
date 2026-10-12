@@ -28,7 +28,7 @@
  },
  "variants": {
   "desktop": {
-   "cols": 170,
+   "cols": 240,
    "gamma": 1.2,
    "crop": {
     "left": 0.0614,
@@ -38,7 +38,7 @@
    }
   },
   "mobile": {
-   "cols": 100,
+   "cols": 140,
    "gamma": 1.2,
    "crop": {
     "left": 0.0614,
@@ -48,7 +48,7 @@
    }
   },
   "phone": {
-   "cols": 110,
+   "cols": 155,
    "gamma": 1.2,
    "crop": {
     "left": 0.0614,
