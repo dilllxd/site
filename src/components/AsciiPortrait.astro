@@ -12,13 +12,16 @@ const grid = (rows: string[]) =>
     })
     .join("\n");
 
-const { cols, rows, ramp } = portrait;
+const { ramp, variants } = portrait;
+const order = ["desktop", "mobile"] as const;
 ---
-<figure class="ap" data-ascii-portrait data-cols={cols} data-rows={rows} data-ramp={ramp} role="img" aria-label="ASCII portrait of Dylan with Amber, a tortoiseshell cat, leaning against his chest">
-  <div class="ap-fit" style={`--cols:${cols}`}>
-    <pre class="ap-grid ap-dark" data-mode="dark" aria-hidden="true" set:html={grid(portrait.dark)} />
-    <pre class="ap-grid ap-light" data-mode="light" aria-hidden="true" set:html={grid(portrait.light)} />
-  </div>
+<figure class="ap" data-ascii-portrait data-ramp={ramp} role="img" aria-label="ASCII portrait of Dylan with Amber, a tortoiseshell cat, leaning against his chest">
+  {order.map((k) => (
+    <div class={`ap-fit ap-v-${k}`} style={`--cols:${variants[k].cols}`}>
+      <pre class="ap-grid ap-dark" data-mode="dark" data-cols={variants[k].cols} data-rows={variants[k].rows} aria-hidden="true" set:html={grid(variants[k].dark)} />
+      <pre class="ap-grid ap-light" data-mode="light" data-cols={variants[k].cols} data-rows={variants[k].rows} aria-hidden="true" set:html={grid(variants[k].light)} />
+    </div>
+  ))}
 </figure>
 
 <script>
@@ -26,8 +29,7 @@ const { cols, rows, ramp } = portrait;
   if (fig) initPortrait(fig);
 
   function initPortrait(fig: HTMLElement) {
-    const COLS = Number(fig.dataset.cols);
-    const ROWS = Number(fig.dataset.rows);
+    let COLS = 1, ROWS = 1, segsPerRow = 1;
     const SEG = 5;
     const ramp = fig.dataset.ramp || "";
     const idx = new Map<string, number>();
@@ -39,7 +41,6 @@ const { cols, rows, ramp } = portrait;
     const WAVE_MS = 900;
 
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const segsPerRow = Math.ceil(COLS / SEG);
     type Seg = { el: HTMLElement; base: string; cur: string; level: number };
     let grid: Seg[] = [];
     let pre: HTMLElement | null = null;
@@ -49,6 +50,7 @@ const { cols, rows, ramp } = portrait;
       pre = activePre();
       grid = [];
       if (!pre) return;
+      COLS = Number(pre.dataset.cols); ROWS = Number(pre.dataset.rows); segsPerRow = Math.ceil(COLS / SEG);
       pre.querySelectorAll<HTMLElement>(".ap-seg").forEach((el) => {
         const base = el.textContent || "";
         grid.push({ el, base, cur: base, level: 0 });
