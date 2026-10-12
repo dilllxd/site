@@ -1,5 +1,5 @@
 {
- "source": "set with ASCII_PORTRAIT_SOURCE or --source; kept outside the repo. Crops are fractions of the auto-oriented upright image (EXIF 8, 2080x2784).",
+ "source": "set with ASCII_PORTRAIT_SOURCE or --source; kept outside the repo. Crops are fractions of the auto-oriented upright image (EXIF 6, 3024x4032).",
  "cellAspect": 0.5,
  "ramp": " .-:*+=#%@",
  "levels": 16,
@@ -10,47 +10,51 @@
    "cols": 170,
    "gamma": 1.2,
    "crop": {
-    "left": 0,
-    "top": 0.1,
-    "width": 1,
-    "height": 0.86
+    "left": 0.01,
+    "top": 0.39,
+    "width": 0.77,
+    "height": 0.44
    }
   },
   "mobile": {
    "cols": 100,
    "gamma": 1.2,
    "crop": {
-    "left": 0,
-    "top": 0.02,
-    "width": 1,
-    "height": 0.95
+    "left": 0.01,
+    "top": 0.39,
+    "width": 0.77,
+    "height": 0.44
    }
   },
   "phone": {
    "cols": 110,
    "gamma": 1.2,
    "crop": {
-    "left": 0,
-    "top": 0.02,
-    "width": 1,
-    "height": 0.95
+    "left": 0.01,
+    "top": 0.39,
+    "width": 0.77,
+    "height": 0.44
    }
   }
  },
  "clahe": {
-  "tile": 160,
+  "tile": 240,
   "slope": 6,
   "mix": 1
  },
  "alphaThreshold": 0.4,
- "catLift": 0.6,
+ "catLift": 1.0,
  "stretch": [
-  0.03,
+  0.02,
   0.99
  ],
  "sCurve": 0.6,
  "detail": {
   "radius": 3,
   "amount": 1.2
+ },
+ "particles": {
+  "cellW": 3.4,
+  "cellH": 5.1
  }
 }

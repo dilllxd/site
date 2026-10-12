@@ -25,7 +25,7 @@ const grid = (g: { chars: string[]; lv: string[] }) =>
 const { ramp, variants } = portrait;
 const order = ["desktop", "mobile", "phone"] as const;
 ---
-<figure class="ap" data-ascii-portrait data-aspect={`${particles.w}/${particles.h}`} role="img" aria-label="ASCII portrait of Dylan with Amber, a tortoiseshell cat, leaning against his chest">
+<figure class="ap" data-ascii-portrait data-aspect={`${particles.w}/${particles.h}`} role="img" aria-label="ASCII portrait of Amber">
   {order.map((k) => (
     <div class={`ap-fit ap-v-${k}`} style={`--cols:${variants[k].cols}`}>
       <pre class="ap-grid ap-dark" data-mode="dark" data-cols={variants[k].cols} data-rows={variants[k].rows} aria-hidden="true" set:html={grid(variants[k].dark)} />
@@ -45,7 +45,7 @@ const order = ["desktop", "mobile", "phone"] as const;
 
   function initPortrait(fig: HTMLElement, canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D) {
     const DW = data.w, DH = data.h, N = data.n;
-    const FONT = 7; // design px; monospace advance is ~0.6em, so 7px sits on the 4.2px cell pitch
+    const FONT = Math.round(7 * data.cellW / 4.2 * 10) / 10; // design px; monospace advance is ~0.6em, so 7px sits on the 4.2px cell pitch
     const BUCKETS = [".'`,", "-:~", ";!i*", "+=r1", "ctlI?", "%#oe", "8&@$B"];
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)");
 

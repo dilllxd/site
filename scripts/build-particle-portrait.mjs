@@ -64,7 +64,7 @@ const hex = (v) => Math.max(0, Math.min(15, Math.round(v / 17))).toString(16);
 for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) {
   const n = y * cols + x; if (!inSub(n)) continue;
   const ox = (region.left + (x + 0.5) / cols * region.width) / W, oy = (region.top + (y + 0.5) / rows * region.height) / H;
-  const gm = ox >= 0.44 && oy >= 0.5 ? gamma * cfg.catLift : gamma; // lift the dark cat
+  const gm = gamma * cfg.catLift; // lift the dark cat
   const u = Math.pow(Math.min(1, Math.max(0, (lum[n] - lo) / (hi - lo))), gm);
   const t = u * (1 - cfg.sCurve) + u * u * (3 - 2 * u) * cfg.sCurve;
   xs.push(Math.round(((x + 0.5) * P.cellW) * 10) / 10); ys.push(Math.round(((y + 0.5) * P.cellH) * 10) / 10);

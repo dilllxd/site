@@ -13,12 +13,12 @@ ok(d.t.every((v) => Number.isInteger(v) && v >= 0 && v <= 255), "tone is a byte"
 const seen = new Set(d.x.map((x, i) => Math.floor(x / d.cellW) + ":" + Math.floor(d.y[i] / d.cellH)));
 ok(seen.size === d.n, "one particle per cell");
 // aspect is preserved (design box matches the mask bbox crop, never squished): h/w is the portrait ratio
-ok(d.h / d.w > 1 && d.h / d.w < 1.6, "aspect plausible " + (d.h / d.w).toFixed(3));
+ok(d.h / d.w > 0.5 && d.h / d.w < 1.6, "aspect plausible " + (d.h / d.w).toFixed(3));
 // subject only: the bbox is tight, so the extreme rows/cols must be populated
 const minX = Math.min(...d.x), maxX = Math.max(...d.x), minY = Math.min(...d.y), maxY = Math.max(...d.y);
 ok(minX < 30 && d.w - maxX < 30 && minY < 30 && d.h - maxY < 30, "layout is tightly cropped to subject");
-// both heads need density: enough particles in the upper half and in the lower-right (cat) quadrant
-const cat = d.x.filter((x, i) => x > d.w * 0.44 && d.y[i] > d.h * 0.5).length;
-ok(cat > 1500, "cat region has particles: " + cat);
+// the single cat needs density
+const cat = d.n;
+ok(cat > 3000, "cat has particles: " + cat);
 if (fails) process.exit(1);
 console.log("portrait layout ok:", d.n, "particles,", d.w + "x" + d.h);
