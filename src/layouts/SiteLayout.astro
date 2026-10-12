@@ -72,17 +72,12 @@ const structuredDataJson = stringifyStructuredData(structuredData);
     )}
     <script is:inline>
       (() => {
-        const P = ["ink", "paper", "amber"];
-        let palette = null, legacy = null;
-        try { palette = localStorage.getItem("palette"); legacy = localStorage.getItem("theme"); } catch {}
-        if (!P.includes(palette)) palette = legacy === "light" ? "paper" : legacy === "dark" ? "ink" : null;
-        if (!palette) palette = window.matchMedia("(prefers-color-scheme: dark)").matches ? "ink" : "paper";
-        const root = document.documentElement;
-        root.dataset.palette = palette;
-        root.dataset.theme = palette === "paper" ? "light" : "dark";
-        const home = location.pathname === "/";
-        const color = home ? { ink: "#151513", paper: "#ece6d6", amber: "#100c07" }[palette] : (palette === "paper" ? "#e7e5de" : "#0c0e0f");
-        document.querySelector('meta[data-theme-color]')?.setAttribute("content", color);
+        let stored = null;
+        try { stored = localStorage.getItem("theme"); } catch {}
+        if (stored !== "light" && stored !== "dark") stored = null;
+        const preferred = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        document.documentElement.dataset.theme = stored || preferred;
+        document.querySelector('meta[data-theme-color]')?.setAttribute('content', document.documentElement.dataset.theme === 'dark' ? '#0c0e0f' : '#e7e5de');
       })();
     </script>
   </head>

@@ -1,3 +1,16 @@
+// home palettes (ink/paper/amber); home-only, the shared theme toggle is untouched
+const PALETTES = ["ink", "paper", "amber"];
+const root = document.documentElement;
+function applyPalette(p, save = true) {
+  if (!PALETTES.includes(p)) return;
+  root.dataset.palette = p;
+  if (save) { try { localStorage.setItem("palette", p); } catch {} }
+  document.querySelector('meta[data-theme-color]')?.setAttribute("content", { ink: "#151513", paper: "#ece6d6", amber: "#100c07" }[p]);
+  document.querySelectorAll("[data-palette-choice]").forEach((b) => b.setAttribute("aria-pressed", b.dataset.paletteChoice === p ? "true" : "false"));
+  document.dispatchEvent(new CustomEvent("palette-changed", { detail: { palette: p } }));
+}
+document.addEventListener("set-palette", (e) => applyPalette(e.detail?.palette));
+applyPalette(root.dataset.palette, false);
 const form = document.querySelector("[data-cmd]");
 const input = form?.querySelector("input");
 const list = form?.querySelector(".cmd-list");
