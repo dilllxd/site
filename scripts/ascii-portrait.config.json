@@ -1,111 +1,29 @@
 {
- "source": "set with ASCII_PORTRAIT_SOURCE or --source; kept outside the repo. Crops are fractions of the auto-oriented upright image (sharp .rotate(); EXIF 8, 2080x2784). Man face x0-.69 y.14-.78; cat face x.47-1 y.45-.96",
+ "source": "set with ASCII_PORTRAIT_SOURCE or --source; kept outside the repo. Crops are fractions of the auto-oriented upright image (EXIF 8, 2080x2784).",
  "cellAspect": 0.5,
- "ramp": " .:-=+*#%@",
+ "ramp": " .-:*+=#%@",
+ "levels": 16,
+ "minOpacity": 0.55,
  "output": "src/data/ascii-portrait.json",
  "variants": {
   "desktop": {
-   "unsharpSigma": 1.5,
-   "unsharpFlat": 1,
-   "unsharpJagged": 2,
-   "mode": "density",
    "cols": 170,
-   "inkScale": 1,
-   "contrast": 1,
-   "gamma": 1,
-   "shadowLift": 1.5,
-   "highlight": 0.9,
-   "claheTiles": 12,
-   "claheSlope": 4,
-   "localTone": 0.9,
-   "localRadius": 4,
-   "localGain": 3.2,
-   "equalize": 0.35,
-   "dim": [
-    {
-     "x0": 0.55,
-     "y0": 0,
-     "x1": 1,
-     "y1": 0.46,
-     "strength": 0.85,
-     "feather": 0.06
-    }
-   ],
-   "lift": [
-    {
-     "x0": 0.44,
-     "y0": 0.5,
-     "x1": 1,
-     "y1": 0.98,
-     "gamma": 2.2,
-     "feather": 0.05
-    },
-    {
-     "x0": 0,
-     "y0": 0.1,
-     "x1": 0.66,
-     "y1": 0.8,
-     "gamma": 0.8,
-     "feather": 0.06
-    }
-   ],
+   "gamma":0.55,
+   "crop": {
+    "left": 0,
+    "top": 0.1,
+    "width": 1,
+    "height": 0.86
+   }
+  },
+  "mobile": {
+   "cols": 100,
+   "gamma":0.55,
    "crop": {
     "left": 0,
     "top": 0.14,
     "width": 1,
-    "height": 0.84
-   }
-  },
-  "mobile": {
-   "unsharpSigma": 1.5,
-   "unsharpFlat": 1,
-   "unsharpJagged": 2,
-   "mode": "density",
-   "cols": 100,
-   "inkScale": 1,
-   "contrast": 1,
-   "gamma": 1,
-   "shadowLift": 1.5,
-   "highlight": 0.9,
-   "claheTiles": 12,
-   "claheSlope": 4,
-   "localTone": 0.9,
-   "localRadius": 3,
-   "localGain": 3,
-   "equalize": 0.35,
-   "dim": [
-    {
-     "x0": 0.55,
-     "y0": 0,
-     "x1": 1,
-     "y1": 0.46,
-     "strength": 0.85,
-     "feather": 0.06
-    }
-   ],
-   "lift": [
-    {
-     "x0": 0.44,
-     "y0": 0.5,
-     "x1": 1,
-     "y1": 0.98,
-     "gamma": 2.2,
-     "feather": 0.05
-    },
-    {
-     "x0": 0,
-     "y0": 0.3,
-     "x1": 0.66,
-     "y1": 0.8,
-     "gamma": 0.8,
-     "feather": 0.06
-    }
-   ],
-   "crop": {
-    "left": 0.03,
-    "top": 0.3,
-    "width": 0.97,
-    "height": 0.66
+    "height": 0.82
    }
   }
  }

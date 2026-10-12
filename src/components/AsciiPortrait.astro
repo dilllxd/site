@@ -1,13 +1,22 @@
 ---
 import portrait from "../data/ascii-portrait.json";
 
-const SEG = 5;
+const SEG = 6;
 const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-const grid = (rows: string[]) =>
-  rows
-    .map((row) => {
+// one span per run of cells that share an opacity level (capped at SEG so hover stays local)
+const grid = (g: { chars: string[]; lv: string[] }) =>
+  g.chars
+    .map((row, y) => {
       const parts: string[] = [];
-      for (let i = 0; i < row.length; i += SEG) parts.push(`<span class="ap-seg">${esc(row.slice(i, i + SEG))}</span>`);
+      let i = 0;
+      while (i < row.length) {
+        const l = g.lv[y][i];
+        let j = i + 1;
+        while (j < row.length && j - i < SEG && g.lv[y][j] === l) j++;
+        const text = row.slice(i, j);
+        parts.push(text.trim() === "" ? esc(text) : `<span class="ap-seg o${parseInt(l, 16)}" data-c="${i}">${esc(text)}</span>`);
+        i = j;
+      }
       return parts.join("");
     })
     .join("\n");
@@ -29,8 +38,8 @@ const order = ["desktop", "mobile"] as const;
   if (fig) initPortrait(fig);
 
   function initPortrait(fig: HTMLElement) {
-    let COLS = 1, ROWS = 1, segsPerRow = 1;
-    const SEG = 5;
+    let COLS = 1, ROWS = 1;
+    const SEG = 6;
     const ramp = fig.dataset.ramp || "";
     const idx = new Map<string, number>();
     [...ramp].forEach((c, i) => idx.set(c, i));
@@ -41,8 +50,9 @@ const order = ["desktop", "mobile"] as const;
     const WAVE_MS = 900;
 
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)");
-    type Seg = { el: HTMLElement; base: string; cur: string; level: number };
+    type Seg = { el: HTMLElement; base: string; cur: string; level: number; r: number; c: number };
     let grid: Seg[] = [];
+    let byRow: number[][] = [];
     let pre: HTMLElement | null = null;
 
     const activePre = () => [...fig.querySelectorAll<HTMLElement>(".ap-grid")].find((p) => p.offsetParent !== null) || null;
@@ -50,11 +60,18 @@ const order = ["desktop", "mobile"] as const;
       pre = activePre();
       grid = [];
       if (!pre) return;
-      COLS = Number(pre.dataset.cols); ROWS = Number(pre.dataset.rows); segsPerRow = Math.ceil(COLS / SEG);
-      pre.querySelectorAll<HTMLElement>(".ap-seg").forEach((el) => {
+      COLS = Number(pre.dataset.cols); ROWS = Number(pre.dataset.rows);
+      const rowsTxt = pre.childNodes;
+      let row = 0;
+      rowsTxt.forEach((n) => {
+        if (n.nodeType === 3) { row += ((n.textContent || "").match(/\n/g) || []).length; return; }
+        const el = n as HTMLElement;
+        if (!el.classList.contains("ap-seg")) return;
         const base = el.textContent || "";
-        grid.push({ el, base, cur: base, level: 0 });
+        grid.push({ el, base, cur: base, level: 0, r: row, c: Number(el.dataset.c) });
       });
+      byRow = Array.from({ length: ROWS }, () => []);
+      grid.forEach((sg, i) => byRow[sg.r]?.push(i));
     }
 
     let visible = false, hidden = document.hidden, enabled = false;
@@ -88,13 +105,13 @@ const order = ["desktop", "mobile"] as const;
       for (const s of sources) {
         const r0 = Math.max(0, Math.floor(s.cy - RADIUS / 2)), r1 = Math.min(ROWS - 1, Math.ceil(s.cy + RADIUS / 2));
         const c0 = Math.max(0, Math.floor(s.cx - RADIUS)), c1 = Math.min(COLS - 1, Math.ceil(s.cx + RADIUS));
-        for (let r = r0; r <= r1; r++) for (let c = Math.floor(c0 / SEG); c <= Math.floor(c1 / SEG); c++) next.add(r * segsPerRow + c);
+        for (let r = r0; r <= r1; r++) for (const i of byRow[r] || []) { const sc = grid[i].c; if (sc + SEG > c0 && sc <= c1) next.add(i); }
       }
       dirty.forEach((i) => { if (!next.has(i)) restore(i); });
       next.forEach((i) => {
         const s = grid[i];
         if (!s) return;
-        const r = Math.floor(i / segsPerRow), c0 = (i % segsPerRow) * SEG;
+        const r = s.r, c0 = s.c;
         let out = "", peak = 0;
         for (let j = 0; j < s.base.length; j++) {
           let bump = 0;
@@ -166,7 +183,7 @@ const order = ["desktop", "mobile"] as const;
       if (hidden) { if (raf) cancelAnimationFrame(raf); raf = 0; restoreAll(); }
     });
     // theme swaps which grid is visible: drop effects on the old one
-    document.addEventListener("palette-changed", () => { restoreAll(); grid = []; rect = null; });
+    document.addEventListener("palette-changed", () => { restoreAll(); grid = []; byRow = []; rect = null; });
     window.addEventListener("resize", () => { rect = null; }, opts);
   }
 </script>
