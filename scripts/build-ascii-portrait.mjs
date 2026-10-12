@@ -66,7 +66,7 @@ async function build(name, v) {
   const tone = Float32Array.from(lum, (x) => Math.pow(Math.min(1, Math.max(0, (x - lo) / (hi - lo))), v.gamma));
   if (proofDir) {
     const px = Buffer.from(Array.from(tone, (t) => Math.round(t * 255)));
-    await sharp(px, { raw: { width: cols, height: rows, channels: 1 } }).resize(cols * 8, rows * 8, { kernel: "nearest" }).png().toFile(path.join(proofDir, name + "-gray8x.png"));
+    await sharp(px, { raw: { width: cols, height: rows, channels: 1 } }).resize(cols * 8, rows * 16, { kernel: "nearest" }).png().toFile(path.join(proofDir, name + "-gray8x.png"));
   }
   const mk = (inv) => {
     const chars = [], lv = [];
@@ -92,7 +92,10 @@ async function build(name, v) {
   return out;
 }
 
-const variants = {};
-for (const [name, v] of Object.entries(cfg.variants)) { variants[name] = await build(name, v); console.log(name, variants[name].cols + "x" + variants[name].rows); }
-await writeFile(process.env.ASCII_OUT || path.join(root, cfg.output), JSON.stringify({ cellAspect: cfg.cellAspect, ramp: cfg.ramp, levels: LEVELS, variants }) + "\n");
+// --only=<name> regenerates just that variant and keeps every other variant byte-for-byte from the existing data file
+const only = arg("only");
+const outPath = process.env.ASCII_OUT || path.join(root, cfg.output);
+const variants = only ? JSON.parse(await readFile(outPath, "utf8")).variants : {};
+for (const [name, v] of Object.entries(cfg.variants)) { if (only && name !== only) continue; variants[name] = await build(name, v); console.log(name, variants[name].cols + "x" + variants[name].rows); }
+await writeFile(outPath, JSON.stringify({ cellAspect: cfg.cellAspect, ramp: cfg.ramp, levels: LEVELS, variants }) + "\n");
 console.log("wrote", cfg.output);

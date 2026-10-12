@@ -22,7 +22,7 @@ const grid = (g: { chars: string[]; lv: string[] }) =>
     .join("\n");
 
 const { ramp, variants } = portrait;
-const order = ["desktop", "mobile"] as const;
+const order = ["desktop", "mobile", "phone"] as const;
 ---
 <figure class="ap" data-ascii-portrait data-ramp={ramp} role="img" aria-label="ASCII portrait of Dylan with Amber, a tortoiseshell cat, leaning against his chest">
   {order.map((k) => (
