@@ -23,14 +23,24 @@ const rows = Math.round((cols * region.height / region.width) * cfg.cellAspect);
 const SS = 4; // supersample, then lanczos down to cell grid for sharp detail
 let pipe = sharp(upright.data).extract(region).greyscale().normalise()
   .sharpen({ sigma: cfg.sharpen ?? 1 }).clahe({ width: cfg.clahe.width, height: cfg.clahe.height, maxSlope: cfg.clahe.maxSlope });
-const big = await pipe.resize(cols * SS, rows * SS, { fit: "fill", kernel: "lanczos3" }).raw().toBuffer();
+const { data: big, info: bigInfo } = await pipe.resize(cols * SS, rows * SS, { fit: "fill", kernel: "lanczos3" }).toColourspace("b-w").raw().toBuffer({ resolveWithObject: true });
+const CH = bigInfo.channels;
 const lum = new Float32Array(cols * rows);
 for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) {
   let s = 0;
-  for (let j = 0; j < SS; j++) for (let i = 0; i < SS; i++) s += big[(y * SS + j) * cols * SS + x * SS + i];
+  for (let j = 0; j < SS; j++) for (let i = 0; i < SS; i++) s += big[((y * SS + j) * cols * SS + x * SS + i) * CH];
   let v = s / (SS * SS) / 255;
   v = Math.min(1, Math.max(0, (v - 0.5) * cfg.contrast + 0.5));
   lum[y * cols + x] = Math.pow(v, cfg.gamma);
+}
+// histogram-equalise (blended) so the whole glyph range is used, then stretch
+const sorted = Float32Array.from(lum).sort();
+const eq = cfg.equalize ?? 0;
+for (let i = 0; i < lum.length; i++) {
+  const v = lum[i];
+  let lo = 0, hi = sorted.length;
+  while (lo < hi) { const m = (lo + hi) >> 1; if (sorted[m] < v) lo = m + 1; else hi = m; }
+  lum[i] = v * (1 - eq) + (lo / sorted.length) * eq;
 }
 const ramp = [...cfg.ramp];
 const mk = (invert) => Array.from({ length: rows }, (_, y) => {

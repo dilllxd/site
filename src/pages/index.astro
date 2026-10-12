@@ -1,5 +1,6 @@
 ---
 import SiteLayout from "../layouts/SiteLayout.astro";
+import AsciiPortrait from "../components/AsciiPortrait.astro";
 import { siteConfig } from "../data/site";
 import { toAbsoluteUrl } from "../lib/seo";
 
@@ -24,20 +25,46 @@ const structuredData = [
   },
 ];
 const links = [
-  { label: "Photos", href: "/photos/", note: "sky globe" },
+  { label: "Photos", href: "/photos/", note: "astrophotography" },
   { label: "Email", href: `mailto:${siteConfig.email}`, note: siteConfig.email },
   ...siteConfig.socialLinks.map((l) => ({ label: l.label, href: l.href, note: new URL(l.href).host.replace(/^www\./, "") })),
 ];
+const palettes = ["ink", "paper", "amber"];
 ---
-<SiteLayout structuredData={structuredData} hideFooter={true}>
-  <div class="term" data-widget-config={widgetConfig}>
-    <p class="term-line"><span class="term-prompt" aria-hidden="true">$</span> ls ~/links</p>
-    <ul class="term-links">
-      {links.map((l) => (
-        <li><a href={l.href} target={l.href.startsWith("http") ? "_blank" : undefined} rel={l.href.startsWith("http") ? "noreferrer" : undefined}>{l.label}<span>{l.note}</span></a></li>
-      ))}
-    </ul>
-    <p class="term-status"><span data-local-time>--:--</span> <span data-work-chip><span aria-hidden="true">/</span> <span data-work-status>checking schedule</span></span></p>
+<SiteLayout structuredData={structuredData} hideFooter={true} pageClass="home">
+  <div class="home-main" data-widget-config={widgetConfig}>
+    <AsciiPortrait />
+
+    <section class="home-block" aria-labelledby="whoami">
+      <h2 class="home-cmd" id="whoami"><span class="prompt" aria-hidden="true">$</span> whoami</h2>
+      <p>I self-host most of my own stuff and take astrophotography from South Carolina. The tortie in the portrait is Amber.</p>
+    </section>
+
+    <section class="home-block" aria-labelledby="links">
+      <h2 class="home-cmd" id="links"><span class="prompt" aria-hidden="true">$</span> ls ~/links</h2>
+      <ul class="term-links">
+        {links.map((l) => (
+          <li><a href={l.href} target={l.href.startsWith("http") ? "_blank" : undefined} rel={l.href.startsWith("http") ? "noreferrer" : undefined}>{l.label}<span>{l.note}</span></a></li>
+        ))}
+      </ul>
+    </section>
+
+    <div class="statusline" data-statusline>
+      <p class="term-status"><span data-local-time>--:--</span> <span data-work-chip><span aria-hidden="true">/</span> <span data-work-status>checking schedule</span></span></p>
+      <div class="statusline-tools">
+        <div class="palette" role="group" aria-label="Color theme">
+          {palettes.map((p) => <button type="button" data-palette-choice={p} aria-pressed="false">{p}</button>)}
+        </div>
+        <button type="button" class="cmd-open" data-cmd-open aria-label="Open command line" aria-haspopup="listbox" title="Command line (:)">:</button>
+      </div>
+      <form class="cmd" data-cmd hidden autocomplete="off">
+        <label class="sr-only" for="cmd-input">Command</label>
+        <span class="prompt" aria-hidden="true">:</span>
+        <input id="cmd-input" name="cmd" type="text" spellcheck="false" autocapitalize="off" autocomplete="off" role="combobox" aria-expanded="true" aria-controls="cmd-list" aria-autocomplete="list" />
+        <ul class="cmd-list" id="cmd-list" role="listbox" aria-label="Commands"></ul>
+      </form>
+    </div>
   </div>
+  <script type="module" src="/scripts/home-commands.js"></script>
   <script type="module" src="/scripts/live-widgets.js?v=20261010b"></script>
 </SiteLayout>
