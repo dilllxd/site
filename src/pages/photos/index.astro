@@ -1,39 +1,82 @@
 ---
+import "../../styles/gallery.css";
 import { getCollection } from "astro:content";
 import SiteLayout from "../../layouts/SiteLayout.astro";
 import { siteConfig } from "../../data/site";
 import { toAbsoluteUrl } from "../../lib/seo";
-import Gallery from "../../components/Gallery.astro";
-import SkyStage from "../../components/SkyStage.astro";
+import { photoDims } from "../../lib/images";
 
-const photos = (await getCollection("photos")).sort(
-  (a, b) => b.data.date.valueOf() - a.data.date.valueOf(),
-);
+const photos = (await getCollection("photos")).sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+const dims = await photoDims(photos);
+const palettes = ["ink", "paper", "amber"];
+const fmt = (d: Date) => d.toISOString().slice(0, 10);
+const description = "Astrophotography from South Carolina: deep-sky targets stacked and processed from my back yard.";
 
 const structuredData = {
   "@context": "https://schema.org",
   "@type": "CollectionPage",
   name: "Photos",
   url: `${siteConfig.siteUrl}/photos/`,
-  description:
-    "An interactive sky atlas of my astrophotography from South Carolina: each photo placed at its real J2000 right ascension and declination, with a plain list of every target.",
+  description,
   image: toAbsoluteUrl(siteConfig.defaultSocialImage),
 };
 ---
+<SiteLayout title="Photos | Dylan H" description={description} ogImage={siteConfig.defaultSocialImage} ogImageAlt={siteConfig.defaultSocialImageAlt} structuredData={structuredData} pageClass="gallery" hideFooter={true}>
+  <div class="gx" data-gx>
+    <h1 class="gx-cmd"><span class="prompt" aria-hidden="true">$</span> ls photos/ <span class="gx-count">{photos.length} files</span></h1>
+    <ul class="gx-grid">
+      {photos.map((p, i) => {
+        const d = dims[p.id];
+        const meta = [fmt(p.data.date), p.data.location].filter(Boolean).join("  /  ");
+        return (
+          <li>
+            <a class="gx-tile" href={`/photos/${p.id}/`} data-gx-tile data-title={p.data.title} data-caption={p.data.caption} data-image={p.data.image} data-alt={p.data.alt} data-meta={meta} data-w={d?.[0]} data-h={d?.[1]} aria-haspopup="dialog">
+              <span class="gx-thumb"><img src={p.data.image} alt={p.data.alt} width={d?.[0]} height={d?.[1]} loading={i < 3 ? "eager" : "lazy"} decoding="async" /></span>
+              <span class="gx-label"><span class="gx-idx">{String(i + 1).padStart(2, "0")}</span><span class="gx-name">{p.data.title}</span><span class="gx-date">{fmt(p.data.date)}</span></span>
+            </a>
+          </li>
+        );
+      })}
+    </ul>
 
-<SiteLayout
-  title="Photos | Dylan H"
-  description="An interactive sky atlas of my astrophotography from South Carolina: each photo placed at its real J2000 right ascension and declination, with a plain list of every target."
-  ogImage={siteConfig.defaultSocialImage}
-  ogImageAlt={siteConfig.defaultSocialImageAlt}
-  structuredData={structuredData}
->
-  <header class="page-head">
-    <h1>Photos</h1>
-    <p>Stacked exposures from South Carolina, placed at their real RA/Dec.</p>
-  </header>
+    <div class="gx-status">
+      <p class="gx-hint">click a file to open <span aria-hidden="true">/</span> esc closes</p>
+      <div class="palette" role="group" aria-label="Color theme" data-gx-palette hidden>
+        {palettes.map((p) => <button type="button" data-palette-choice={p} aria-pressed="false">{p}</button>)}
+      </div>
+    </div>
 
-  <Gallery photos={photos}>
-    <SkyStage photos={photos} />
-  </Gallery>
+    <div class="gv" data-gv hidden role="dialog" aria-modal="true" aria-labelledby="gv-title" aria-describedby="gv-caption">
+      <div class="gv-win">
+        <div class="gv-bar">
+          <span class="gv-path"><span class="prompt" aria-hidden="true">$</span> open <span data-gv-name></span></span>
+          <div class="gv-ctl">
+            <button type="button" data-gv-prev aria-label="Previous photo">&lt;</button>
+            <button type="button" data-gv-next aria-label="Next photo">&gt;</button>
+            <button type="button" data-gv-out aria-label="Zoom out">-</button>
+            <button type="button" data-gv-reset aria-label="Reset zoom">100%</button>
+            <button type="button" data-gv-in aria-label="Zoom in">+</button>
+            <a href="#" target="_blank" rel="noreferrer" data-gv-full>full size</a>
+            <button type="button" class="gv-close" data-gv-close>close</button>
+          </div>
+        </div>
+        <div class="gv-stage" data-gv-stage><img alt="" data-gv-img draggable="false" /></div>
+        <div class="gv-info">
+          <h2 id="gv-title" data-gv-title></h2>
+          <p class="gv-meta" data-gv-meta></p>
+          <p class="gv-caption" id="gv-caption" data-gv-caption></p>
+          <a class="gv-page" href="#" data-gv-page>photo page</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script is:inline>
+    (() => {
+      let p = null;
+      try { p = localStorage.getItem("palette"); } catch {}
+      if (!["ink", "paper", "amber"].includes(p)) p = matchMedia("(prefers-color-scheme: dark)").matches ? "ink" : "paper";
+      document.documentElement.dataset.palette = p;
+    })();
+  </script>
+  <script type="module" src="/scripts/gallery.js"></script>
 </SiteLayout>
