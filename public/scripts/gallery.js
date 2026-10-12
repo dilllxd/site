@@ -63,20 +63,20 @@ if (gv && tiles.length) {
     window.scrollTo(lock.x, lock.y); root.style.scrollBehavior = h; lock = null;
   };
 
+  // inert only elements outside the dialog's ancestor chain (never main/.gx, which contain the viewer)
+  const bg = () => [...document.querySelectorAll(".skip-link, .site-header, .gx > :not([data-gv])")];
   const openAt = (i, from) => {
     if (open) return;
     opener = from; open = true;
     show(i); lockScroll(); gv.hidden = false;
-    document.querySelector("main")?.setAttribute("inert", "");
-    document.querySelector(".site-header")?.setAttribute("inert", "");
+    bg().forEach((e) => e.setAttribute("inert", ""));
     btn.close.focus({ preventScroll: true });
   };
   const close = () => {
     if (!open) return;
     open = false; gv.hidden = true; pointers.clear(); drag = null; pinch = null;
     gv.classList.remove("is-panning");
-    document.querySelector("main")?.removeAttribute("inert");
-    document.querySelector(".site-header")?.removeAttribute("inert");
+    bg().forEach((e) => e.removeAttribute("inert"));
     unlockScroll();
     (opener || tiles[idx]).focus({ preventScroll: true });
   };
