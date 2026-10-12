@@ -4,6 +4,7 @@ import SiteLayout from "../../layouts/SiteLayout.astro";
 import { siteConfig } from "../../data/site";
 import { toAbsoluteUrl } from "../../lib/seo";
 import { photoDims } from "../../lib/images";
+import "../../styles/gallery.css";
 
 export async function getStaticPaths() {
   const photos = await getCollection("photos");
@@ -47,13 +48,13 @@ const structuredData = {
   ogImage={photo.data.image}
   ogImageAlt={photo.data.alt}
   structuredData={structuredData}
-  pageClass="page-photo-detail"
+  pageClass="page-photo-detail gx-page"
   hideFooter={true}
 >
   <article class="photo-detail">
     <div class="photo-detail-layout">
       <figure class="photo-detail-figure" data-photo-viewer data-photo-viewer-mode="inline">
-        <div class="photo-detail-viewer-controls" aria-label="Photo viewer controls">
+        <div class="photo-detail-viewer-controls" aria-label="Photo viewer controls" data-js-only hidden>
           <button type="button" data-photo-viewer-zoom-out aria-label="Zoom out">-</button>
           <button type="button" data-photo-viewer-zoom-reset>100%</button>
           <button type="button" data-photo-viewer-zoom-in aria-label="Zoom in">+</button>
@@ -96,8 +97,22 @@ const structuredData = {
             </div>
           )}
         </dl>
+        <div class="gx-detail-theme">
+          <div class="palette" role="group" aria-label="Color theme" data-js-only hidden>
+            {["ink", "paper", "amber"].map((p) => <button type="button" data-palette-choice={p} aria-pressed="false">{p}</button>)}
+          </div>
+        </div>
       </section>
     </div>
   </article>
+  <script is:inline>
+    (() => {
+      let p = null;
+      try { p = localStorage.getItem("palette"); } catch {}
+      if (!["ink", "paper", "amber"].includes(p)) p = matchMedia("(prefers-color-scheme: dark)").matches ? "ink" : "paper";
+      document.documentElement.dataset.palette = p;
+    })();
+  </script>
+  <script type="module" src="/scripts/gx-palette.js"></script>
   <script type="module" src="/scripts/photo-viewer.js"></script>
 </SiteLayout>
