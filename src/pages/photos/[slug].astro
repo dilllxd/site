@@ -54,10 +54,12 @@ const structuredData = {
   <article class="photo-detail">
     <div class="photo-detail-layout">
       <figure class="photo-detail-figure" data-photo-viewer data-photo-viewer-mode="inline">
-        <div class="photo-detail-viewer-controls" aria-label="Photo viewer controls" data-js-only hidden>
-          <button type="button" data-photo-viewer-zoom-out aria-label="Zoom out">-</button>
-          <button type="button" data-photo-viewer-zoom-reset>100%</button>
-          <button type="button" data-photo-viewer-zoom-in aria-label="Zoom in">+</button>
+        <div class="photo-detail-viewer-controls" aria-label="Photo viewer controls">
+          <span class="gx-zoom" data-js-only hidden>
+            <button type="button" data-photo-viewer-zoom-out aria-label="Zoom out">-</button>
+            <button type="button" data-photo-viewer-zoom-reset>100%</button>
+            <button type="button" data-photo-viewer-zoom-in aria-label="Zoom in">+</button>
+          </span>
           <a href={photo.data.image} target="_blank" rel="noreferrer">Full size</a>
         </div>
         <div class="photo-detail-viewport" data-photo-viewer-viewport>
