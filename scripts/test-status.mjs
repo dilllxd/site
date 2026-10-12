@@ -33,3 +33,11 @@ assert.equal(discordView({ data: { discord_status: "offline", activities: [] } }
 assert.equal(discordView({ data: { discord_status: "online", activities: [] } }), null);
 assert.deepEqual(discordView({ data: { discord_status: "dnd", activities: [{ name: "Overwatch 2", type: 0, details: "Ana" }] } }), { label: "playing", text: "Overwatch 2 - Ana" });
 console.log("status logic ok");
+// DST edges: nonexistent and ambiguous wall times still parse to a finite instant within an hour of the neighbours
+const gap = parseScheduleTime("2027-03-14T02:30:00", tz), amb = parseScheduleTime("2026-11-01T01:30:00", tz);
+assert.ok(Number.isFinite(gap) && Math.abs(gap - Date.parse("2027-03-14T07:30:00Z")) <= 3600e3, "spring-forward gap");
+assert.ok(Number.isFinite(amb) && Math.abs(amb - Date.parse("2026-11-01T05:30:00Z")) <= 3600e3, "fall-back ambiguity");
+assert.ok(parseScheduleTime("2026-10-12T13:00:00-04:00", tz) === Date.parse("2026-10-12T17:00:00Z"), "explicit offsets honored");
+// minute-granularity countdown: a 30s tick changes text only when the minute rolls
+const w1 = workStatus(ev, t0, tz), w2 = workStatus(ev, t0 + 30000, tz), w3 = workStatus(ev, t0 + 60000, tz);
+assert.notEqual(w1, w3); console.log("countdown", w1, "|", w2, "|", w3);

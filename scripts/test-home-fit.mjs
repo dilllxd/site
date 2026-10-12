@@ -64,6 +64,7 @@ const measure = (extra) => `(async () => {
     out.col = [Math.round(col.l * 10) / 10, Math.round(col.r * 10) / 10]; }
   ${extra || ""}
   return out; })()`;
+const only = process.env.SIZES && process.env.SIZES.split(","); if (only) for (let i = sizes.length - 1; i >= 0; i--) if (!only.includes(sizes[i].join("x"))) sizes.splice(i, 1);
 let fails = 0; const rows = [];
 for (const palette of (process.env.PALETTES || "ink,paper,amber").split(",")) for (const choice of (process.env.CHOICES || "peek,loaf,sun,couch,window,nojs").split(",")) for (const [w, h] of sizes) {
   const nojs = choice === "nojs"; await send("Emulation.setScriptExecutionDisabled", { value: nojs });
