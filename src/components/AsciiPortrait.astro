@@ -1,8 +1,15 @@
 ---
 import portrait from "../data/ascii-portrait.json";
 import peekPortrait from "../data/ascii-portrait-peek.json";
+import sunPortrait from "../data/ascii-portrait-sun.json";
+import couchPortrait from "../data/ascii-portrait-couch.json";
+import windowPortrait from "../data/ascii-portrait-window.json";
+// numeric metadata only (design box w/h); the particle JSON itself is fetched at runtime, one file, by ?url
 import particles from "../data/portrait-particles.json";
 import peekDimensions from "../data/portrait-peek-particles.json";
+import sunDimensions from "../data/portrait-sun-particles.json";
+import couchDimensions from "../data/portrait-couch-particles.json";
+import windowDimensions from "../data/portrait-window-particles.json";
 
 const SEG = 6;
 const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -24,19 +31,37 @@ const grid = (g: { chars: string[]; lv: string[] }) =>
     })
     .join("\n");
 
-const sets = [{ id: "peek", variants: peekPortrait.variants }, { id: "loaf", variants: portrait.variants }];
+// order = the five equal random bins: floor(random * 5) -> peek, loaf, sun, couch, window
+const sets = [
+  { id: "peek", variants: peekPortrait.variants, dim: peekDimensions },
+  { id: "loaf", variants: portrait.variants, dim: particles },
+  { id: "sun", variants: sunPortrait.variants, dim: sunDimensions },
+  { id: "couch", variants: couchPortrait.variants, dim: couchDimensions },
+  { id: "window", variants: windowPortrait.variants, dim: windowDimensions },
+];
+const ids = sets.map((x) => x.id);
+const dims = Object.fromEntries(sets.map((x) => [x.id, [Math.round(x.dim.w * 10) / 10, x.dim.h]]));
 const order = ["desktop", "mobile", "phone"] as const;
+// no-JS default is sun (a uniform random pick needs JS); its true ratio is baked into the markup
+const def = dims.sun;
+const defAspect = def[0] + "/" + def[1];
+const defStyle = "--portrait-aspect:" + defAspect + ";--ar:" + def[0] / def[1];
+const idList = ids.join(",");
+const dimsJson = JSON.stringify(dims);
 ---
-<figure class="ap" data-ascii-portrait data-aspect={`${particles.w}/${particles.h}`} data-peek-aspect={`${peekDimensions.w}/${peekDimensions.h}`} role="img" aria-label="ASCII portrait of Amber">
+<figure class="ap" data-ascii-portrait data-portrait-choice="sun" data-ids={idList} data-dims={dimsJson} data-aspect={defAspect} style={defStyle} role="img" aria-label="ASCII portrait of Amber">
   <script is:inline>const portraitFigure = document.currentScript.parentElement;
-    // the one and only layout choice: ?p=peek / ?p=loaf force it, anything else is a fresh 50/50 roll on every load
+    // the one and only choice, made before first paint. ?p=<name> forces one of five (fixed whitelist, never reflected);
+    // anything else is a uniform floor(random*5) over the five layouts in data-ids order
+    const portraitIds = portraitFigure.dataset.ids.split(",");
     const forced = new URLSearchParams(location.search).get("p");
-    const portraitChoice = forced === "peek" || forced === "loaf" ? forced : Math.random() < 0.5 ? "peek" : "loaf";
-    const portraitAspect = portraitChoice === "loaf" ? portraitFigure.dataset.aspect : portraitFigure.dataset.peekAspect;
+    const portraitChoice = portraitIds.indexOf(forced) >= 0 ? forced : portraitIds[Math.min(portraitIds.length - 1, Math.floor(Math.random() * portraitIds.length))];
+    const [aw, ah] = JSON.parse(portraitFigure.dataset.dims)[portraitChoice];
+    const portraitAspect = aw + "/" + ah;
     portraitFigure.dataset.portraitChoice = portraitChoice;
     portraitFigure.dataset.aspect = portraitAspect;
     portraitFigure.style.setProperty("--portrait-aspect", portraitAspect);
-    { const [aw, ah] = portraitAspect.split("/").map(Number); portraitFigure.style.setProperty("--ar", String(aw / ah)); }
+    portraitFigure.style.setProperty("--ar", String(aw / ah));
     portraitFigure.classList.add("ap-loading")</script>
   {sets.map((st) => (
     <div class={`ap-set ap-set-${st.id}`}>
@@ -48,19 +73,22 @@ const order = ["desktop", "mobile", "phone"] as const;
       ))}
     </div>
   ))}
-  <canvas class="ap-canvas" data-ap-canvas width={Math.round(particles.w)} height={particles.h} aria-hidden="true"></canvas>
+  <canvas class="ap-canvas" data-ap-canvas width={Math.round(def[0])} height={def[1]} aria-hidden="true"></canvas>
 </figure>
 
 <script>
   import loafUrl from "../data/portrait-particles.json?url";
   import peekUrl from "../data/portrait-peek-particles.json?url";
+  import sunUrl from "../data/portrait-sun-particles.json?url";
+  import couchUrl from "../data/portrait-couch-particles.json?url";
+  import windowUrl from "../data/portrait-window-particles.json?url";
+  const urls: Record<string, string> = { peek: peekUrl, loaf: loafUrl, sun: sunUrl, couch: couchUrl, window: windowUrl };
 
   type PortraitData = { w: number; h: number; n: number; cellW: number; x: number[]; y: number[]; t: number[]; c: string; a?: number[]; cx?: number; eyeX?: number };
 
   const fig = document.querySelector<HTMLElement>("[data-ascii-portrait]");
   // the early inline script already made the single choice; never re-roll or re-read the query here
-  const isPeek = fig?.dataset.portraitChoice !== "loaf";
-  const url = isPeek ? peekUrl : loafUrl;
+  const url = urls[fig?.dataset.portraitChoice ?? "sun"] ?? urls.sun;
 
   const canvas = fig?.querySelector<HTMLCanvasElement>("[data-ap-canvas]");
   const ctx = canvas?.getContext("2d");

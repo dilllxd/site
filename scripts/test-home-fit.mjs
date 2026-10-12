@@ -51,21 +51,24 @@ const measure = (extra) => `(async () => {
   ${extra || ""}
   return out; })()`;
 let fails = 0; const rows = [];
-for (const palette of (process.env.PALETTES || "ink,paper,amber").split(",")) for (const choice of ["peek", "loaf"]) for (const [w, h] of sizes) {
+for (const palette of (process.env.PALETTES || "ink,paper,amber").split(",")) for (const choice of (process.env.CHOICES || "peek,loaf,sun,couch,window,nojs").split(",")) for (const [w, h] of sizes) {
+  const nojs = choice === "nojs"; await send("Emulation.setScriptExecutionDisabled", { value: nojs });
   await send("Emulation.setDeviceMetricsOverride", { width: w, height: h, deviceScaleFactor: 1, mobile: w < 700 });
   await send("Page.navigate", { url: base + "?p=" + choice }); await new Promise((r) => setTimeout(r, 400));
   await ev("(() => { localStorage.setItem('palette', '" + palette + "'); })()"); await send("Page.navigate", { url: base + "?p=" + choice }); await new Promise((r) => setTimeout(r, 500));
   let o; for (let k = 0; k < 4; k++) { try { o = await ev(measure()); break; } catch (e) { if (k === 3) throw e; await send('Page.navigate', { url: base + '?p=' + choice }); await new Promise((r) => setTimeout(r, 1200)); } }
   const bad = [];
+  if (nojs) { const g = await ev("(() => { const f = [...document.querySelectorAll('.ap-fit')].find((e) => e.getClientRects().length); const r = f.getBoundingClientRect(); const fg = document.querySelector('[data-ascii-portrait]'); return { l: r.left, t: r.top, r: r.right, b: r.bottom, choice: fg.dataset.portraitChoice, set: f.closest('.ap-set').className }; })()"); if (g.choice !== "sun" || !/ap-set-sun/.test(g.set)) bad.push("nojs not sun " + g.set); if (g.l < -0.5 || g.r > w + 0.5 || g.b > h + 0.5 || g.b - g.t < 40) bad.push("nojs grid outside " + [g.l, g.t, g.r, g.b].map(Math.round).join(",")); o.nojsGrid = g; }
   const pop = await ev("(async()=>{const b=document.querySelector('[data-cmd-open]');if(!b)return null;b.click();await new Promise(r=>setTimeout(r,250));const c=document.querySelector('[data-cmd]');const r=c.getBoundingClientRect();const o={l:r.left,t:r.top,r:r.right,b:r.bottom,hidden:c.hidden};b.click?.();const l=document.querySelector('.cmd-list').getBoundingClientRect();o.lt=l.top;o.lb=l.bottom;c.hidden=true;return o})()");
   if (pop && !pop.hidden && (pop.t < -0.5 || pop.l < -0.5 || pop.r > w + 0.5 || pop.b > h + 0.5)) bad.push("popover outside " + [pop.l, pop.t, pop.r, pop.b].map(Math.round).join(","));
   if (o.scrollH > o.vh) bad.push("scrollH " + o.scrollH + ">" + o.vh);
   if (o.scrollW > o.vw) bad.push("scrollW " + o.scrollW + ">" + o.vw);
   if (o.clipped.length) bad.push("clipped " + o.clipped.slice(0, 3).join(" | "));
-  if (!(o.canvas[3] >= 40)) bad.push("portrait too small " + o.canvas[3]);
-  if (!o.js) bad.push("canvas not live");
+  if (!nojs && !(o.canvas[3] >= 40)) bad.push("portrait too small " + o.canvas[3]);
+  if (!o.js && !nojs) bad.push("canvas not live");
+  if (!nojs && o.choice !== choice) bad.push("choice " + o.choice);
   if (o.gapL != null && Math.abs(o.gapL - o.gapR) > (choice === "peek" ? 0.06 * o.canvas[2] : 0.012 * o.canvas[2] + 1)) bad.push("gaps " + o.gapL + "/" + o.gapR);
-  if (choice === "loaf" && Math.abs(o.alpha[12].gapL - o.alpha[12].gapR) > 0.02 * o.canvas[2] + 1) bad.push("loaf pixel bbox off-centre " + o.alpha[12].gapL + "/" + o.alpha[12].gapR);
+  if (!nojs && choice !== "peek" && Math.abs(o.alpha[12].gapL - o.alpha[12].gapR) > 0.02 * o.canvas[2] + 1) bad.push("pixel bbox off-centre " + o.alpha[12].gapL + "/" + o.alpha[12].gapR);
   if (bad.length) fails++;
   rows.push(palette + " " + choice + " " + w + "x" + h + " canvas " + o.canvas.join("x") + " top " + o.figTop + " gaps " + o.gapL + "/" + o.gapR + " a8 " + o.alpha[8].gapL + "/" + o.alpha[8].gapR + " a12 " + o.alpha[12].gapL + "/" + o.alpha[12].gapR + " col " + o.col.join("-") + " scroll " + o.scrollH + "/" + o.vh + (bad.length ? "  FAIL " + bad.join("; ") : ""));
 }

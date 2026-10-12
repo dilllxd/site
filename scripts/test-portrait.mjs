@@ -2,8 +2,9 @@
 import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 let fails = 0;
+const NAMES = ["portrait-particles", "portrait-peek-particles", "portrait-sun-particles", "portrait-couch-particles", "portrait-window-particles"];
 const ok = (c, m) => { if (!c) { fails++; console.error("FAIL", m); } };
-for (const name of ["portrait-particles", "portrait-peek-particles"]) {
+for (const name of ["portrait-particles", "portrait-peek-particles", "portrait-sun-particles", "portrait-couch-particles", "portrait-window-particles"]) {
 const d = JSON.parse(readFileSync(new URL("../src/data/" + name + ".json", import.meta.url), "utf8"));
 ok(d.n === d.x.length && d.n === d.y.length && d.n === d.t.length, "array lengths match n");
 ok(d.c.length === d.n * 3 && /^[0-9a-f]+$/.test(d.c), "colour string is 3 hex digits per particle");
@@ -22,8 +23,9 @@ const minX = Math.min(...d.x), maxX = Math.max(...d.x), minY = Math.min(...d.y),
 ok(minX < 40 && d.w - maxX < 80 && minY < 30 && d.h - maxY < 30, "layout is cropped to the subject, small blank margins only");
 ok(minX >= 0 && maxX <= d.w, "no particle clipped by the box");
 const isPeek = name.includes("peek");
+if (!isPeek) ok(d.cx === undefined && d.eyeX === undefined, "only peek has the eye nudge");
 if (isPeek) if (d.cx != null) ok(Math.abs(d.cx - d.w / 2) < 12 && Number.isFinite(d.eyeX), "centre anchor is a small nudge from the box middle: cx " + d.cx + " eye " + d.eyeX);
-else ok(d.faceX === undefined, "loaf has no face-point requirement");
+if (!isPeek) ok(d.faceX === undefined, "no face-point requirement");
 { const cx = (minX + maxX) / 2; ok(Math.abs(cx - d.w / 2) <= d.w * 0.07, "data bbox roughly centred (runtime centres exact visible pixels): " + cx.toFixed(1) + " vs " + d.w / 2); }
 if (d.a) {
   ok(d.a.length === d.n && d.a.every((v) => Number.isInteger(v) && v >= 0 && v <= 255), "edge alpha is a byte per particle");
@@ -39,21 +41,27 @@ ok(cat > 3000, "cat has particles: " + cat);
 console.log(name, "layout ok:", d.n, "particles,", d.w + "x" + d.h);
 }
 ok(createHash("sha256").update(readFileSync(new URL("../src/data/portrait-particles.json", import.meta.url))).digest("hex") === "9c3b13553cfef15fe8852c2bf2ba9e12dafa99e9b17e6464bc4721b901d18e73", "loaf layout unchanged (centring is done by the renderer from drawn extents)");
+ok(createHash("sha256").update(readFileSync(new URL("../src/data/portrait-peek-particles.json", import.meta.url))).digest("hex") === "95a81c11115e70b767140a00cdf0d3de260eef483ffddc708c7469a319e7b00d", "peek layout unchanged");
 ok(/function recentre/.test(readFileSync(new URL("../src/components/AsciiPortrait.astro", import.meta.url), "utf8")), "renderer centres drawn extents");
 // static checks on the component: selection before load, no flash, no intro, one fetch
 const src = readFileSync(new URL("../src/components/AsciiPortrait.astro", import.meta.url), "utf8");
-ok(/portrait-particles\.json\?url/.test(src) && /portrait-peek-particles\.json\?url/.test(src), "runtime uses ?url assets");
-ok(!/import (loaf|peek) from/.test(src), "no inline client JSON imports");
+for (const n of NAMES) ok(src.includes(n + ".json?url"), "runtime uses ?url asset for " + n);
+ok(!/import (loaf|peek|sun|couch|window) from/.test(src), "no inline client JSON imports");
 ok(src.indexOf("location.search") < src.indexOf("fetch("), "query read before fetch");
 ok((src.match(/fetch\(/g) || []).length === 1, "exactly one fetch");
-ok(/forced === "peek" \|\| forced === "loaf"/.test(src) && /Math\.random\(\) < 0\.5 \? "peek" : "loaf"/.test(src), "forced whitelist, else 50/50 roll");
 ok((src.match(/Math\.random\(/g) || []).length === 1, "exactly one random call");
-ok(/dataset\.portraitChoice/.test(src) && !/URLSearchParams[^\n]*\n[^]*<script>[^]*URLSearchParams/.test(src.split("<script>").slice(1).join("")) , "runtime reads stored choice");
-ok(!/URLSearchParams|localStorage/.test(src.slice(src.lastIndexOf("<script>"))), "runtime never re-reads query or storage");
+ok(/portraitIds\.indexOf\(forced\) >= 0/.test(src) && /Math\.floor\(Math\.random\(\) \* portraitIds\.length\)/.test(src), "fixed whitelist, else floor(random*5)");
+ok(/data-ids=\{idList\}/.test(src) && /id: "peek"[^]*id: "loaf"[^]*id: "sun"[^]*id: "couch"[^]*id: "window"/.test(src), "five ids in bin order");
+ok(/dataset\.portraitChoice/.test(src.slice(src.lastIndexOf("<script>"))), "runtime reads stored choice");
+ok(!/URLSearchParams|localStorage|Math\.random/.test(src.slice(src.lastIndexOf("<script>"))), "runtime never re-reads query, storage or random");
 ok(src.indexOf("Math.random") < src.indexOf('class={`ap-set'), "roll precedes fallback markup");
-const choose = (forced, r) => forced === "peek" || forced === "loaf" ? forced : r < 0.5 ? "peek" : "loaf";
-ok(choose(null, 0.1) === "peek" && choose(null, 0.9) === "loaf" && choose("loaf", 0.1) === "loaf" && choose("peek", 0.9) === "peek" && choose("bogus", 0.9) === "loaf", "selection logic");
+// controlled selection: exact bins and names
+const ids = ["peek", "loaf", "sun", "couch", "window"];
+const choose = (forced, r) => ids.indexOf(forced) >= 0 ? forced : ids[Math.min(4, Math.floor(r * 5))];
+[[0, "peek"], [0.2, "loaf"], [0.4, "sun"], [0.6, "couch"], [0.8, "window"], [0.999, "window"], [0.1999, "peek"], [0.7999, "couch"]].forEach(([r, n]) => ok(choose(null, r) === n && choose("bogus", r) === n && choose("__proto__", r) === n, "bin " + r + " -> " + n));
+ids.forEach((n) => ok(choose(n, 0.5) === n && choose(n, 0) === n, "forced " + n));
 ok(src.indexOf('is:inline') < src.indexOf('class={`ap-fit'), "loading class script precedes fallback markup");
+ok(/data-portrait-choice="sun"/.test(src) && /const def = dims\.sun/.test(src), "no-JS default is sun with its own aspect");
 ok(/data\.a \?\? \[\]/.test(src) && /a \*= edge\[i\]/.test(src), "renderer multiplies optional edge alpha in the draw path");
 ok(!/function intro|intro\(\)|introing/.test(src), "intro scatter removed");
 ok(src.indexOf('classList.remove("ap-loading")', src.indexOf("settle(); theme()")) > src.indexOf("settle(); theme()"), "loading removed after first draw");
