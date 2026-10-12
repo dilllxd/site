@@ -47,6 +47,9 @@ const measure = (extra) => `(async () => {
     const k = cr.width / c.width; out.alpha = {};
     for (const th of [8, 12]) { let mn = 1e9, mx = -1; for (let y = 0; y < c.height; y++) for (let x = 0; x < c.width; x++) if (id[(y * c.width + x) * 4 + 3] >= th) { if (x < mn) mn = x; if (x > mx) mx = x; } 
       const L = cr.left + mn * k, R = cr.left + (mx + 1) * k; out.alpha[th] = { gapL: Math.round((L - col.l) * 10) / 10, gapR: Math.round((col.r - R) * 10) / 10 }; }
+    { let t0 = -1, b0 = -1; for (let y = 0; y < c.height && t0 < 0; y++) for (let x = 0; x < c.width; x++) if (id[(y * c.width + x) * 4 + 3] >= 12) { t0 = y; break; }
+      for (let y = c.height - 1; y >= 0 && b0 < 0; y--) for (let x = 0; x < c.width; x++) if (id[(y * c.width + x) * 4 + 3] >= 12) { b0 = y; break; }
+      out.vTop = Math.round(t0 * k * 10) / 10; out.vBot = Math.round((c.height - 1 - b0) * k * 10) / 10; out.figH = Math.round(fe.height * 10) / 10; }
     out.col = [Math.round(col.l * 10) / 10, Math.round(col.r * 10) / 10]; }
   ${extra || ""}
   return out; })()`;
@@ -83,8 +86,10 @@ for (const palette of (process.env.PALETTES || "ink,paper,amber").split(",")) fo
   if (!nojs && o.choice !== choice) bad.push("choice " + o.choice);
   if (o.gapL != null && Math.abs(o.gapL - o.gapR) > (choice === "peek" ? 0.06 * o.canvas[2] : 0.012 * o.canvas[2] + 1)) bad.push("gaps " + o.gapL + "/" + o.gapR);
   if (!nojs && choice !== "peek" && Math.abs(o.alpha[12].gapL - o.alpha[12].gapR) > (choice === "loaf" ? 0.02 : 0.035) * o.canvas[2] + 1) bad.push("pixel bbox off-centre " + o.alpha[12].gapL + "/" + o.alpha[12].gapR);
+  if (!nojs && Math.abs(o.figH - o.canvas[3]) > 2) bad.push("deadband: fig " + o.figH + " vs canvas " + o.canvas[3]);
+  if (!nojs && (o.vTop > 14 || o.vBot > 0.03 * o.canvas[3] + 6)) bad.push("blank rows in canvas top/bottom " + o.vTop + "/" + o.vBot);
   if (bad.length) fails++;
-  rows.push(palette + " " + choice + " " + w + "x" + h + " canvas " + o.canvas.join("x") + " top " + o.figTop + " gaps " + o.gapL + "/" + o.gapR + " a8 " + o.alpha[8].gapL + "/" + o.alpha[8].gapR + " a12 " + o.alpha[12].gapL + "/" + o.alpha[12].gapR + " col " + o.col.join("-") + " scroll " + o.scrollH + "/" + o.vh + (bad.length ? "  FAIL " + bad.join("; ") : ""));
+  rows.push(palette + " " + choice + " " + w + "x" + h + " canvas " + o.canvas.join("x") + " top " + o.figTop + " gaps " + o.gapL + "/" + o.gapR + " a8 " + o.alpha[8].gapL + "/" + o.alpha[8].gapR + " a12 " + o.alpha[12].gapL + "/" + o.alpha[12].gapR + " col " + o.col.join("-") + " fig " + o.figH + " vis " + o.vTop + "/" + o.vBot + " scroll " + o.scrollH + "/" + o.vh + (bad.length ? "  FAIL " + bad.join("; ") : ""));
 }
 console.log(rows.join("\n")); console.log(fails ? "FAILED " + fails : "all fit");
 ws.close(); chrome.kill(); server?.close(); process.exit(fails ? 1 : 0);

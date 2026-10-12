@@ -90,6 +90,19 @@ const dimsJson = JSON.stringify(dims);
   // the early inline script already made the single choice; never re-roll or re-read the query here
   const url = urls[fig?.dataset.portraitChoice ?? "sun"] ?? urls.sun;
 
+  // natural slot: measure the free height with the portrait hidden, then size the figure to min(width, height * aspect) so it is as tall as its drawing
+  function fitPortrait() {
+    if (!fig) return;
+    fig.classList.remove("ap-nat"); fig.classList.add("ap-measure");
+    const availH = fig.clientHeight, availW = fig.clientWidth, ar = Number(fig.style.getPropertyValue("--ar")) || 1;
+    fig.classList.remove("ap-measure"); fig.classList.add("ap-nat");
+    fig.style.setProperty("--fw", Math.max(0, Math.floor(Math.min(availW, availH * ar))) + "px");
+  }
+  fitPortrait();
+  addEventListener("resize", fitPortrait);
+  if (typeof ResizeObserver !== "undefined") new ResizeObserver(fitPortrait).observe(document.body);
+  document.fonts?.ready.then(fitPortrait);
+
   const canvas = fig?.querySelector<HTMLCanvasElement>("[data-ap-canvas]");
   const ctx = canvas?.getContext("2d");
   if (fig && canvas && ctx) {
@@ -108,7 +121,7 @@ const dimsJson = JSON.stringify(dims);
 
   function initPortrait(fig: HTMLElement, canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D, data: PortraitData) {
     const DW = data.w, DH = data.h, N = data.n;
-    canvas.height = DH; fig.dataset.aspect = DW + "/" + DH; fig.style.setProperty("--ar", String(DW / DH));
+    canvas.height = DH; fig.dataset.aspect = DW + "/" + DH; fig.style.setProperty("--ar", String(DW / DH)); fitPortrait();
     const FONT = Math.round(7 * data.cellW / 4.2 * 10) / 10; // design px; monospace advance is ~0.6em, so 7px sits on the 4.2px cell pitch
     const BUCKETS = [".'`,", "-:~", ";!i*", "+=r1", "ctlI?", "%#oe", "8&@$B"];
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)");
