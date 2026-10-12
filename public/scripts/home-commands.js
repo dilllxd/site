@@ -111,3 +111,6 @@ document.querySelectorAll("[data-palette-choice]").forEach((b) => {
   b.addEventListener("click", () => setPalette(b.dataset.paletteChoice));
   b.setAttribute("aria-pressed", b.dataset.paletteChoice === document.documentElement.dataset.palette ? "true" : "false");
 });
+
+// Reveal only after the controls have their working listeners.
+document.querySelector("[data-js-controls]")?.removeAttribute("hidden");
