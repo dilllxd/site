@@ -22,6 +22,22 @@ if (proofDir) await mkdir(proofDir, { recursive: true });
 const upright = await sharp(source).rotate().toBuffer({ resolveWithObject: true });
 const { width: W, height: H } = upright.info;
 const LEVELS = cfg.levels;
+// Subject mask (person + cat), kept outside the repo like the photo. Background cells become blank, opacity 0.
+const maskPath = arg("mask") || process.env.ASCII_PORTRAIT_MASK;
+if (!maskPath) { console.error("Set ASCII_PORTRAIT_MASK or --mask=<file>"); process.exit(1); }
+const maskRaw = await sharp(maskPath).resize(W, H, { fit: "fill" }).greyscale().raw().toBuffer();
+// Greyscale with background filled by the subject median, then CLAHE (large tiles, low slope) so local
+// contrast on the face and fur is lifted without background dominating the histogram.
+const greyRaw = await sharp(upright.data).greyscale().raw().toBuffer();
+const subj = []; for (let i = 0; i < greyRaw.length; i += 7) if (maskRaw[i] > 160) subj.push(greyRaw[i]);
+subj.sort((a, b) => a - b); const fill = subj[subj.length >> 1];
+const filled = Buffer.from(greyRaw); for (let i = 0; i < filled.length; i++) { const a = maskRaw[i] / 255; filled[i] = Math.round(greyRaw[i] * a + fill * (1 - a)); }
+const clahed = await sharp(filled, { raw: { width: W, height: H, channels: 1 } }).clahe({ width: cfg.clahe.tile, height: cfg.clahe.tile, maxSlope: cfg.clahe.slope }).greyscale().raw().toBuffer();
+const clBuf = Buffer.from(clahed);
+for (let i = 0; i < clBuf.length; i++) clBuf[i] = Math.round(greyRaw[i] * (1 - cfg.clahe.mix) + clBuf[i] * cfg.clahe.mix);
+if (clBuf.length !== W * H) throw new Error("clahe channel mismatch");
+const toneSrc = clBuf;
+if (proofDir) await sharp(toneSrc, { raw: { width: W, height: H, channels: 1 } }).resize(520).png().toFile(path.join(proofDir, "tone-source.png"));
 
 // measured ink coverage of each ramp glyph (Liberation Mono), normalised so the densest glyph is 1
 const esc = (c) => c.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -54,18 +70,40 @@ async function build(name, v) {
   const rows = Math.round((cols * region.height / region.width) * cfg.cellAspect);
   const SS = 4;
   const { data: big, info } = await sharp(upright.data).extract(region).resize(cols * SS, rows * SS, { fit: "fill", kernel: "lanczos3" }).greyscale().raw().toBuffer({ resolveWithObject: true });
+  const rawIn = { raw: { width: W, height: H, channels: 1 } };
+  const { data: tbig } = await sharp(toneSrc, rawIn).extract(region).resize(cols * SS, rows * SS, { fit: "fill", kernel: "lanczos3" }).greyscale().raw().toBuffer({ resolveWithObject: true });
+  const { data: mbig } = await sharp(maskRaw, rawIn).extract(region).resize(cols * SS, rows * SS, { fit: "fill", kernel: "cubic" }).greyscale().raw().toBuffer({ resolveWithObject: true });
+  const alpha = new Float32Array(cols * rows);
   // linear-light average per cell
   const lum = new Float32Array(cols * rows);
   for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) {
     let s = 0;
-    for (let j = 0; j < SS; j++) for (let i = 0; i < SS; i++) s += toLin(big[(y * SS + j) * info.width + x * SS + i]);
-    lum[y * cols + x] = toGam(s / (SS * SS)) / 255; // back to display space for percentile work
+    for (let j = 0; j < SS; j++) for (let i = 0; i < SS; i++) { const k = (y * SS + j) * info.width + x * SS + i; s += cfg.linearAverage ? toLin(tbig[k]) : tbig[k] / 255; alpha[y * cols + x] += mbig[k] / 255 / (SS * SS); }
+    lum[y * cols + x] = cfg.linearAverage ? toGam(s / (SS * SS)) / 255 : s / (SS * SS); // back to display space for percentile work
   }
-  const sorted = Float32Array.from(lum).sort();
-  const lo = sorted[Math.floor(sorted.length * 0.01)], hi = sorted[Math.floor(sorted.length * 0.99)];
-  const tone = Float32Array.from(lum, (x) => Math.pow(Math.min(1, Math.max(0, (x - lo) / (hi - lo))), v.gamma));
+  const inSub = (n) => alpha[n] >= cfg.alphaThreshold;
+  // cell-domain detail boost (masked unsharp): box blur over subject cells only, so the cut edge adds no halo
+  const R = cfg.detail.radius, blur = new Float32Array(cols * rows);
+  for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) {
+    let s = 0, w = 0;
+    for (let j = -R; j <= R; j++) for (let i = -R; i <= R; i++) { const yy = y + j, xx = x + i; if (yy < 0 || xx < 0 || yy >= rows || xx >= cols) continue; const q = yy * cols + xx; if (!inSub(q)) continue; s += lum[q]; w++; }
+    blur[y * cols + x] = w ? s / w : lum[y * cols + x];
+  }
+  for (let n = 0; n < lum.length; n++) lum[n] = lum[n] + cfg.detail.amount * (lum[n] - blur[n]);
+  const sorted = Float32Array.from(lum.filter((_, n) => inSub(n))).sort();
+  const lo = sorted[Math.floor(sorted.length * cfg.stretch[0])], hi = sorted[Math.floor(sorted.length * cfg.stretch[1])];
+  const tone = Float32Array.from(lum, (x, n) => {
+    const col = n % cols, row = Math.floor(n / cols);
+    // original-image coordinates of this cell, for the cat-shadow lift region (x .44-1, y .5-1)
+    const ox = c.left + (col + 0.5) / cols * c.width, oy = c.top + (row + 0.5) / rows * c.height;
+    let g = v.gamma; if (ox >= 0.44 && oy >= 0.5) g *= cfg.catLift;
+    if (alpha[n] < cfg.alphaThreshold) return -1;
+    const u = Math.pow(Math.min(1, Math.max(0, (x - lo) / (hi - lo))), g);
+    const s = u * u * (3 - 2 * u); // gentle S-curve
+    return u * (1 - cfg.sCurve) + s * cfg.sCurve;
+  });
   if (proofDir) {
-    const px = Buffer.from(Array.from(tone, (t) => Math.round(t * 255)));
+    const px = Buffer.from(Array.from(tone, (t) => t < 0 ? 0 : Math.round(30 + t * 225)));
     await sharp(px, { raw: { width: cols, height: rows, channels: 1 } }).resize(cols * 8, rows * 16, { kernel: "nearest" }).png().toFile(path.join(proofDir, name + "-gray8x.png"));
   }
   const mk = (inv) => {
@@ -74,7 +112,7 @@ async function build(name, v) {
       let a = "", b = "";
       for (let x = 0; x < cols; x++) {
         const t = tone[y * cols + x];
-        const r = represent(inv ? 1 - t : t);
+        const r = t < 0 ? { g: 0, o: 0 } : represent(inv ? 1 - t : t);
         a += cfg.ramp[r.g]; b += r.o.toString(16);
       }
       chars.push(a); lv.push(b);

@@ -8,7 +8,7 @@
  "variants": {
   "desktop": {
    "cols": 170,
-   "gamma": 0.55,
+   "gamma": 1.2,
    "crop": {
     "left": 0,
     "top": 0.1,
@@ -18,23 +18,39 @@
   },
   "mobile": {
    "cols": 100,
-   "gamma": 0.55,
+   "gamma": 1.2,
    "crop": {
     "left": 0,
-    "top": 0.14,
+    "top": 0.02,
     "width": 1,
-    "height": 0.82
+    "height": 0.95
    }
   },
   "phone": {
-   "cols": 70,
-   "gamma": 0.55,
+   "cols": 110,
+   "gamma": 1.2,
    "crop": {
-    "left": 0.12,
-    "top": 0.25,
-    "width": 0.88,
-    "height": 0.62
+    "left": 0,
+    "top": 0.02,
+    "width": 1,
+    "height": 0.95
    }
   }
+ },
+ "clahe": {
+  "tile": 160,
+  "slope": 6,
+  "mix": 1
+ },
+ "alphaThreshold": 0.4,
+ "catLift": 0.6,
+ "stretch": [
+  0.03,
+  0.99
+ ],
+ "sCurve": 0.6,
+ "detail": {
+  "radius": 3,
+  "amount": 1.2
  }
 }
