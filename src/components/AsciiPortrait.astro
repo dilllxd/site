@@ -100,7 +100,7 @@ const dimsJson = JSON.stringify(dims);
   }
   fitPortrait();
   addEventListener("resize", fitPortrait);
-  if (typeof ResizeObserver !== "undefined") new ResizeObserver(fitPortrait).observe(document.body);
+  if (typeof ResizeObserver !== "undefined") { const ro = new ResizeObserver(fitPortrait); ro.observe(document.body); const sl = document.querySelector(".statusline"); if (sl) ro.observe(sl); }
   document.fonts?.ready.then(fitPortrait);
 
   const canvas = fig?.querySelector<HTMLCanvasElement>("[data-ap-canvas]");
