@@ -1,5 +1,5 @@
 {
- "source": "Amber couch photo; private upright PNG + mask in /tmp (amber-couch-upright.png / -mask.png). Run: ASCII_CFG=scripts/ascii-portrait-couch.config.json ASCII_PORTRAIT_SOURCE=/tmp/amber-couch-upright.png ASCII_PORTRAIT_MASK=/tmp/amber-couch-mask.png ASCII_PORTRAIT_OUT=src/data/portrait-couch-particles.json ASCII_PORTRAIT_FEATHER=28 npm run build:particles",
+ "source": "Amber couch photo; private upright PNG + mask in /tmp (amber-couch-upright.png / -mask.png). Run: ASCII_CFG=scripts/ascii-portrait-couch.config.json ASCII_PORTRAIT_SOURCE=/tmp/amber-couch-upright.png ASCII_PORTRAIT_MASK=/tmp/amber-couch-mask.png ASCII_PORTRAIT_OUT=src/data/portrait-couch-particles.json ASCII_PORTRAIT_FEATHER=44 npm run build:particles",
  "cellAspect": 0.5,
  "ramp": " .-:*+=#%@",
  "levels": 16,
@@ -31,30 +31,30 @@
    "cols": 170,
    "gamma": 1.2,
    "crop": {
-    "left": 0.164,
-    "top": 0.1375,
-    "width": 0.6117,
-    "height": 0.6458
+    "left": 0.1793,
+    "top": 0.147,
+    "width": 0.5917,
+    "height": 0.6083
    }
   },
   "mobile": {
    "cols": 100,
    "gamma": 1.2,
    "crop": {
-    "left": 0.164,
-    "top": 0.1375,
-    "width": 0.6117,
-    "height": 0.6458
+    "left": 0.1793,
+    "top": 0.147,
+    "width": 0.5917,
+    "height": 0.6083
    }
   },
   "phone": {
    "cols": 110,
    "gamma": 1.2,
    "crop": {
-    "left": 0.164,
-    "top": 0.1375,
-    "width": 0.6117,
-    "height": 0.6458
+    "left": 0.1793,
+    "top": 0.147,
+    "width": 0.5917,
+    "height": 0.6083
    }
   }
  },
