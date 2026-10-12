@@ -26,7 +26,7 @@ const ws = new WebSocket(wsUrl); await new Promise((r) => (ws.onopen = r));
 let id = 0; const pend = new Map(); ws.onmessage = (m) => { const d = JSON.parse(m.data); if (d.id && pend.has(d.id)) { pend.get(d.id)(d); pend.delete(d.id); } };
 const send = (method, params = {}) => new Promise((r) => { const i = ++id; pend.set(i, r); ws.send(JSON.stringify({ id: i, method, params })); });
 const ev = async (expr) => { const r = await send("Runtime.evaluate", { expression: expr, awaitPromise: true, returnByValue: true }); if (r.result.exceptionDetails) throw new Error(JSON.stringify(r.result.exceptionDetails).slice(0, 300)); return r.result.result.value; };
-const sizes = [[1366, 657], [1280, 600], [390, 664], [360, 640], [280, 653], [844, 390], [768, 820], [1440, 900], [2560, 1080], [390, 560], [320, 480], [1024, 500], [667, 375], [320, 568], [1920, 1080], [3440, 1440], [1280, 720]];
+const sizes = [[390, 664], [1440, 900], [280, 653], [768, 820], [820, 1180], [1366, 657], [1280, 600], [390, 664], [360, 640], [280, 653], [844, 390], [768, 820], [1440, 900], [2560, 1080], [390, 560], [320, 480], [1024, 500], [667, 375], [320, 568], [1920, 1080], [3440, 1440], [1280, 720]];
 const measure = (extra) => `(async () => {
   for (let i = 0; i < 40 && !document.querySelector('[data-ap-canvas]'); i++) await new Promise((r) => setTimeout(r, 100));
   await new Promise((r) => setTimeout(r, 700));
@@ -42,10 +42,16 @@ const measure = (extra) => `(async () => {
   out.js = fig.classList.contains("ap-js"); out.choice = fig.dataset.portraitChoice;
   const hm = document.querySelector(".home-main").getBoundingClientRect(); out.homeBottom = Math.round(hm.bottom);
   const ap = fig.__ap; if (ap) { const e = ap.extent(), k = cr.width / ap.dw; out.gapL = Math.round(e.left * k * 10) / 10; out.gapR = Math.round((ap.dw - e.right) * k * 10) / 10; out.shift = Math.round(ap.shift() * 10) / 10; }
+  { const hmr = document.querySelector('.home-main').getBoundingClientRect(), fe = document.querySelector('[data-ascii-portrait]').getBoundingClientRect();
+    const col = { l: fe.left, r: fe.right }, cw = c.width, ch = c.height, ctx = c.getContext('2d'), id = ctx.getImageData(0, 0, c.width, c.height).data;
+    const k = cr.width / c.width; out.alpha = {};
+    for (const th of [8, 12]) { let mn = 1e9, mx = -1; for (let y = 0; y < c.height; y++) for (let x = 0; x < c.width; x++) if (id[(y * c.width + x) * 4 + 3] >= th) { if (x < mn) mn = x; if (x > mx) mx = x; } 
+      const L = cr.left + mn * k, R = cr.left + (mx + 1) * k; out.alpha[th] = { gapL: Math.round((L - col.l) * 10) / 10, gapR: Math.round((col.r - R) * 10) / 10 }; }
+    out.col = [Math.round(col.l * 10) / 10, Math.round(col.r * 10) / 10]; }
   ${extra || ""}
   return out; })()`;
 let fails = 0; const rows = [];
-for (const palette of ["ink", "paper", "amber"]) for (const choice of ["peek", "loaf"]) for (const [w, h] of sizes) {
+for (const palette of (process.env.PALETTES || "ink,paper,amber").split(",")) for (const choice of ["peek", "loaf"]) for (const [w, h] of sizes) {
   await send("Emulation.setDeviceMetricsOverride", { width: w, height: h, deviceScaleFactor: 1, mobile: w < 700 });
   await send("Page.navigate", { url: base + "?p=" + choice }); await new Promise((r) => setTimeout(r, 400));
   await ev("(() => { localStorage.setItem('palette', '" + palette + "'); })()"); await send("Page.navigate", { url: base + "?p=" + choice }); await new Promise((r) => setTimeout(r, 500));
@@ -59,8 +65,9 @@ for (const palette of ["ink", "paper", "amber"]) for (const choice of ["peek", "
   if (!(o.canvas[3] >= 40)) bad.push("portrait too small " + o.canvas[3]);
   if (!o.js) bad.push("canvas not live");
   if (o.gapL != null && Math.abs(o.gapL - o.gapR) > (choice === "peek" ? 0.06 * o.canvas[2] : 0.012 * o.canvas[2] + 1)) bad.push("gaps " + o.gapL + "/" + o.gapR);
+  if (choice === "loaf" && Math.abs(o.alpha[12].gapL - o.alpha[12].gapR) > 0.02 * o.canvas[2] + 1) bad.push("loaf pixel bbox off-centre " + o.alpha[12].gapL + "/" + o.alpha[12].gapR);
   if (bad.length) fails++;
-  rows.push(palette + " " + choice + " " + w + "x" + h + " canvas " + o.canvas.join("x") + " top " + o.figTop + " gaps " + o.gapL + "/" + o.gapR + " scroll " + o.scrollH + "/" + o.vh + (bad.length ? "  FAIL " + bad.join("; ") : ""));
+  rows.push(palette + " " + choice + " " + w + "x" + h + " canvas " + o.canvas.join("x") + " top " + o.figTop + " gaps " + o.gapL + "/" + o.gapR + " a8 " + o.alpha[8].gapL + "/" + o.alpha[8].gapR + " a12 " + o.alpha[12].gapL + "/" + o.alpha[12].gapR + " col " + o.col.join("-") + " scroll " + o.scrollH + "/" + o.vh + (bad.length ? "  FAIL " + bad.join("; ") : ""));
 }
 console.log(rows.join("\n")); console.log(fails ? "FAILED " + fails : "all fit");
 ws.close(); chrome.kill(); server?.close(); process.exit(fails ? 1 : 0);
