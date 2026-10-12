@@ -1,6 +1,7 @@
 ---
 import portrait from "../data/ascii-portrait.json";
 import particles from "../data/portrait-particles.json";
+import peekDimensions from "../data/portrait-peek-particles.json";
 
 const SEG = 6;
 const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -25,8 +26,12 @@ const grid = (g: { chars: string[]; lv: string[] }) =>
 const { ramp, variants } = portrait;
 const order = ["desktop", "mobile", "phone"] as const;
 ---
-<figure class="ap" data-ascii-portrait data-aspect={`${particles.w}/${particles.h}`} role="img" aria-label="ASCII portrait of Amber">
-  <script is:inline>document.currentScript.parentElement.classList.add("ap-loading")</script>
+<figure class="ap" data-ascii-portrait data-aspect={`${particles.w}/${particles.h}`} data-peek-aspect={`${peekDimensions.w}/${peekDimensions.h}`} role="img" aria-label="ASCII portrait of Amber">
+  <script is:inline>const portraitFigure = document.currentScript.parentElement;
+    const portraitAspect = new URLSearchParams(location.search).get("p") === "peek" ? portraitFigure.dataset.peekAspect : portraitFigure.dataset.aspect;
+    portraitFigure.dataset.aspect = portraitAspect;
+    portraitFigure.style.setProperty("--portrait-aspect", portraitAspect);
+    portraitFigure.classList.add("ap-loading")</script>
   {order.map((k) => (
     <div class={`ap-fit ap-v-${k}`} style={`--cols:${variants[k].cols}`}>
       <pre class="ap-grid ap-dark" data-mode="dark" data-cols={variants[k].cols} data-rows={variants[k].rows} aria-hidden="true" set:html={grid(variants[k].dark)} />

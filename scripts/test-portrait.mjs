@@ -37,4 +37,7 @@ ok(/get\("p"\) === "peek"/.test(src) && /isPeek \? peekUrl : loafUrl/.test(src),
 ok(src.indexOf('is:inline') < src.indexOf('class={`ap-fit'), "loading class script precedes fallback markup");
 ok(!/function intro|intro\(\)|introing/.test(src), "intro scatter removed");
 ok(src.indexOf('classList.remove("ap-loading")', src.indexOf("settle(); theme()")) > src.indexOf("settle(); theme()"), "loading removed after first draw");
+const home = readFileSync(new URL("../src/pages/index.astro", import.meta.url), "utf8");
+ok(/ap-loading \.ap-canvas\{display:block;visibility:hidden;aspect-ratio:var\(--portrait-aspect\)\}/.test(home), "loading canvas retains selected layout dimensions");
+ok(src.indexOf('style.setProperty("--portrait-aspect"') < src.indexOf('classList.add("ap-loading")'), "selected aspect reserved before loading");
 if (fails) process.exit(1);
