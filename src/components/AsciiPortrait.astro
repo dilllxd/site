@@ -36,6 +36,7 @@ const order = ["desktop", "mobile", "phone"] as const;
     portraitFigure.dataset.portraitChoice = portraitChoice;
     portraitFigure.dataset.aspect = portraitAspect;
     portraitFigure.style.setProperty("--portrait-aspect", portraitAspect);
+    { const [aw, ah] = portraitAspect.split("/").map(Number); portraitFigure.style.setProperty("--ar", String(aw / ah)); }
     portraitFigure.classList.add("ap-loading")</script>
   {sets.map((st) => (
     <div class={`ap-set ap-set-${st.id}`}>
@@ -79,7 +80,7 @@ const order = ["desktop", "mobile", "phone"] as const;
 
   function initPortrait(fig: HTMLElement, canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D, data: PortraitData) {
     const DW = data.w, DH = data.h, N = data.n;
-    canvas.height = DH; fig.dataset.aspect = DW + "/" + DH;
+    canvas.height = DH; fig.dataset.aspect = DW + "/" + DH; fig.style.setProperty("--ar", String(DW / DH));
     const FONT = Math.round(7 * data.cellW / 4.2 * 10) / 10; // design px; monospace advance is ~0.6em, so 7px sits on the 4.2px cell pitch
     const BUCKETS = [".'`,", "-:~", ";!i*", "+=r1", "ctlI?", "%#oe", "8&@$B"];
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)");
