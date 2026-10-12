@@ -33,6 +33,17 @@ for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) {
   v = Math.min(1, Math.max(0, (v - 0.5) * cfg.contrast + 0.5));
   lum[y * cols + x] = Math.pow(v, cfg.gamma);
 }
+// local tone: blend in (pixel - local mean) so dark fur and shadowed faces keep internal detail
+const lt = cfg.localTone ?? 0;
+if (lt > 0) {
+  const R = cfg.localRadius ?? 6, mean = new Float32Array(lum.length);
+  for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) {
+    let s = 0, n = 0;
+    for (let j = Math.max(0, y - R); j <= Math.min(rows - 1, y + R); j++) for (let i = Math.max(0, x - R); i <= Math.min(cols - 1, x + R); i++) { s += lum[j * cols + i]; n++; }
+    mean[y * cols + x] = s / n;
+  }
+  for (let i = 0; i < lum.length; i++) lum[i] = Math.min(1, Math.max(0, lum[i] * (1 - lt) + (0.5 + (lum[i] - mean[i]) * 2.2) * lt));
+}
 // histogram-equalise (blended) so the whole glyph range is used, then stretch
 const sorted = Float32Array.from(lum).sort();
 const eq = cfg.equalize ?? 0;

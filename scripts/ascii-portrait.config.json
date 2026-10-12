@@ -2,22 +2,24 @@
  "source": "set with ASCII_PORTRAIT_SOURCE or --source; kept outside the repo",
  "crop": {
   "left": 0,
-  "top": 0.22,
+  "top": 0.14,
   "width": 1,
-  "height": 0.68
+  "height": 0.84
  },
- "note": "fractions of the EXIF-rotated upright image (2080x2784); tight on both faces: Dylan left, Amber lower-right",
- "cols": 110,
+ "note": "fractions of the auto-oriented upright image (sharp .rotate(); EXIF 8, 2080x2784). Man face x0-.69 y0-.78; cat face x.47-1 y.45-.96",
+ "cols": 130,
  "cellAspect": 0.5,
- "gamma": 0.8,
- "contrast": 1.1,
+ "gamma": 1.0,
+ "contrast": 1.2,
  "clahe": {
-  "width": 48,
-  "height": 48,
-  "maxSlope": 4
+  "width": 16,
+  "height": 16,
+  "maxSlope": 3
  },
  "ramp": " .:-=+*#%@",
  "output": "src/data/ascii-portrait.json",
- "sharpen": 1.5,
- "equalize": 0.75
+ "sharpen": 2,
+ "equalize": 0.5,
+ "localTone": 0.8,
+ "localRadius": 5
 }
