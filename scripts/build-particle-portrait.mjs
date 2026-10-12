@@ -74,9 +74,9 @@ for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) {
   cs += hex(m + (r - m) * k) + hex(m + (g - m) * k) + hex(m + (b - m) * k);
 }
 const out = { w: P.designW, h: Math.round(rows * P.cellH), cellW: P.cellW, cellH: P.cellH, n: xs.length, x: xs, y: ys, t: ts, c: cs };
-await writeFile(path.join(root, "src/data/portrait-particles.json"), JSON.stringify(out) + "\n");
+await writeFile(path.join(root, process.env.ASCII_PORTRAIT_OUT || "src/data/portrait-particles.json"), JSON.stringify(out) + "\n");
 console.log("particles", out.n, "grid", cols + "x" + rows, "design", out.w + "x" + out.h);
 if (process.argv.includes("--proof")) {
   const px = Buffer.alloc(cols * rows); for (let i = 0; i < xs.length; i++) px[Math.floor(ys[i] / P.cellH) * cols + Math.floor(xs[i] / P.cellW)] = 30 + ts[i] * 0.88;
-  await sharp(px, { raw: { width: cols, height: rows, channels: 1 } }).resize(cols * 6, rows * 6, { kernel: "nearest" }).png().toFile("/tmp/particles-tone.png");
+  await sharp(px, { raw: { width: cols, height: rows, channels: 1 } }).resize(cols * 6, rows * 6, { kernel: "nearest" }).png().toFile((process.env.ASCII_PORTRAIT_OUT ? "/tmp/particles-tone-peek.png" : "/tmp/particles-tone.png"));
 }

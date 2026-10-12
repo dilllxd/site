@@ -1,8 +1,10 @@
-// Layout checks for src/data/portrait-particles.json (run: npm run test:portrait)
+// Layout checks for portrait-particles.json and portrait-peek-particles.json (run: npm run test:portrait)
 import { readFileSync } from "node:fs";
-const d = JSON.parse(readFileSync(new URL("../src/data/portrait-particles.json", import.meta.url), "utf8"));
+import { createHash } from "node:crypto";
 let fails = 0;
 const ok = (c, m) => { if (!c) { fails++; console.error("FAIL", m); } };
+for (const name of ["portrait-particles", "portrait-peek-particles"]) {
+const d = JSON.parse(readFileSync(new URL("../src/data/" + name + ".json", import.meta.url), "utf8"));
 ok(d.n === d.x.length && d.n === d.y.length && d.n === d.t.length, "array lengths match n");
 ok(d.c.length === d.n * 3 && /^[0-9a-f]+$/.test(d.c), "colour string is 3 hex digits per particle");
 ok(d.n >= 3000 && d.n <= 12000, "particle count in range: " + d.n);
@@ -20,5 +22,9 @@ ok(minX < 30 && d.w - maxX < 30 && minY < 30 && d.h - maxY < 30, "layout is tigh
 // the single cat needs density
 const cat = d.n;
 ok(cat > 3000, "cat has particles: " + cat);
+
+console.log(name, "layout ok:", d.n, "particles,", d.w + "x" + d.h);
+}
+// default loaf layout must stay byte-identical
+ok(createHash("sha256").update(readFileSync(new URL("../src/data/portrait-particles.json", import.meta.url))).digest("hex") === "9c3b13553cfef15fe8852c2bf2ba9e12dafa99e9b17e6464bc4721b901d18e73", "default loaf layout byte parity");
 if (fails) process.exit(1);
-console.log("portrait layout ok:", d.n, "particles,", d.w + "x" + d.h);
