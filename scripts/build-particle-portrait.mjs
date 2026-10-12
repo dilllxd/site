@@ -8,7 +8,7 @@ import { fileURLToPath } from "node:url";
 import path from "node:path";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const cfg = JSON.parse(await readFile(path.join(root, "scripts/ascii-portrait.config.json"), "utf8"));
+const cfg = JSON.parse(await readFile(process.env.ASCII_CFG ? path.resolve(root, process.env.ASCII_CFG) : path.join(root, "scripts/ascii-portrait.config.json"), "utf8"));
 const P = { designW: 480, cellW: 4.2, cellH: 6.3, pad: 6, alpha: 0.45, ...(cfg.particles || {}) };
 // optional face centring: ASCII_PORTRAIT_FACE_X is the eye-midpoint column in upright source pixels (measured, not the bbox centre).
 // ASCII_PORTRAIT_FEATHER (design px, default 0 = off) fades only the diagonal bottom cut of the mask; see the alpha pass below.
