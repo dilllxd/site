@@ -90,7 +90,7 @@ const dimsJson = JSON.stringify(dims);
   // the early inline script already made the single choice; never re-roll or re-read the query here
   const url = urls[fig?.dataset.portraitChoice ?? "sun"] ?? urls.sun;
 
-  // natural slot: measure the free height with the portrait hidden, then size the figure to min(width, height * aspect) so it is as tall as its drawing
+  // Measure the flexible slot with the drawing hidden, then aspect-fit the canvas within it.
   function fitPortrait() {
     if (!fig) return;
     fig.classList.remove("ap-nat"); fig.classList.add("ap-measure");

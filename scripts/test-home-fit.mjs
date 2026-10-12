@@ -49,7 +49,7 @@ const measure = (extra) => `(async () => {
     if (r.left < -0.5 || r.top < -0.5 || r.right > vw + 0.5 || r.bottom > vh + 0.5) out.clipped.push((el.className || el.tagName) + ":" + [r.left, r.top, r.right, r.bottom].map((v) => Math.round(v)).join(","));
   }
   const c = document.querySelector("[data-ap-canvas]"), cr = c.getBoundingClientRect(), fig = document.querySelector("[data-ascii-portrait]"), fr = fig.getBoundingClientRect();
-  out.canvas = [cr.left, cr.top, cr.width, cr.height].map((v) => Math.round(v * 10) / 10); out.figTop = Math.round(fr.top * 10) / 10;
+  out.canvas = [cr.left, cr.top, cr.width, cr.height].map((v) => Math.round(v * 10) / 10); out.figTop = Math.round(fr.top * 10) / 10; out.slotCentreOffset = Math.abs((cr.top + cr.bottom - fr.top - fr.bottom) / 2);
   out.js = fig.classList.contains("ap-js"); out.choice = fig.dataset.portraitChoice;
   const hm = document.querySelector(".home-main").getBoundingClientRect(); out.homeBottom = Math.round(hm.bottom);
   const ap = fig.__ap; if (ap) { const e = ap.extent(), k = cr.width / ap.dw; out.gapL = Math.round(e.left * k * 10) / 10; out.gapR = Math.round((ap.dw - e.right) * k * 10) / 10; out.shift = Math.round(ap.shift() * 10) / 10; }
@@ -99,7 +99,7 @@ for (const palette of (process.env.PALETTES || "ink,paper,amber").split(",")) fo
   if (!nojs && o.choice !== choice) bad.push("choice " + o.choice);
   if (o.gapL != null && Math.abs(o.gapL - o.gapR) > (choice === "peek" ? 0.06 * o.canvas[2] : 0.012 * o.canvas[2] + 1)) bad.push("gaps " + o.gapL + "/" + o.gapR);
   if (!nojs && choice !== "peek" && Math.abs(o.alpha[12].gapL - o.alpha[12].gapR) > (choice === "loaf" ? 0.02 : 0.035) * o.canvas[2] + 1) bad.push("pixel bbox off-centre " + o.alpha[12].gapL + "/" + o.alpha[12].gapR);
-  if (!nojs && Math.abs(o.figH - o.canvas[3]) > 2) bad.push("deadband: fig " + o.figH + " vs canvas " + o.canvas[3]);
+  if (!nojs && o.slotCentreOffset > 2) bad.push("portrait not vertically centred: " + o.slotCentreOffset);
   if (!nojs && (o.vTop > 14 || o.vBot > 0.03 * o.canvas[3] + 6)) bad.push("blank rows in canvas top/bottom " + o.vTop + "/" + o.vBot);
   if (bad.length) fails++;
   rows.push(palette + " " + choice + " " + w + "x" + h + " canvas " + o.canvas.join("x") + " top " + o.figTop + " gaps " + o.gapL + "/" + o.gapR + " a8 " + o.alpha[8].gapL + "/" + o.alpha[8].gapR + " a12 " + o.alpha[12].gapL + "/" + o.alpha[12].gapR + " col " + o.col.join("-") + " fig " + o.figH + " vis " + o.vTop + "/" + o.vBot + " scroll " + o.scrollH + "/" + o.vh + (bad.length ? "  FAIL " + bad.join("; ") : ""));
