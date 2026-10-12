@@ -8,7 +8,7 @@ for (const name of ["portrait-particles", "portrait-peek-particles", "portrait-s
 const d = JSON.parse(readFileSync(new URL("../src/data/" + name + ".json", import.meta.url), "utf8"));
 ok(d.n === d.x.length && d.n === d.y.length && d.n === d.t.length, "array lengths match n");
 ok(d.c.length === d.n * 3 && /^[0-9a-f]+$/.test(d.c), "colour string is 3 hex digits per particle");
-ok(d.n >= 3000 && d.n <= 12000, "particle count in range: " + d.n);
+ok(d.n >= 15000 && d.n <= 30000, "particle count in range: " + d.n);
 ok(d.x.every(Number.isFinite) && d.y.every(Number.isFinite) && d.t.every(Number.isFinite), "all values finite");
 ok(d.x.every((v) => v >= 0 && v <= d.w) && d.y.every((v) => v >= 0 && v <= d.h), "positions inside the design box");
 ok(d.t.every((v) => Number.isInteger(v) && v >= 0 && v <= 255), "tone is a byte");
@@ -40,8 +40,7 @@ ok(cat > 3000, "cat has particles: " + cat);
 
 console.log(name, "layout ok:", d.n, "particles,", d.w + "x" + d.h);
 }
-ok(createHash("sha256").update(readFileSync(new URL("../src/data/portrait-particles.json", import.meta.url))).digest("hex") === "9c3b13553cfef15fe8852c2bf2ba9e12dafa99e9b17e6464bc4721b901d18e73", "loaf layout unchanged (centring is done by the renderer from drawn extents)");
-ok(createHash("sha256").update(readFileSync(new URL("../src/data/portrait-peek-particles.json", import.meta.url))).digest("hex") === "95a81c11115e70b767140a00cdf0d3de260eef483ffddc708c7469a319e7b00d", "peek layout unchanged");
+for (const name of NAMES) { const d = JSON.parse(readFileSync(new URL("../src/data/" + name + ".json", import.meta.url), "utf8")); ok(d.cellW <= 2.4 && d.cellH <= 3.6 && Math.abs(d.cellH / d.cellW - 1.5) < 0.01, name + " dense pitch " + d.cellW + "x" + d.cellH); }
 ok(/function recentre/.test(readFileSync(new URL("../src/components/AsciiPortrait.astro", import.meta.url), "utf8")), "renderer centres drawn extents");
 // static checks on the component: selection before load, no flash, no intro, one fetch
 const src = readFileSync(new URL("../src/components/AsciiPortrait.astro", import.meta.url), "utf8");

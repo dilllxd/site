@@ -12,6 +12,8 @@ const cfg = JSON.parse(await readFile(process.env.ASCII_CFG ? path.resolve(root,
 const P = { designW: 480, cellW: 4.2, cellH: 6.3, pad: 6, alpha: 0.45, ...(cfg.particles || {}) };
 // optional face centring: ASCII_PORTRAIT_FACE_X is the eye-midpoint column in upright source pixels (measured, not the bbox centre).
 // ASCII_PORTRAIT_FEATHER (design px, default 0 = off) fades only the diagonal bottom cut of the mask; see the alpha pass below.
+// ASCII_PITCH=2.4x3.6 overrides the cell pitch (design px). Glyph size follows cellW in the renderer; the unsharp radius is rescaled so detail stays the same physical size.
+if (process.env.ASCII_PITCH) { const [pw, ph] = process.env.ASCII_PITCH.split("x").map(Number); P.cellW = pw; P.cellH = ph; }
 const faceX = process.env.ASCII_PORTRAIT_FACE_X ? Number(process.env.ASCII_PORTRAIT_FACE_X) : null;
 // ASCII_PORTRAIT_EYE_X (+ optional ASCII_PORTRAIT_NUDGE, default 0.25): keep the tight bbox layout and only record a centre anchor 'cx' for the
 // visible particles: their bbox centre nudged that fraction of the way toward the eye midpoint. The renderer centres the drawn extents on cx.
@@ -68,7 +70,7 @@ for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) {
 }
 const inSub = (n) => alpha[n] >= P.alpha;
 // masked unsharp on subject cells only (no halo from the cut edge)
-const R = cfg.detail.radius, blur = new Float32Array(N);
+const R = Math.max(1, Math.round(cfg.detail.radius * (cfg.particles?.cellW ?? 3.4) / P.cellW)), blur = new Float32Array(N);
 for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) {
   let s = 0, w = 0;
   for (let j = -R; j <= R; j++) for (let i = -R; i <= R; i++) { const yy = y + j, xx = x + i; if (yy < 0 || xx < 0 || yy >= rows || xx >= cols) continue; const q = yy * cols + xx; if (!inSub(q)) continue; s += lum[q]; w++; }
