@@ -26,6 +26,7 @@ const { ramp, variants } = portrait;
 const order = ["desktop", "mobile", "phone"] as const;
 ---
 <figure class="ap" data-ascii-portrait data-aspect={`${particles.w}/${particles.h}`} role="img" aria-label="ASCII portrait of Amber">
+  <script is:inline>document.currentScript.parentElement.classList.add("ap-loading")</script>
   {order.map((k) => (
     <div class={`ap-fit ap-v-${k}`} style={`--cols:${variants[k].cols}`}>
       <pre class="ap-grid ap-dark" data-mode="dark" data-cols={variants[k].cols} data-rows={variants[k].rows} aria-hidden="true" set:html={grid(variants[k].dark)} />
@@ -36,18 +37,33 @@ const order = ["desktop", "mobile", "phone"] as const;
 </figure>
 
 <script>
-  import loaf from "../data/portrait-particles.json";
-  import peek from "../data/portrait-peek-particles.json";
+  import loafUrl from "../data/portrait-particles.json?url";
+  import peekUrl from "../data/portrait-peek-particles.json?url";
 
-  // fixed whitelist: only ?p=peek switches layouts, anything else is the default
-  const data = new URLSearchParams(location.search).get("p") === "peek" ? peek : loaf;
+  type PortraitData = { w: number; h: number; n: number; cellW: number; x: number[]; y: number[]; t: number[]; c: string };
+
+  // fixed whitelist, read before any layout loads: only ?p=peek switches layouts, anything else is the default
+  const isPeek = new URLSearchParams(location.search).get("p") === "peek";
+  const url = isPeek ? peekUrl : loafUrl;
 
   const fig = document.querySelector<HTMLElement>("[data-ascii-portrait]");
   const canvas = fig?.querySelector<HTMLCanvasElement>("[data-ap-canvas]");
   const ctx = canvas?.getContext("2d");
-  if (fig && canvas && ctx) initPortrait(fig, canvas, ctx);
+  if (fig && canvas && ctx) {
+    fetch(url)
+      .then((r) => { if (!r.ok) throw new Error("portrait " + r.status); return r.json(); })
+      .then((d: PortraitData) => {
+        if (!d || !(d.n > 0) || d.x?.length !== d.n) throw new Error("portrait data invalid");
+        initPortrait(fig, canvas, ctx, d);
+      })
+      .catch((e) => {
+        console.warn("portrait unavailable", e);
+        // peek never falls back to the loaf; the default keeps its static grid
+        if (!isPeek) fig.classList.remove("ap-loading");
+      });
+  } else fig?.classList.remove("ap-loading");
 
-  function initPortrait(fig: HTMLElement, canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D) {
+  function initPortrait(fig: HTMLElement, canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D, data: PortraitData) {
     const DW = data.w, DH = data.h, N = data.n;
     canvas.height = DH; fig.dataset.aspect = DW + "/" + DH;
     const FONT = Math.round(7 * data.cellW / 4.2 * 10) / 10; // design px; monospace advance is ~0.6em, so 7px sits on the 4.2px cell pitch
@@ -148,34 +164,24 @@ const order = ["desktop", "mobile", "phone"] as const;
         vx[i] += (fx - K * dx - C * vx[i]) * dt; vy[i] += (fy - K * dy - C * vy[i]) * dt;
         px[i] += vx[i] * dt; py[i] += vy[i] * dt;
         const nx2 = px[i] - bx[i], ny2 = py[i] - by[i], m2 = nx2 * nx2 + ny2 * ny2;
-        if (m2 > MAXD2 && !introing) { const s = MAXD / Math.sqrt(m2); px[i] = bx[i] + nx2 * s; py[i] = by[i] + ny2 * s; }
+        if (m2 > MAXD2) { const s = MAXD / Math.sqrt(m2); px[i] = bx[i] + nx2 * s; py[i] = by[i] + ny2 * s; }
         if (m2 > 0.0016 || vx[i] * vx[i] + vy[i] * vy[i] > 0.0016) moving = true;
         else { px[i] = bx[i]; py[i] = by[i]; vx[i] = 0; vy[i] = 0; }
       }
       return moving || near;
     }
 
-    let introing = false, introEnd = 0;
-    function frame(now: number) {
+        function frame(now: number) {
       raf = 0;
       if (!visible || hiddenDoc) return;
       const dt = Math.min(1 / 30, Math.max(0.001, (now - last) / 1000)); last = now;
       const going = step(dt);
       draw();
-      if (introing && now > introEnd) introing = false;
       if (going) raf = requestAnimationFrame(frame);
     }
     function kick() { if (!raf && !reduce.matches && visible && !hiddenDoc) { last = performance.now(); raf = requestAnimationFrame(frame); } }
     function stop() { if (raf) cancelAnimationFrame(raf); raf = 0; }
-    function settle() { for (let i = 0; i < N; i++) { px[i] = bx[i]; py[i] = by[i]; vx[i] = vy[i] = 0; } mx = my = -9999; introing = false; }
-    function intro() {
-      for (let i = 0; i < N; i++) {
-        const a = Math.random() * Math.PI * 2, r = 30 + Math.random() * 90;
-        px[i] = bx[i] + Math.cos(a) * r; py[i] = by[i] + Math.sin(a) * r; vx[i] = vy[i] = 0;
-      }
-      introing = true; introEnd = performance.now() + 1400; kick();
-    }
-
+    function settle() { for (let i = 0; i < N; i++) { px[i] = bx[i]; py[i] = by[i]; vx[i] = vy[i] = 0; } mx = my = -9999; }
     function toDesign(e: PointerEvent) {
       const r = canvas.getBoundingClientRect();
       mx = (e.clientX - r.left) / r.width * DW; my = (e.clientY - r.top) / r.height * DH;
@@ -204,7 +210,7 @@ const order = ["desktop", "mobile", "phone"] as const;
 
     fig.classList.add("ap-js");
     settle(); theme(); resize(); draw();
-    if (!reduce.matches) intro();
+    fig.classList.remove("ap-loading");
     // test hook for the layout/renderer checks
     (fig as any).__ap = { count: () => N, drawnCount: () => live.reduce((a, b) => a + b, 0) };
   }

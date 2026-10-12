@@ -27,4 +27,14 @@ console.log(name, "layout ok:", d.n, "particles,", d.w + "x" + d.h);
 }
 // default loaf layout must stay byte-identical
 ok(createHash("sha256").update(readFileSync(new URL("../src/data/portrait-particles.json", import.meta.url))).digest("hex") === "9c3b13553cfef15fe8852c2bf2ba9e12dafa99e9b17e6464bc4721b901d18e73", "default loaf layout byte parity");
+// static checks on the component: selection before load, no flash, no intro, one fetch
+const src = readFileSync(new URL("../src/components/AsciiPortrait.astro", import.meta.url), "utf8");
+ok(/portrait-particles\.json\?url/.test(src) && /portrait-peek-particles\.json\?url/.test(src), "runtime uses ?url assets");
+ok(!/import (loaf|peek) from/.test(src), "no inline client JSON imports");
+ok(src.indexOf("location.search") < src.indexOf("fetch("), "query read before fetch");
+ok((src.match(/fetch\(/g) || []).length === 1, "exactly one fetch");
+ok(/get\("p"\) === "peek"/.test(src) && /isPeek \? peekUrl : loafUrl/.test(src), "whitelist: only p=peek picks peek");
+ok(src.indexOf('is:inline') < src.indexOf('class={`ap-fit'), "loading class script precedes fallback markup");
+ok(!/function intro|intro\(\)|introing/.test(src), "intro scatter removed");
+ok(src.indexOf('classList.remove("ap-loading")', src.indexOf("settle(); theme()")) > src.indexOf("settle(); theme()"), "loading removed after first draw");
 if (fails) process.exit(1);
