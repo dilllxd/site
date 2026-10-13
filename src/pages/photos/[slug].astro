@@ -3,6 +3,8 @@ import { getCollection } from "astro:content";
 import SiteLayout from "../../layouts/SiteLayout.astro";
 import { siteConfig } from "../../data/site";
 import { toAbsoluteUrl } from "../../lib/seo";
+import { photoDims } from "../../lib/images";
+import "../../styles/gallery.css";
 
 export async function getStaticPaths() {
   const photos = await getCollection("photos");
@@ -14,6 +16,7 @@ export async function getStaticPaths() {
 }
 
 const { photo } = Astro.props;
+const dims = await photoDims([photo]);
 const canonicalUrl = `${siteConfig.siteUrl}/photos/${photo.id}/`;
 const structuredData = {
   "@context": "https://schema.org",
@@ -45,23 +48,28 @@ const structuredData = {
   ogImage={photo.data.image}
   ogImageAlt={photo.data.alt}
   structuredData={structuredData}
-  pageClass="page-photo-detail"
+  pageClass="page-photo-detail gx-page"
   hideFooter={true}
 >
   <article class="photo-detail">
     <div class="photo-detail-layout">
       <figure class="photo-detail-figure" data-photo-viewer data-photo-viewer-mode="inline">
         <div class="photo-detail-viewer-controls" aria-label="Photo viewer controls">
-          <button type="button" data-photo-viewer-zoom-out aria-label="Zoom out">-</button>
-          <button type="button" data-photo-viewer-zoom-reset>100%</button>
-          <button type="button" data-photo-viewer-zoom-in aria-label="Zoom in">+</button>
-          <a href={photo.data.image} target="_blank" rel="noreferrer">Open full size</a>
+          <span class="gx-zoom" data-js-only hidden>
+            <button type="button" data-photo-viewer-zoom-out aria-label="Zoom out">-</button>
+            <button type="button" data-photo-viewer-zoom-reset>100%</button>
+            <button type="button" data-photo-viewer-zoom-in aria-label="Zoom in">+</button>
+          </span>
+          <a href={photo.data.image} target="_blank" rel="noreferrer">Full size</a>
         </div>
         <div class="photo-detail-viewport" data-photo-viewer-viewport>
           <img
             src={photo.data.image}
             alt={photo.data.alt}
+            width={dims[photo.id]?.[0]}
+            height={dims[photo.id]?.[1]}
             loading="eager"
+            fetchpriority="high"
             data-photo-viewer-image
             draggable="false"
           />
@@ -70,8 +78,8 @@ const structuredData = {
 
       <section class="photo-detail-sidebar">
         <div class="photo-detail-topline">
-          <p>{photo.data.date.getUTCFullYear()}</p>
-          <a href="/photos/">All photographs</a>
+          <p>Photo, {photo.data.date.getUTCFullYear()}</p>
+          <a href="/photos/">All photos</a>
         </div>
 
         <header class="photo-detail-header">
@@ -91,8 +99,22 @@ const structuredData = {
             </div>
           )}
         </dl>
+        <div class="gx-detail-theme">
+          <div class="palette" role="group" aria-label="Color theme" data-js-only hidden>
+            {["ink", "paper", "amber"].map((p) => <button type="button" data-palette-choice={p} aria-pressed="false">{p}</button>)}
+          </div>
+        </div>
       </section>
     </div>
   </article>
+  <script is:inline>
+    (() => {
+      let p = null;
+      try { p = localStorage.getItem("palette"); } catch {}
+      if (!["ink", "paper", "amber"].includes(p)) p = matchMedia("(prefers-color-scheme: dark)").matches ? "ink" : "paper";
+      document.documentElement.dataset.palette = p;
+    })();
+  </script>
+  <script type="module" src="/scripts/gx-palette.js"></script>
   <script type="module" src="/scripts/photo-viewer.js"></script>
 </SiteLayout>

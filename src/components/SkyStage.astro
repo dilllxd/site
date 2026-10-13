@@ -1,0 +1,49 @@
+---
+import { groupTargets, formatRa, formatDec, type SkyTarget } from "../lib/sky";
+
+interface Props {
+  photos: { id: string; data: { title: string; ra?: number; dec?: number } }[];
+}
+const { photos } = Astro.props;
+const targets: SkyTarget[] = photos
+  .filter((p) => p.data.ra !== undefined && p.data.dec !== undefined)
+  .map((p) => ({ id: p.id, title: p.data.title, ra: p.data.ra as number, dec: p.data.dec as number }));
+const groups = groupTargets(targets);
+const json = JSON.stringify({ targets, groups }).replace(/</g, "\\u003c");
+const regions = groups.filter((g) => g.members.length > 1);
+---
+<section class="sky" data-sky aria-labelledby="sky-title">
+  <div class="sky-bar">
+    <h2 id="sky-title">Sky globe</h2>
+    <span>J2000 RA/Dec, seen from outside the celestial sphere</span>
+  </div>
+  <div class="sky-stage" data-sky-stage>
+    <div class="sky-view" data-sky-view tabindex="0" role="application" aria-roledescription="sky globe" aria-label="Interactive sky globe. Drag to rotate. Arrow keys rotate, plus and minus zoom, zero resets." aria-describedby="sky-status"></div>
+    <div class="sky-message" data-sky-message>
+      <p data-sky-message-text>The 3D globe loads when this section scrolls into view. The list below works without it.</p>
+      <button type="button" class="sky-btn" data-sky-load hidden>Load globe</button>
+    </div>
+    <div class="sky-controls" data-sky-controls role="group" aria-label="Globe controls" hidden>
+      <button type="button" class="sky-btn" data-sky-zoom-in aria-label="Zoom in">+</button>
+      <button type="button" class="sky-btn" data-sky-zoom-out aria-label="Zoom out">-</button>
+      <button type="button" class="sky-btn" data-sky-reset aria-label="Reset view">Reset</button>
+    </div>
+  </div>
+  <p class="sky-status" id="sky-status" data-sky-status role="status" aria-live="polite">{targets.length} photographed {targets.length === 1 ? "target" : "targets"}. Background stars are decorative, not a catalog.</p>
+  <div class="sky-panel" data-sky-panel hidden aria-label="Targets in this region"></div>
+  {regions.length > 0 && (
+    <ul class="sky-regions" aria-label="Regions with more than one target">
+      {regions.map((g) => (
+        <li>
+          <strong>{g.members.map((m) => m.title).join(" + ")}</strong>
+          <span>share one marker; each keeps its true position:</span>
+          <ul>{g.members.map((m) => <li>{m.title}: RA {formatRa(m.ra)}, Dec {formatDec(m.dec)}</li>)}</ul>
+        </li>
+      ))}
+    </ul>
+  )}
+  <script type="application/json" data-sky-data set:html={json}></script>
+</section>
+<script>
+  import "../scripts/sky.ts";
+</script>

@@ -1,48 +1,94 @@
 ---
+import "../../styles/gallery.css";
 import { getCollection } from "astro:content";
 import SiteLayout from "../../layouts/SiteLayout.astro";
 import { siteConfig } from "../../data/site";
 import { toAbsoluteUrl } from "../../lib/seo";
+import { photoDims } from "../../lib/images";
+import { getThumb } from "../../lib/thumbs";
 
-const photos = (await getCollection("photos")).sort(
-  (a, b) => b.data.date.valueOf() - a.data.date.valueOf(),
-);
+const photos = (await getCollection("photos")).sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+const dims = await photoDims(photos);
+const thumbs = await Promise.all(photos.map((p) => getThumb(p.data.image)));
+const THUMB_SIZES = "(max-width: 451px) calc(100vw - 37px), (max-width: 679px) 45vw, (max-width: 915px) 30vw, (max-width: 1010px) 22vw, (max-width: 1700px) 224px, (max-width: 2200px) 250px, 282px";
+const palettes = ["ink", "paper", "amber"];
+const fmt = (d: Date) => d.toISOString().slice(0, 10);
+const description = "Astrophotography from South Carolina: deep-sky targets stacked and processed from my back yard.";
 
 const structuredData = {
   "@context": "https://schema.org",
   "@type": "CollectionPage",
   name: "Photos",
   url: `${siteConfig.siteUrl}/photos/`,
-  description:
-    "A small gallery of the images I actually want to keep around, with each photo shown in its natural proportions.",
+  description,
   image: toAbsoluteUrl(siteConfig.defaultSocialImage),
 };
 ---
+<SiteLayout title="Photos | Dylan H" description={description} ogImage={siteConfig.defaultSocialImage} ogImageAlt={siteConfig.defaultSocialImageAlt} structuredData={structuredData} pageClass="gx-page" hideFooter={true}>
+  <div class="gx" data-gx>
+    <h1 class="gx-cmd"><span class="prompt" aria-hidden="true">$</span> ls photos/ <span class="gx-count">{photos.length} files</span></h1>
+    <ul class="gx-grid">
+      {photos.map((p, i) => {
+        const d = dims[p.id];
+        const meta = [fmt(p.data.date), p.data.location].filter(Boolean).join("  /  ");
+        return (
+          <li>
+            <a class="gx-tile" href={`/photos/${p.id}/`} data-gx-tile data-title={p.data.title} data-caption={p.data.caption} data-image={p.data.image} data-alt={p.data.alt} data-meta={meta} data-w={d?.[0]} data-h={d?.[1]} aria-haspopup="dialog">
+              <span class="gx-thumb">
+                {thumbs[i] ? (
+                  <picture>
+                    <source type="image/avif" srcset={thumbs[i].avif} sizes={THUMB_SIZES} />
+                    <img src={thumbs[i].src} srcset={thumbs[i].webp} sizes={THUMB_SIZES} alt={p.data.alt} width={d?.[0]} height={d?.[1]} loading={i < 3 ? "eager" : "lazy"} fetchpriority={i === 0 ? "high" : undefined} decoding="async" />
+                  </picture>
+                ) : (
+                  <img src={p.data.image} alt={p.data.alt} width={d?.[0]} height={d?.[1]} loading={i < 3 ? "eager" : "lazy"} decoding="async" />
+                )}
+              </span>
+              <span class="gx-label"><span class="gx-idx">{String(i + 1).padStart(2, "0")}</span><span class="gx-name">{p.data.title}</span><span class="gx-date">{fmt(p.data.date)}</span></span>
+            </a>
+          </li>
+        );
+      })}
+    </ul>
 
-<SiteLayout
-  title="Photographs | Dylan H"
-  description="A small gallery of the images I actually want to keep around, with each photo shown in its natural proportions."
-  ogImage={siteConfig.defaultSocialImage}
-  ogImageAlt={siteConfig.defaultSocialImageAlt}
-  structuredData={structuredData}
->
-  <section class="listing-hero">
-    <h1>Photographs</h1>
-    <p class="hero-text">A growing record of galaxies, nebulae, and clear nights from South Carolina.</p>
-  </section>
+    <div class="gx-status">
+      <p class="gx-hint">click a file to open <span aria-hidden="true">/</span> esc closes</p>
+      <div class="palette" role="group" aria-label="Color theme" data-gx-palette hidden>
+        {palettes.map((p) => <button type="button" data-palette-choice={p} aria-pressed="false">{p}</button>)}
+      </div>
+    </div>
 
-  <section class="photo-gallery">
-    {photos.map((photo) => (
-      <figure class="gallery-item">
-        <a href={`/photos/${photo.id}/`} class="gallery-link">
-          <img src={photo.data.image} alt={photo.data.alt} loading="lazy" />
-          <span class="gallery-overlay">
-            <strong>{photo.data.title}</strong>
-            <span>{photo.data.caption}</span>
-            {photo.data.location && <span class="gallery-overlay-meta">{photo.data.location}</span>}
-          </span>
-        </a>
-      </figure>
-    ))}
-  </section>
+    <div class="gv" data-gv hidden role="dialog" aria-modal="true" aria-labelledby="gv-title" aria-describedby="gv-caption">
+      <div class="gv-win">
+        <div class="gv-bar">
+          <span class="gv-path"><span class="prompt" aria-hidden="true">$</span> open <span data-gv-name></span></span>
+          <div class="gv-ctl">
+            <button type="button" data-gv-prev aria-label="Previous photo">&lt;</button>
+            <button type="button" data-gv-next aria-label="Next photo">&gt;</button>
+            <button type="button" data-gv-out aria-label="Zoom out">-</button>
+            <button type="button" data-gv-reset aria-label="Reset zoom">100%</button>
+            <button type="button" data-gv-in aria-label="Zoom in">+</button>
+            <a href="#" target="_blank" rel="noreferrer" data-gv-full>full size</a>
+            <button type="button" class="gv-close" data-gv-close>close</button>
+          </div>
+        </div>
+        <div class="gv-stage" data-gv-stage><img alt="" data-gv-img draggable="false" /></div>
+        <div class="gv-info">
+          <h2 id="gv-title" data-gv-title></h2>
+          <p class="gv-meta" data-gv-meta></p>
+          <p class="gv-caption" id="gv-caption" data-gv-caption></p>
+          <a class="gv-page" href="#" data-gv-page>photo page</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script is:inline>
+    (() => {
+      let p = null;
+      try { p = localStorage.getItem("palette"); } catch {}
+      if (!["ink", "paper", "amber"].includes(p)) p = matchMedia("(prefers-color-scheme: dark)").matches ? "ink" : "paper";
+      document.documentElement.dataset.palette = p;
+    })();
+  </script>
+  <script type="module" src="/scripts/gallery.js"></script>
 </SiteLayout>

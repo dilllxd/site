@@ -157,6 +157,16 @@ async function createPhoto({ rootDir, title, slug, date, options, positionalArgs
   const locationLine = location
     ? `location: ${escapeYaml(location)}\n`
     : "";
+  const ra = parseCoord("ra", options.ra, 0, 360, true);
+  const dec = parseCoord("dec", options.dec, -90, 90, false);
+  if ((ra === undefined) !== (dec === undefined)) {
+    console.error("Give --ra and --dec together (decimal degrees, J2000), or neither.");
+    process.exit(1);
+  }
+  if (ra === undefined) {
+    console.warn("No --ra/--dec given: this photo will be listed but will not appear on the /photos sky globe until you add them.");
+  }
+  const coordLines = ra === undefined ? "" : `ra: ${ra}\ndec: ${dec}\n`;
   const filePath = path.join(rootDir, "src", "content", "photos", `${slug}.md`);
   const contents = `---
 title: ${escapeYaml(title)}
@@ -164,10 +174,21 @@ date: ${date}
 image: ${escapeYaml(imagePath)}
 alt: ${escapeYaml(alt)}
 caption: ${escapeYaml(caption)}
-${locationLine}---
+${locationLine}${coordLines}---
 `;
 
   await writeMarkdownFile(filePath, contents);
+}
+
+// RA/Dec are decimal degrees, J2000. ra is 0 <= ra < 360 (hours x 15); dec is -90..90.
+function parseCoord(name, raw, min, max, excludeMax) {
+  if (raw === undefined || raw === "") return undefined;
+  const n = Number(raw);
+  if (!Number.isFinite(n) || n < min || n > max || (excludeMax && n >= max)) {
+    console.error(`--${name} must be a number of degrees from ${min} to ${max}${excludeMax ? " (exclusive)" : ""}.`);
+    process.exit(1);
+  }
+  return n;
 }
 
 async function promptValue(rl, label, fallback = "", { required = true } = {}) {

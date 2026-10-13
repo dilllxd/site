@@ -3,7 +3,7 @@ export const siteConfig = {
   title: "Dylan H",
   siteName: "dylanh.dev",
   description:
-    "A personal site for posts, projects, photography, and a few live slices of the day.",
+    "Astrophotography from South Carolina, with links and a few live slices of the day.",
   defaultSocialImage: "/images/photos/ngc-2244.png",
   defaultSocialImageAlt: "Astrophotography image of the Rosette Nebula surrounding the central cluster NGC 2244.",
   location: "South Carolina",
@@ -21,10 +21,8 @@ export const siteConfig = {
     discordUserId: "200654056992145408",
     spotifyWebSocketUrl: "wss://api.dylanh.dev/spotify/ws",
     spotifyNowPlayingUrl: "https://api.dylanh.dev/spotify/now-playing",
-    workScheduleUrl: "https://api.dylanh.dev/schedule/status",
-    workScheduleEventsUrl: "https://api.dylanh.dev/schedule/events",
-    workScheduleCalendarUrl: "https://api.dylanh.dev/schedule/calendar.ics",
-    ignoredScheduleSources: ["lily"],
-    ignoredScheduleSummaryPrefixes: ["Lily"],
+    workScheduleUrl: "https://api.dylanh.dev/schedule/dylan/status",
+    workScheduleEventsUrl: "https://api.dylanh.dev/schedule/dylan/events",
+    workScheduleCalendarUrl: "https://api.dylanh.dev/schedule/dylan/calendar.ics",
   },
 };

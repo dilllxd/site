@@ -1,0 +1,62 @@
+{
+ "source": "Amber sun photo; private upright PNG + mask in /tmp (amber-sun-upright.png / -mask.png). Run: ASCII_CFG=scripts/ascii-portrait-sun.config.json ASCII_PORTRAIT_SOURCE=/tmp/amber-sun-upright.png ASCII_PORTRAIT_MASK=/tmp/amber-sun-mask.png ASCII_PORTRAIT_OUT=src/data/portrait-sun-particles.json ASCII_PORTRAIT_FEATHER=28 npm run build:particles",
+ "cellAspect": 0.5,
+ "ramp": " .-:*+=#%@",
+ "levels": 16,
+ "minOpacity": 0.55,
+ "output": "src/data/ascii-portrait-sun.json",
+ "clahe": {
+  "tile": 240,
+  "slope": 6,
+  "mix": 1
+ },
+ "alphaThreshold": 0.4,
+ "catLift": 1,
+ "stretch": [
+  0.02,
+  0.99
+ ],
+ "sCurve": 0.6,
+ "detail": {
+  "radius": 3,
+  "amount": 1.2
+ },
+ "particles": {
+  "cellW": 3.4,
+  "cellH": 5.1,
+  "designW": 480
+ },
+ "variants": {
+  "desktop": {
+   "cols": 240,
+   "gamma": 1.2,
+   "crop": {
+    "left": 0.0614,
+    "top": 0.0961,
+    "width": 0.8247,
+    "height": 0.7439
+   }
+  },
+  "mobile": {
+   "cols": 140,
+   "gamma": 1.2,
+   "crop": {
+    "left": 0.0614,
+    "top": 0.0961,
+    "width": 0.8247,
+    "height": 0.7439
+   }
+  },
+  "phone": {
+   "cols": 155,
+   "gamma": 1.2,
+   "crop": {
+    "left": 0.0614,
+    "top": 0.0961,
+    "width": 0.8247,
+    "height": 0.7439
+   }
+  }
+ },
+ "bottomFeather": 0.1
+}

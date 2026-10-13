@@ -24,7 +24,8 @@ if (photoSection) {
       let chosenPhoto = newestPhoto;
 
       if (!Number.isNaN(newestPhotoTime) && now - newestPhotoTime > within24Hours) {
-        const lastPhotoId = localStorage.getItem(lastPhotoStorageKey);
+        let lastPhotoId = null;
+        try { lastPhotoId = localStorage.getItem(lastPhotoStorageKey); } catch {}
         const availablePhotos =
           photos.length > 1 ? photos.filter((photo) => photo.id !== lastPhotoId) : photos;
         const randomIndex = Math.floor(Math.random() * availablePhotos.length);
@@ -33,6 +34,10 @@ if (photoSection) {
 
       photoImage.src = chosenPhoto.image;
       photoImage.alt = chosenPhoto.alt;
+      if (chosenPhoto.width && chosenPhoto.height) {
+        photoImage.width = chosenPhoto.width;
+        photoImage.height = chosenPhoto.height;
+      }
 
       if (photoPreviewImage) {
         photoPreviewImage.src = chosenPhoto.image;
@@ -64,7 +69,7 @@ if (photoSection) {
       }
 
       if (chosenPhoto.id) {
-        localStorage.setItem(lastPhotoStorageKey, chosenPhoto.id);
+        try { localStorage.setItem(lastPhotoStorageKey, chosenPhoto.id); } catch {}
       }
     }
   } catch (error) {

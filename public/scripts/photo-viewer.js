@@ -18,11 +18,9 @@ for (const viewer of viewerRoots) {
   const minZoom = 1;
   const maxZoom = 4;
   const zoomStep = 0.25;
-  const hoverDelayMs = 450;
-  const hoverLeaveDelayMs = 140;
 
-  let hoverTimer = null;
-  let leaveTimer = null;
+  let lastFocus = null;
+  let wasVisible = false;
   let previewZoom = 1;
   let panX = 0;
   let panY = 0;
@@ -31,8 +29,49 @@ for (const viewer of viewerRoots) {
   let dragStartY = 0;
   let movedDuringDrag = false;
 
+  const upgradeToFull = () => {
+    const full = image.dataset.fullSrc;
+    if (!full || image.dataset.fullLoaded) return;
+    image.dataset.fullLoaded = "1";
+    const picture = image.closest("picture");
+    picture?.querySelectorAll("source").forEach((s) => s.remove());
+    image.removeAttribute("srcset");
+    image.removeAttribute("sizes");
+    image.src = full;
+  };
+
   const applyTransform = () => {
     image.style.transform = `translate3d(${panX}px, ${panY}px, 0) scale(${previewZoom})`;
+  };
+
+  let lockY = 0;
+  let lockX = 0;
+  let locked = false;
+  const root = document.documentElement;
+  let savedRootStyle = "";
+  let savedBodyStyle = "";
+  const lockScroll = () => {
+    if (locked) return;
+    locked = true;
+    lockX = window.scrollX;
+    lockY = window.scrollY;
+    const pageWidth = root.clientWidth;
+    savedRootStyle = root.style.cssText;
+    savedBodyStyle = document.body.style.cssText;
+    root.style.overflow = "hidden";
+    root.style.scrollbarGutter = "auto";
+    // Preserve the pre-lock layout width instead of compensating twice.
+    Object.assign(document.body.style, { overflow: "hidden", position: "fixed", top: -lockY + "px", left: -lockX + "px", right: "auto", width: pageWidth + "px" });
+  };
+  const unlockScroll = () => {
+    if (!locked) return;
+    locked = false;
+    root.style.cssText = savedRootStyle;
+    document.body.style.cssText = savedBodyStyle;
+    const prev = root.style.scrollBehavior;
+    root.style.scrollBehavior = "auto";
+    window.scrollTo(lockX, lockY);
+    root.style.scrollBehavior = prev;
   };
 
   const setVisible = (nextVisible) => {
@@ -41,6 +80,22 @@ for (const viewer of viewerRoots) {
     }
 
     viewer.classList.toggle("is-photo-preview-visible", nextVisible);
+    if (nextVisible) upgradeToFull();
+    if (overlay) {
+      overlay.setAttribute("aria-hidden", nextVisible ? "false" : "true");
+      overlay.toggleAttribute("inert", !nextVisible);
+    }
+    if (mode === "overlay") {
+      if (nextVisible) lockScroll(); else unlockScroll();
+    }
+    if (nextVisible && !wasVisible) {
+      const active = document.activeElement;
+      lastFocus = active && active !== document.body && active.matches("button, a[href]") ? active : viewer.querySelector("[data-photo-viewer-open]");
+      closeButton?.focus({ preventScroll: true });
+    } else if (!nextVisible && wasVisible) {
+      lastFocus?.focus?.({ preventScroll: true });
+    }
+    wasVisible = nextVisible;
   };
 
   const resetPan = () => {
@@ -65,6 +120,7 @@ for (const viewer of viewerRoots) {
 
   const updateZoom = (nextZoom) => {
     previewZoom = Math.min(maxZoom, Math.max(minZoom, nextZoom));
+    if (previewZoom > 1) upgradeToFull();
     if (previewZoom <= 1) {
       resetPan();
     } else {
@@ -78,14 +134,10 @@ for (const viewer of viewerRoots) {
       return;
     }
 
-    clearTimeout(hoverTimer);
-    clearTimeout(leaveTimer);
     setVisible(true);
   };
 
   const closeViewer = () => {
-    clearTimeout(hoverTimer);
-    clearTimeout(leaveTimer);
     setVisible(false);
     viewer.classList.remove("is-panning");
     isDragging = false;
@@ -93,39 +145,37 @@ for (const viewer of viewerRoots) {
     updateZoom(1);
   };
 
-  const startHoverOpen = () => {
-    if (mode !== "overlay") {
-      return;
+  if (mode === "overlay" && overlay) {
+    overlay.setAttribute("aria-hidden", "true");
+    overlay.setAttribute("inert", "");
+    overlay.setAttribute("role", "dialog");
+    overlay.setAttribute("aria-modal", "true");
+    overlay.setAttribute("aria-label", "Photo viewer");
+    const openers = viewer.querySelectorAll("[data-photo-viewer-open]");
+    for (const opener of openers) {
+      opener.addEventListener("click", () => {
+        setVisible(true);
+      });
     }
-
-    clearTimeout(hoverTimer);
-    clearTimeout(leaveTimer);
-    hoverTimer = window.setTimeout(() => {
-      setVisible(true);
-    }, hoverDelayMs);
-  };
-
-  const startHoverClose = () => {
-    if (mode !== "overlay") {
-      return;
-    }
-
-    clearTimeout(hoverTimer);
-    clearTimeout(leaveTimer);
-    leaveTimer = window.setTimeout(() => {
-      closeViewer();
-    }, hoverLeaveDelayMs);
-  };
-
-  if (trigger) {
-    trigger.addEventListener("mouseenter", startHoverOpen);
-    trigger.addEventListener("mouseleave", startHoverClose);
-    trigger.addEventListener("focus", startHoverOpen);
-    trigger.addEventListener("blur", startHoverClose);
+    trigger?.addEventListener("click", () => setVisible(true));
+    overlay.addEventListener("touchmove", (event) => {
+      if (event.touches.length > 1) return;
+      if (viewport.contains(event.target) && previewZoom > 1) return;
+      event.preventDefault();
+    }, { passive: false });
+    document.addEventListener("keydown", (event) => {
+      if (!wasVisible || event.key !== "Tab") return;
+      const items = [...overlay.querySelectorAll("button:not(:disabled), a[href]")];
+      if (!items.length) return;
+      const first = items[0];
+      const last = items[items.length - 1];
+      if (!overlay.contains(document.activeElement)) { event.preventDefault(); (event.shiftKey ? last : first).focus({ preventScroll: true }); }
+      else if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+    });
   }
 
   if (overlay) {
-    overlay.addEventListener("mouseenter", keepOpen);
     overlay.addEventListener("click", (event) => {
       if (event.target === overlay) {
         closeViewer();
@@ -232,7 +282,7 @@ for (const viewer of viewerRoots) {
   });
 
   document.addEventListener("keydown", (event) => {
-    if (event.key === "Escape" && mode === "overlay") {
+    if (event.key === "Escape" && mode === "overlay" && viewer.classList.contains("is-photo-preview-visible")) {
       closeViewer();
     }
   });

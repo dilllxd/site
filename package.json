@@ -10,15 +10,26 @@
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",
+    "build:portrait": "node ./scripts/build-ascii-portrait.mjs",
+    "build:particles": "node ./scripts/build-particle-portrait.mjs",
+    "test:sky": "node ./scripts/test-sky.mjs",
+    "test:portrait": "node ./scripts/test-portrait.mjs",
     "new:post": "node ./scripts/new-content.mjs post",
     "new:photo": "node ./scripts/new-content.mjs photo",
     "publish:post": "node ./scripts/new-content.mjs post --interactive",
-    "publish:photo": "node ./scripts/new-content.mjs photo --interactive"
+    "publish:photo": "node ./scripts/new-content.mjs photo --interactive",
+    "minify:scripts": "node ./scripts/minify-scripts.mjs",
+    "prebuild": "npm run minify:scripts",
+    "predev": "npm run minify:scripts",
+    "test:status": "node ./scripts/test-status.mjs"
   },
   "dependencies": {
-    "astro": "^6.1.8"
+    "@types/three": "^0.186.0",
+    "astro": "^6.1.8",
+    "three": "^0.186.1"
   },
   "devDependencies": {
+    "esbuild": "^0.27.7",
     "sharp": "^0.34.5",
     "to-ico": "^1.1.5"
   }

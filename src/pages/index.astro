@@ -1,29 +1,8 @@
 ---
-import { getCollection } from "astro:content";
 import SiteLayout from "../layouts/SiteLayout.astro";
+import AsciiPortrait from "../components/AsciiPortrait.astro";
 import { siteConfig } from "../data/site";
 import { toAbsoluteUrl } from "../lib/seo";
-
-const [posts, photos] = await Promise.all([
-  getCollection("posts"),
-  getCollection("photos"),
-]);
-
-const sortedPosts = posts.sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
-const latestPosts = sortedPosts.slice(0, 3);
-const sortedPhotos = photos.sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
-const latestPhoto = sortedPhotos[0];
-const heroPhoto = sortedPhotos.find((photo) => photo.id === "ngc-2244") ?? latestPhoto;
-const photoRotationPayload = JSON.stringify(
-  sortedPhotos.map((photo) => ({
-    id: photo.id,
-    title: photo.data.title,
-    date: photo.data.date.toISOString(),
-    image: photo.data.image,
-    alt: photo.data.alt,
-    caption: photo.data.caption,
-  })),
-);
 
 const widgetConfig = JSON.stringify(siteConfig.widgetConfig);
 const structuredData = [
@@ -33,10 +12,7 @@ const structuredData = [
     name: siteConfig.title,
     url: siteConfig.siteUrl,
     email: siteConfig.email,
-    homeLocation: {
-      "@type": "Place",
-      name: siteConfig.location,
-    },
+    homeLocation: { "@type": "Place", name: siteConfig.location },
     sameAs: siteConfig.socialLinks.map((link) => link.href),
   },
   {
@@ -48,169 +24,188 @@ const structuredData = [
     image: toAbsoluteUrl(siteConfig.defaultSocialImage),
   },
 ];
+// handle shown beside each link, derived from the configured href (never the bare domain)
+const DISCORD_USERNAME = "dilll"; // confirmed by Dylan; config href stays the numeric user ID
+function handleOf(href: string) {
+  const u = new URL(href);
+  const host = u.hostname.replace(/^www\./, "");
+  const seg = u.pathname.split("/").filter(Boolean);
+  if (host === "discord.com") return DISCORD_USERNAME;
+  if (host === "status.dylan.lol") return host;
+  return seg[0] || host;
+}
+const links = [
+  { label: "Photos", href: "/photos/", note: "astro photos" },
+  { label: "Email", href: `mailto:${siteConfig.email}`, note: siteConfig.email },
+  ...siteConfig.socialLinks.map((l) => ({ label: l.label, href: l.href, note: handleOf(l.href) })),
+];
+const palettes = ["ink", "paper", "amber"];
 ---
+<SiteLayout structuredData={structuredData} hideFooter={true} pageClass="home">
+  <div class="home-main" data-widget-config={widgetConfig}>
+    <AsciiPortrait />
 
-<SiteLayout structuredData={structuredData}>
-  {heroPhoto && (
-    <section class="home-hero" aria-labelledby="home-title">
-      <img class="home-hero-image" src={heroPhoto.data.image} alt="" loading="eager" />
-      <div class="home-hero-copy">
-        <h1 id="home-title">DYLAN H.</h1>
-        <p>Building useful things. Photographing distant ones.</p>
-        <div class="home-hero-links">
-          <a href="/posts/">Notes</a>
-          <a href="/photos/">Photographs</a>
-        </div>
-      </div>
-      <a class="home-scroll" href="#about">Continue</a>
+    <section class="home-block" aria-labelledby="whoami">
+      <h2 class="home-cmd" id="whoami"><span class="prompt" aria-hidden="true">$</span> whoami</h2>
+      <p>I self-host most of my own stuff and take astrophotography from South Carolina. The tortie in the portrait is Amber.</p>
     </section>
-  )}
 
-  <section class="home-about" id="about">
-    <div class="home-about-copy">
-      <h2>A small place<br />for curious work.</h2>
-      <p>I’m a computer science student, hobbyist developer, and infrastructure tinkerer in South Carolina. This site is where code, field notes, and nights spent looking upward meet.</p>
-      <a href={`mailto:${siteConfig.email}`}>Write to me</a>
-    </div>
-    <figure class="home-portrait">
-      <img
-        src="/apple-touch-icon.png"
-        alt="Dylan H site mark"
-        width="120"
-        height="120"
-        loading="eager"
-      />
-      <figcaption>Dylan H. · Lancaster, South Carolina</figcaption>
-    </figure>
-    <div class="links-line" aria-label="Social links">
-      {siteConfig.socialLinks.map((link) => (
-        <a href={link.href} target="_blank" rel="noreferrer">{link.label}</a>
-      ))}
-    </div>
-  </section>
-
-  <section class="home-status" data-widget-config={widgetConfig}>
-    <header class="home-status-heading">
-      <h2>Current conditions</h2>
-      <p>A quiet, live view of the day.</p>
-    </header>
-    <div class="utility-strip">
-      <div class="utility-item">
-        <span>Based in</span>
-        <strong>{siteConfig.location}</strong>
-      </div>
-      <div class="utility-item">
-        <span>Current time</span>
-        <strong data-local-time>Loading...</strong>
-      </div>
-      <div class="utility-item" data-work-chip>
-        <span data-work-label>Schedule</span>
-        <strong data-work-status>Checking...</strong>
-      </div>
-    </div>
-    <div class="live-cluster" data-now-row>
-      <div class="live-cluster-heading">
-        <span>Now</span>
-      </div>
-      <div class="live-cluster-items">
-        <div class="status-chip" data-discord-chip>
-          <span>Discord</span>
-          <strong data-discord-status>Connecting...</strong>
-        </div>
-        <div class="status-chip status-chip-wide" data-spotify-chip>
-          <span>Listening</span>
-          <strong data-spotify-status>Waiting for presence data...</strong>
-          <div class="spotify-progress" aria-hidden="true">
-            <div data-spotify-progress></div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section class="home-grid">
-    <div class="section-heading">
-      <h2>Latest notes</h2>
-      <a href="/posts/">All notes</a>
-    </div>
-    <div class="home-posts-grid">
-      {latestPosts.map((post) => (
-        <a class="post-card" href={`/posts/${post.id}/`}>
-          <span class="story-date">
-            {post.data.date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" })}
-          </span>
-          <h3>{post.data.title}</h3>
-          <p>{post.data.excerpt}</p>
-          <span class="inline-meta">{post.data.readingTime}</span>
-        </a>
-      ))}
-    </div>
-  </section>
-
-  {latestPhoto && (
-    <section class="photo-feature" data-photo-rotation={photoRotationPayload} data-photo-viewer data-photo-viewer-mode="overlay">
-      <div class="section-heading">
-        <h2>Recent light</h2>
-        <a href="/photos/">All photographs</a>
-      </div>
-      <a class="photo-feature-inner" href={`/photos/${latestPhoto.id}/`} data-photo-link>
-        <img
-          src={latestPhoto.data.image}
-          alt={latestPhoto.data.alt}
-          loading="lazy"
-          data-photo-image
-          data-photo-viewer-trigger
-        />
-        <div class="photo-feature-meta">
-          <h3 data-photo-title>{latestPhoto.data.title}</h3>
-          <p data-photo-caption>{latestPhoto.data.caption}</p>
-        </div>
-      </a>
-      <div class="photo-preview" aria-hidden="true" data-photo-viewer-overlay>
-        <div class="photo-preview-frame">
-          <div class="photo-preview-topline">
-            <div class="photo-preview-meta">
-              <strong data-photo-preview-title>{latestPhoto.data.title}</strong>
-              <span data-photo-preview-caption>{latestPhoto.data.caption}</span>
-            </div>
-            <div class="photo-preview-actions">
-              <button type="button" data-photo-viewer-zoom-out aria-label="Zoom out">-</button>
-              <button type="button" data-photo-viewer-zoom-reset>100%</button>
-              <button type="button" data-photo-viewer-zoom-in aria-label="Zoom in">+</button>
-              <a
-                href={`/photos/${latestPhoto.id}/`}
-                data-photo-preview-link
-                aria-label={`Open ${latestPhoto.data.title}`}
-              >
-                Open photo
-              </a>
-              <a
-                href={latestPhoto.data.image}
-                target="_blank"
-                rel="noreferrer"
-                data-photo-preview-full
-              >
-                Full size
-              </a>
-              <button type="button" data-photo-viewer-close aria-label="Close preview">Close</button>
-            </div>
-          </div>
-          <div class="photo-preview-viewport" data-photo-viewer-viewport>
-            <img
-              src={latestPhoto.data.image}
-              alt={latestPhoto.data.alt}
-              loading="lazy"
-              data-photo-preview-image
-              data-photo-viewer-image
-              draggable="false"
-            />
-          </div>
-        </div>
-      </div>
+    <section class="home-block" aria-labelledby="links">
+      <h2 class="home-cmd" id="links"><span class="prompt" aria-hidden="true">$</span> ls ~/links</h2>
+      <ul class="term-links">
+        {links.map((l) => (
+          <li><a href={l.href} target={l.href.startsWith("http") ? "_blank" : undefined} rel={l.href.startsWith("http") ? "noreferrer" : undefined}>{l.label}<span>{l.note}</span></a></li>
+        ))}
+      </ul>
     </section>
-  )}
 
-  <script type="module" src="/scripts/live-widgets.js?v=20260711a"></script>
-  <script type="module" src="/scripts/photo-rotation.js"></script>
-  <script type="module" src="/scripts/photo-viewer.js"></script>
+    <div class="statusline" data-statusline>
+      <div class="st-rows" aria-live="off">
+        <p class="term-status st-row" data-spotify-chip hidden><span class="st-k">listening</span> <a class="st-v" data-spotify-status></a></p>
+        <p class="term-status st-row" data-discord-chip hidden><span class="st-k" data-discord-label>playing</span> <span class="st-v" data-discord-status></span></p>
+      </div>
+      <p class="term-status"><span data-local-time>--:--</span> <span data-work-chip hidden><span aria-hidden="true">/</span> <span data-work-status></span></span></p>
+      <div class="statusline-tools" data-js-controls hidden>
+        <div class="palette" role="group" aria-label="Color theme">
+          {palettes.map((p) => <button type="button" data-palette-choice={p} aria-pressed="false">{p}</button>)}
+        </div>
+        <button type="button" class="cmd-open" data-cmd-open aria-label="Open command line" aria-haspopup="listbox" title="Command line (:)">:</button>
+      </div>
+      <form class="cmd" data-cmd hidden autocomplete="off">
+        <label class="sr-only" for="cmd-input">Command</label>
+        <span class="prompt" aria-hidden="true">:</span>
+        <input id="cmd-input" name="cmd" type="text" spellcheck="false" autocapitalize="off" autocomplete="off" role="combobox" aria-expanded="true" aria-controls="cmd-list" aria-autocomplete="list" />
+        <ul class="cmd-list" id="cmd-list" role="listbox" aria-label="Commands"></ul>
+      </form>
+    </div>
+  </div>
+  <script type="module" src="/scripts/home-commands.js"></script>
+  <script is:inline>
+    // live widgets (clock text is already in the HTML): load after the page has painted and the main thread is idle, never later than ~2.5s after load
+    (() => {
+      const go = () => import("/scripts/live-widgets.js?v=20261013a");
+      const idle = () => ("requestIdleCallback" in window ? requestIdleCallback(go, { timeout: 2500 }) : setTimeout(go, 200));
+      if (document.readyState === "complete") idle(); else addEventListener("load", idle, { once: true });
+    })();
+  </script>
+  <script is:inline>
+    (() => {
+      let p = null;
+      try { p = localStorage.getItem("palette"); } catch {}
+      if (!["ink", "paper", "amber"].includes(p)) p = matchMedia("(prefers-color-scheme: dark)").matches ? "ink" : "paper";
+      document.documentElement.dataset.palette = p;
+    })();
+  </script>
+  <style is:inline slot="head">/* ascii portrait home: warm editor palettes, scoped to the home page so /photos keeps its look */
+.sr-only{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+body.home{--bg:#ece6d6;--text:#2a2723;--muted:#6f6657;--line:rgba(42,39,35,.3);--line-soft:rgba(42,39,35,.14);--accent:#8a4b2a;--on-accent:#ece6d6;--panel:#e4ddca;--ascii:#25211b;background:var(--bg)}
+:root[data-palette="ink"] body.home{--bg:#151513;--text:#e4dcc8;--muted:#9a9283;--line:rgba(228,220,200,.28);--line-soft:rgba(228,220,200,.12);--accent:#b9c27a;--on-accent:#151513;--panel:#1c1c19;--ascii:#ded5bd}
+:root[data-palette="paper"] body.home{--bg:#ece6d6;--text:#2a2723;--muted:#6f6657;--line:rgba(42,39,35,.3);--line-soft:rgba(42,39,35,.14);--accent:#8a4b2a;--on-accent:#ece6d6;--panel:#e4ddca;--ascii:#25211b}
+:root[data-palette="amber"] body.home{--bg:#100c07;--text:#f0c987;--muted:#a07c3f;--line:rgba(240,201,135,.3);--line-soft:rgba(240,201,135,.13);--accent:#ffb347;--on-accent:#100c07;--panel:#17110a;--ascii:#efc480}
+@media (prefers-color-scheme:dark){:root:not([data-palette]) body.home{--bg:#151513;--text:#e4dcc8;--muted:#9a9283;--line:rgba(228,220,200,.28);--line-soft:rgba(228,220,200,.12);--accent:#b9c27a;--on-accent:#151513;--panel:#1c1c19;--ascii:#ded5bd}}
+body.home .site-header,body.home .home-main{width:100%;max-width:46rem;margin-inline:auto}
+body.home .brand-name{display:inline-flex;align-items:center;gap:.55em}
+body.home .brand-name::before{flex:none;margin-right:0}
+@media (max-width:560px){
+ body.home .brand{flex-direction:column;align-items:flex-start;gap:.15rem}
+}
+.home-main{display:flex;flex-direction:column;gap:1.75rem;padding:.5rem 0 2.5rem}
+.ap{margin:0;container-type:inline-size;user-select:none;-webkit-user-select:none}
+.ap-fit{width:100%}
+.ap-set{display:none}
+.ap[data-portrait-choice="peek"] .ap-set-peek,.ap[data-portrait-choice="loaf"] .ap-set-loaf,.ap[data-portrait-choice="sun"] .ap-set-sun,.ap[data-portrait-choice="couch"] .ap-set-couch,.ap[data-portrait-choice="window"] .ap-set-window{display:block}
+.ap-v-mobile,.ap-v-phone{display:none}
+@media (max-width:700px){.ap-v-desktop{display:none}.ap-v-phone{display:block}}
+.ap-grid{margin:0;font:400 calc(100cqw / (var(--cols) * .6))/1.2 var(--mono);letter-spacing:0;white-space:pre;color:var(--ascii);-webkit-text-size-adjust:none;text-size-adjust:none;font-variant-ligatures:none;cursor:crosshair;overflow:hidden}
+.ap-dark{display:none}
+:root[data-palette="ink"] .ap-dark,:root[data-palette="amber"] .ap-dark{display:block}
+:root[data-palette="ink"] .ap-light,:root[data-palette="amber"] .ap-light{display:none}
+@media (prefers-color-scheme:dark){:root:not([data-palette]) .ap-dark{display:block}:root:not([data-palette]) .ap-light{display:none}}
+.ap-seg.o0{opacity:0.063}.ap-seg.o1{opacity:0.125}.ap-seg.o2{opacity:0.188}.ap-seg.o3{opacity:0.250}.ap-seg.o4{opacity:0.313}.ap-seg.o5{opacity:0.375}.ap-seg.o6{opacity:0.438}.ap-seg.o7{opacity:0.500}.ap-seg.o8{opacity:0.563}.ap-seg.o9{opacity:0.625}.ap-seg.o10{opacity:0.688}.ap-seg.o11{opacity:0.750}.ap-seg.o12{opacity:0.813}.ap-seg.o13{opacity:0.875}.ap-seg.o14{opacity:0.938}.ap-seg.o15{opacity:1.000}
+.ap-canvas{display:none;width:100%;height:auto;margin-inline:auto;touch-action:pan-y;cursor:crosshair;-webkit-tap-highlight-color:transparent}
+.ap.ap-js .ap-canvas{display:block}
+.ap.ap-js .ap-fit{display:none}
+.ap.ap-loading .ap-fit{display:none}
+.ap.ap-loading .ap-canvas{display:block;visibility:hidden;aspect-ratio:var(--portrait-aspect)}
+.ap.ap-js .ap-canvas{aspect-ratio:var(--portrait-aspect)}
+.home-block{display:flex;flex-direction:column;gap:.5rem}
+.home-cmd{margin:0;color:var(--muted);font-size:.95rem}
+.home-main .prompt{color:var(--accent)}
+.home-block p{margin:0;font-size:1.05rem;line-height:1.55;max-width:38em}
+.home-main .term-links{border-top-color:var(--line-soft)}
+.home-main .term-links li{border-bottom-color:var(--line-soft)}
+.statusline{position:relative;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:.5rem 1rem;padding-top:.75rem;border-top:1px solid var(--line)}
+.statusline .term-status{margin:0;line-height:1.2rem;height:1.2rem;display:flex;gap:.6ch;white-space:pre}
+.st-rows{flex:0 0 100%;min-width:0;display:flex;flex-direction:column;gap:.1rem}
+.st-row{display:flex;gap:.6ch;min-width:0}
+.st-row[hidden]{display:none}
+.st-k{flex:none;color:var(--accent)}
+.st-v{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text)}
+a.st-v:hover,a.st-v:focus-visible{color:var(--accent);text-decoration:underline}
+@media (max-height:540px){.st-rows{flex-direction:row;gap:0 1.2ch}.st-row{flex:1 1 0}}
+@media (max-height:480px){.st-rows{display:none}}
+.statusline-tools{display:flex;align-items:center;gap:.4rem}
+.palette{display:flex;gap:.25rem}
+.palette button,.cmd-open{padding:.15rem .55rem;border:1px solid var(--line);border-radius:0;background:transparent;color:var(--muted);font-size:.82rem;cursor:pointer;min-height:1.9rem}
+.palette button:hover,.cmd-open:hover{color:var(--text);border-color:var(--text)}
+.palette button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.cmd{position:absolute;left:0;right:0;bottom:calc(100% - .75rem + 1px);display:flex;flex-wrap:wrap;align-items:center;gap:.4rem;padding:.5rem .65rem;background:var(--panel);border:1px solid var(--line);z-index:5}
+.cmd[hidden], [data-js-controls][hidden]{display:none}
+.cmd input{flex:1;min-width:0;background:transparent;border:0;color:var(--text);font:inherit;outline:0;padding:.2rem 0}
+.cmd:focus-within{border-color:var(--accent)}
+.cmd-list{flex:0 0 100%;list-style:none;margin:.25rem 0 0;padding:.25rem 0 0;border-top:1px solid var(--line-soft)}
+.cmd-list li{display:flex;justify-content:space-between;gap:1rem;padding:.3rem .4rem;cursor:pointer;font-size:.9rem}
+.cmd-list li span{color:var(--muted)}
+.cmd-list li[aria-selected="true"]{background:var(--accent);color:var(--on-accent)}
+.cmd-list li[aria-selected="true"] span{color:inherit}
+body.home .theme-toggle{display:none}
+@media (max-width:560px){.statusline-tools{width:100%;justify-content:space-between}}
+
+/* fit: the home page is exactly one viewport tall; the portrait is the only thing that shrinks */
+body.home{min-height:100vh;min-height:100dvh;height:100vh;height:100dvh}
+body.home .page-shell{height:100%;min-height:0;padding-bottom:max(.5rem,env(safe-area-inset-bottom))}
+body.home .site-header{flex:none;min-height:0;padding:clamp(.3rem,1.6dvh,.55rem) 0}
+body.home .page-shell>main{flex:1 1 0;min-height:0;padding-bottom:0;display:flex;flex-direction:column}
+.home-main{--hg:clamp(.55rem,2.4dvh,1.75rem);flex:1 1 0;min-height:0;gap:var(--hg);padding:.25rem 0 0}
+.home-main>*{min-width:0}
+.ap{--fitw:min(100cqw,calc(100cqh * var(--ar,1)));flex:1 1 0;min-height:0;container-type:size;display:flex;justify-content:center;align-items:flex-start}
+.ap-fit{width:var(--fitw);margin-inline:auto}
+.ap-grid{font-size:calc(var(--fitw) / (var(--cols) * .6))}
+.ap-canvas{width:var(--fitw);max-width:none;margin-inline:auto;flex:none}
+/* The portrait owns spare height; keep its aspect-fitted drawing centred in that slot. */
+.ap.ap-measure{flex:1 1 0;align-self:stretch;--fitw:0px}
+.ap.ap-measure>*{display:none!important}
+.ap.ap-nat{--fitw:var(--fw);flex:1 1 0;width:100%;align-self:stretch;align-items:center}
+.ap.ap-nat .ap-canvas,.ap.ap-nat .ap-fit{margin-inline:auto}
+.home-block{gap:.3rem}
+.home-block p{font-size:clamp(.92rem,.85rem + .25dvh,1.05rem);line-height:1.45}
+.home-main .term-links a{padding:clamp(.2rem,.9dvh,.5rem) .1rem;flex-wrap:wrap;column-gap:1rem}
+.home-main .term-links a:hover,.home-main .term-links a:focus-visible{padding-inline:.4rem}
+.statusline{flex:none;padding-top:clamp(.35rem,1.2dvh,.75rem)}
+.cmd-list{max-height:calc(100dvh - 9rem);overflow-y:auto;overscroll-behavior:contain}
+@media (max-height:700px){
+ .home-block p{line-height:1.35}
+ .home-cmd{font-size:.88rem}
+ .palette button,.cmd-open{min-height:1.6rem;padding-block:.05rem}
+ .home-main .term-links a{font-size:.95rem}
+}
+@media (max-height:520px){.home-main .term-links a{font-size:.9rem;padding-block:.12rem}.home-block p{font-size:.88rem}}
+@media (min-width:600px) and (max-height:820px) and (min-aspect-ratio:1/1){
+ body.home .site-header,body.home .home-main{max-width:64rem}
+ .home-main{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) auto;grid-template-areas:"ap who" "ap links" "status status";column-gap:clamp(1rem,4vw,3rem);row-gap:var(--hg)}
+ .home-main>.ap{grid-area:ap;min-height:0;align-self:stretch}
+ .home-main>.home-block:nth-of-type(1){grid-area:who;align-self:start}
+ .home-main>.home-block:nth-of-type(2){grid-area:links;align-self:start}
+ .home-main>.statusline{grid-area:status}
+ .term-links{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:1.25rem}
+ .term-links li:nth-child(odd){grid-column:1}
+ .term-links li:nth-child(even){grid-column:2}
+}
+@media (max-width:560px){.cmd-list{max-height:calc(100dvh - 11rem)}
+ .home-main{--hg:clamp(.45rem,1.4dvh,.6rem)}
+ .term-links{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:.9rem}
+ .home-main .term-links a{flex-direction:column;justify-content:flex-start;gap:0;font-size:.95rem;padding:.22rem .1rem;line-height:1.25}
+ .home-main .term-links a span{text-align:left;font-size:.8rem;line-height:1.2}
+}
+</style>
 </SiteLayout>
