@@ -67,6 +67,7 @@ const structuredDataJson = stringifyStructuredData(structuredData);
     <link rel="icon" href="/favicon.ico" sizes="any" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     {isHome ? <style is:inline set:html={globalCss}></style> : <link rel="stylesheet" href={globalCssUrl} />}
+    <slot name="head" />
     <Font cssVariable="--font-plex-mono" preload />
     {structuredDataJson && (
       <script type="application/ld+json" set:html={structuredDataJson}></script>
