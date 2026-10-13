@@ -152,7 +152,8 @@ function init(root: HTMLElement) {
     const textTex = (text: string, color: string, px = 44) => {
       const c = document.createElement("canvas");
       const ctx = c.getContext("2d")!;
-      const font = `500 ${px}px "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace`;
+      const family = getComputedStyle(document.documentElement).getPropertyValue("--font-plex-mono").trim() || "ui-monospace, Menlo, Consolas, monospace";
+      const font = `500 ${px}px ${family}`;
       ctx.font = font;
       c.width = Math.ceil(ctx.measureText(text).width) + 16;
       c.height = Math.ceil(px * 1.5);

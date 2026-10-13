@@ -1,9 +1,17 @@
 ---
-import portrait from "../data/ascii-portrait.json";
-import peekPortrait from "../data/ascii-portrait-peek.json";
+// The no-JS default (sun) is a compact plain-text grid inside <noscript>. With JS, the static grid of the chosen layout is
+// fetched on demand, and only if the particle renderer fails (see the script below), so it never bloats the HTML.
 import sunPortrait from "../data/ascii-portrait-sun.json";
-import couchPortrait from "../data/ascii-portrait-couch.json";
-import windowPortrait from "../data/ascii-portrait-window.json";
+import loafAsciiUrl from "../data/ascii-portrait.json?url";
+import peekAsciiUrl from "../data/ascii-portrait-peek.json?url";
+import sunAsciiUrl from "../data/ascii-portrait-sun.json?url";
+import couchAsciiUrl from "../data/ascii-portrait-couch.json?url";
+import windowAsciiUrl from "../data/ascii-portrait-window.json?url";
+import loafParticleUrl from "../data/portrait-particles.json?url";
+import peekParticleUrl from "../data/portrait-peek-particles.json?url";
+import sunParticleUrl from "../data/portrait-sun-particles.json?url";
+import couchParticleUrl from "../data/portrait-couch-particles.json?url";
+import windowParticleUrl from "../data/portrait-window-particles.json?url";
 // numeric metadata only (design box w/h); the particle JSON itself is fetched at runtime, one file, by ?url
 import particles from "../data/portrait-particles.json";
 import peekDimensions from "../data/portrait-peek-particles.json";
@@ -11,37 +19,24 @@ import sunDimensions from "../data/portrait-sun-particles.json";
 import couchDimensions from "../data/portrait-couch-particles.json";
 import windowDimensions from "../data/portrait-window-particles.json";
 
-const SEG = 6;
 const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-// one span per run of cells that share an opacity level (capped at SEG so hover stays local)
-const grid = (g: { chars: string[]; lv: string[] }) =>
-  g.chars
-    .map((row, y) => {
-      const parts: string[] = [];
-      let i = 0;
-      while (i < row.length) {
-        const l = g.lv[y][i];
-        let j = i + 1;
-        while (j < row.length && j - i < SEG && g.lv[y][j] === l) j++;
-        const text = row.slice(i, j);
-        parts.push(text.trim() === "" ? esc(text) : `<span class="ap-seg o${parseInt(l, 16)}" data-c="${i}">${esc(text)}</span>`);
-        i = j;
-      }
-      return parts.join("");
-    })
-    .join("\n");
+// no-JS fallback only: plain glyph text, trailing blanks trimmed (the JS renderer and the on-demand fallback add per-run opacity)
+const grid = (g: { chars: string[] }) => g.chars.map((row) => esc(row.replace(/\s+$/, ""))).join("\n");
 
 // order = the five equal random bins: floor(random * 5) -> peek, loaf, sun, couch, window
 const sets = [
-  { id: "peek", variants: peekPortrait.variants, dim: peekDimensions },
-  { id: "loaf", variants: portrait.variants, dim: particles },
-  { id: "sun", variants: sunPortrait.variants, dim: sunDimensions },
-  { id: "couch", variants: couchPortrait.variants, dim: couchDimensions },
-  { id: "window", variants: windowPortrait.variants, dim: windowDimensions },
+  { id: "peek", dim: peekDimensions, particles: peekParticleUrl, ascii: peekAsciiUrl },
+  { id: "loaf", dim: particles, particles: loafParticleUrl, ascii: loafAsciiUrl },
+  { id: "sun", dim: sunDimensions, particles: sunParticleUrl, ascii: sunAsciiUrl },
+  { id: "couch", dim: couchDimensions, particles: couchParticleUrl, ascii: couchAsciiUrl },
+  { id: "window", dim: windowDimensions, particles: windowParticleUrl, ascii: windowAsciiUrl },
 ];
+const urls = JSON.stringify(Object.fromEntries(sets.map((x) => [x.id, [x.particles, x.ascii]])));
+// the mobile variant is never displayed (CSS shows desktop above 700px, phone below), so it is not rendered
+const shown = ["desktop", "phone"] as const;
+const sunSet = sunPortrait.variants;
 const ids = sets.map((x) => x.id);
 const dims = Object.fromEntries(sets.map((x) => [x.id, [Math.round(x.dim.w * 10) / 10, x.dim.h]]));
-const order = ["desktop", "mobile", "phone"] as const;
 // no-JS default is sun (a uniform random pick needs JS); its true ratio is baked into the markup
 const def = dims.sun;
 const defAspect = def[0] + "/" + def[1];
@@ -49,7 +44,7 @@ const defStyle = "--portrait-aspect:" + defAspect + ";--ar:" + def[0] / def[1];
 const idList = ids.join(",");
 const dimsJson = JSON.stringify(dims);
 ---
-<figure class="ap" data-ascii-portrait data-portrait-choice="sun" data-ids={idList} data-dims={dimsJson} data-aspect={defAspect} style={defStyle} role="img" aria-label="ASCII portrait of Amber">
+<figure class="ap" data-ascii-portrait data-portrait-choice="sun" data-ids={idList} data-dims={dimsJson} data-urls={urls} data-aspect={defAspect} style={defStyle} role="img" aria-label="ASCII portrait of Amber">
   <script is:inline>const portraitFigure = document.currentScript.parentElement;
     // the one and only choice, made before first paint. ?p=<name> forces one of five (fixed whitelist, never reflected);
     // anything else is a uniform floor(random*5) over the five layouts in data-ids order
@@ -62,33 +57,67 @@ const dimsJson = JSON.stringify(dims);
     portraitFigure.dataset.aspect = portraitAspect;
     portraitFigure.style.setProperty("--portrait-aspect", portraitAspect);
     portraitFigure.style.setProperty("--ar", String(aw / ah));
-    portraitFigure.classList.add("ap-loading")</script>
-  {sets.map((st) => (
-    <div class={`ap-set ap-set-${st.id}`}>
-      {order.map((k) => (
-        <div class={`ap-fit ap-v-${k}`} style={`--cols:${st.variants[k].cols}`}>
-          <pre class="ap-grid ap-dark" data-mode="dark" data-cols={st.variants[k].cols} data-rows={st.variants[k].rows} aria-hidden="true" set:html={grid(st.variants[k].dark)} />
-          <pre class="ap-grid ap-light" data-mode="light" data-cols={st.variants[k].cols} data-rows={st.variants[k].rows} aria-hidden="true" set:html={grid(st.variants[k].light)} />
+    portraitFigure.classList.add("ap-loading");
+    // start the one particle download right away (same URL the module script uses, so it is a single request)
+    try { window.__apData = fetch(JSON.parse(portraitFigure.dataset.urls)[portraitChoice][0]).then((r) => { if (!r.ok) throw new Error("portrait " + r.status); return r.json(); }); window.__apData.catch(() => {}); } catch (e) {}</script>
+  <noscript>
+    <div class="ap-set ap-set-sun">
+      {shown.map((k) => (
+        <div class={`ap-fit ap-v-${k}`} style={`--cols:${sunSet[k].cols}`}>
+          <pre class="ap-grid ap-dark" data-mode="dark" data-cols={sunSet[k].cols} data-rows={sunSet[k].rows} aria-hidden="true" set:html={grid(sunSet[k].dark)} />
+          <pre class="ap-grid ap-light" data-mode="light" data-cols={sunSet[k].cols} data-rows={sunSet[k].rows} aria-hidden="true" set:html={grid(sunSet[k].light)} />
         </div>
       ))}
     </div>
-  ))}
+  </noscript>
   <canvas class="ap-canvas" data-ap-canvas width={Math.round(def[0])} height={def[1]} aria-hidden="true"></canvas>
 </figure>
 
 <script>
-  import loafUrl from "../data/portrait-particles.json?url";
-  import peekUrl from "../data/portrait-peek-particles.json?url";
-  import sunUrl from "../data/portrait-sun-particles.json?url";
-  import couchUrl from "../data/portrait-couch-particles.json?url";
-  import windowUrl from "../data/portrait-window-particles.json?url";
-  const urls: Record<string, string> = { peek: peekUrl, loaf: loafUrl, sun: sunUrl, couch: couchUrl, window: windowUrl };
 
   type PortraitData = { w: number; h: number; n: number; cellW: number; x: number[]; y: number[]; t: number[]; c: string; a?: number[]; cx?: number; eyeX?: number };
 
   const fig = document.querySelector<HTMLElement>("[data-ascii-portrait]");
-  // the early inline script already made the single choice; never re-roll or re-read the query here
-  const url = urls[fig?.dataset.portraitChoice ?? "sun"] ?? urls.sun;
+  // the early inline script already made the single choice (and started the one particle download); never re-roll or re-read the query here
+  const choice = fig?.dataset.portraitChoice ?? "sun";
+  const urlMap: Record<string, [string, string]> = JSON.parse(fig?.dataset.urls ?? "{}");
+
+  // Static-grid fallback for a failed particle load: only the sun grid ships in the HTML, so any other layout's grid is
+  // fetched and built here (same run-length markup as the build). Never shows a different layout than the chosen one.
+  type AsciiGrid = { chars: string[]; lv: string[] };
+  type AsciiVariant = { cols: number; rows: number; dark: AsciiGrid; light: AsciiGrid };
+  async function staticFallback(f: HTMLElement) {
+    const ascii = urlMap[choice]?.[1];
+    if (!ascii) return;
+    try {
+      const r = await fetch(ascii);
+      if (!r.ok) return;
+      const v: Record<string, AsciiVariant> = (await r.json()).variants;
+      const esc = (t: string) => t.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+      const grid = (g: AsciiGrid) => g.chars.map((row, y) => {
+        let out = "", i = 0;
+        while (i < row.length) {
+          const l = g.lv[y][i]; let j = i + 1;
+          while (j < row.length && j - i < 6 && g.lv[y][j] === l) j++;
+          const text = row.slice(i, j);
+          out += text.trim() === "" ? esc(text) : '<span class="ap-seg o' + parseInt(l, 16) + '" data-c="' + i + '">' + esc(text) + "</span>";
+          i = j;
+        }
+        return out;
+      }).join("\n");
+      const set = document.createElement("div");
+      set.className = "ap-set ap-set-" + choice;
+      for (const k of ["desktop", "phone"]) {
+        const x = v[k]; if (!x) continue;
+        const fit = document.createElement("div");
+        fit.className = "ap-fit ap-v-" + k; fit.style.setProperty("--cols", String(x.cols));
+        fit.innerHTML = '<pre class="ap-grid ap-dark" data-mode="dark" aria-hidden="true">' + grid(x.dark) + '</pre><pre class="ap-grid ap-light" data-mode="light" aria-hidden="true">' + grid(x.light) + "</pre>";
+        set.append(fit);
+      }
+      f.insertBefore(set, f.querySelector("[data-ap-canvas]"));
+    } catch { /* leave the figure empty rather than show a wrong layout */ }
+  }
+  const reveal = (f: HTMLElement) => { f.classList.remove("ap-loading"); staticFallback(f); };
 
   // Measure the flexible slot with the drawing hidden, then aspect-fit the canvas within it.
   function fitPortrait() {
@@ -106,18 +135,21 @@ const dimsJson = JSON.stringify(dims);
   const canvas = fig?.querySelector<HTMLCanvasElement>("[data-ap-canvas]");
   const ctx = canvas?.getContext("2d");
   if (fig && canvas && ctx) {
-    fetch(url)
-      .then((r) => { if (!r.ok) throw new Error("portrait " + r.status); return r.json(); })
-      .then((d: PortraitData) => {
+    const idle = (cb: () => void) => ("requestIdleCallback" in window ? (window as any).requestIdleCallback(cb, { timeout: 250 }) : setTimeout(cb, 1));
+    const family = getComputedStyle(fig).getPropertyValue("--mono").trim();
+    // data (started by the inline script above), the 400-weight face the canvas draws with, and an idle slot after first paint
+    const data: Promise<PortraitData> = (window as any).__apData ?? fetch(urlMap[choice][0]).then((r) => { if (!r.ok) throw new Error("portrait " + r.status); return r.json(); });
+    const fontReady = Promise.race([document.fonts?.load("400 14px " + family).catch(() => []) ?? Promise.resolve([]), new Promise((r) => setTimeout(r, 1500))]);
+    Promise.all([data, fontReady, new Promise<void>((r) => idle(r))])
+      .then(([d]) => {
         if (!d || !(d.n > 0) || d.x?.length !== d.n) throw new Error("portrait data invalid");
         initPortrait(fig, canvas, ctx, d);
       })
       .catch((e) => {
         console.warn("portrait unavailable", e);
-        // the static grid of the chosen layout is revealed; the other layout is never shown
-        fig.classList.remove("ap-loading");
+        reveal(fig);
       });
-  } else fig?.classList.remove("ap-loading");
+  } else if (fig) reveal(fig);
 
   function initPortrait(fig: HTMLElement, canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D, data: PortraitData) {
     const DW = data.w, DH = data.h, N = data.n;
