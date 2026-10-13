@@ -1,5 +1,5 @@
 /* terminal direction: dense monospace dashboard, hairline panels */
-:root,:root[data-theme="light"]{color-scheme:light;--bg:#e7e5de;--panel:#f2f0ea;--panel-2:#e3e0d7;--text:#15181a;--muted:#555b5f;--line:rgba(21,24,26,.34);--line-soft:rgba(21,24,26,.15);--accent:#0b6a5a;--on-accent:#f2f0ea;--dot:rgba(21,24,26,.13);--overlay:rgba(231,229,222,.88);--mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+:root,:root[data-theme="light"]{color-scheme:light;--bg:#e7e5de;--panel:#f2f0ea;--panel-2:#e3e0d7;--text:#15181a;--muted:#555b5f;--line:rgba(21,24,26,.34);--line-soft:rgba(21,24,26,.15);--accent:#0b6a5a;--on-accent:#f2f0ea;--dot:rgba(21,24,26,.13);--overlay:rgba(231,229,222,.88);--mono:var(--font-plex-mono)}
 :root[data-theme="dark"]{color-scheme:dark;--bg:#0c0e0f;--panel:#121516;--panel-2:#0a0c0d;--text:#d9dddd;--muted:#869094;--line:rgba(217,221,221,.26);--line-soft:rgba(217,221,221,.11);--accent:#6fd0b3;--on-accent:#0c0e0f;--dot:rgba(217,221,221,.07);--overlay:rgba(6,8,8,.88)}
 *{box-sizing:border-box}
 html{overflow-x:clip;-webkit-text-size-adjust:100%;text-size-adjust:100%;font-size:13.5px}
