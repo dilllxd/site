@@ -29,7 +29,6 @@ main:focus{outline:none}
 .brand{display:flex;align-items:baseline;gap:.9rem;margin-right:auto;min-width:0}
 .brand-name,.brand-name h1,.brand-name strong{margin:0;font:600 1rem var(--mono);letter-spacing:.01em;white-space:nowrap}
 .brand-name::before{content:"";display:inline-block;width:.55em;height:.55em;margin-right:.55em;background:var(--accent)}
-.brand-place{color:var(--muted);font-size:.85rem}
 .site-nav{display:flex;gap:1rem}
 .site-nav a{padding:.1rem 0;border-bottom:1px solid transparent}
 .site-nav a:hover{border-color:var(--accent)}
@@ -158,7 +157,6 @@ main:focus{outline:none}
  .shot-frame{aspect-ratio:16/11}
 }
 @media (max-width:560px){
- .brand-place{display:none}
  .photo-preview{--pv-chrome:6.4rem;padding:max(.4rem,env(safe-area-inset-top)) max(.4rem,env(safe-area-inset-right)) max(.4rem,env(safe-area-inset-bottom)) max(.4rem,env(safe-area-inset-left))}
  .photo-preview-frame{width:100%}
  .photo-preview-topline{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"meta close" "actions actions";gap:.4rem .5rem;padding:.4rem}
