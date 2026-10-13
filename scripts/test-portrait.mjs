@@ -1,11 +1,12 @@
 // Layout checks for portrait-particles.json and portrait-peek-particles.json (run: npm run test:portrait)
 import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
+import { unpack } from "./particle-pack.mjs";
 let fails = 0;
 const NAMES = ["portrait-particles", "portrait-peek-particles", "portrait-sun-particles", "portrait-couch-particles", "portrait-window-particles"];
 const ok = (c, m) => { if (!c) { fails++; console.error("FAIL", m); } };
 for (const name of ["portrait-particles", "portrait-peek-particles", "portrait-sun-particles", "portrait-couch-particles", "portrait-window-particles"]) {
-const d = JSON.parse(readFileSync(new URL("../src/data/" + name + ".json", import.meta.url), "utf8"));
+const d = unpack(JSON.parse(readFileSync(new URL("../src/data/" + name + ".json", import.meta.url), "utf8")));
 ok(d.n === d.x.length && d.n === d.y.length && d.n === d.t.length, "array lengths match n");
 ok(d.c.length === d.n * 3 && /^[0-9a-f]+$/.test(d.c), "colour string is 3 hex digits per particle");
 ok(d.n >= 15000 && d.n <= 30000, "particle count in range: " + d.n);
@@ -40,7 +41,7 @@ ok(cat > 3000, "cat has particles: " + cat);
 
 console.log(name, "layout ok:", d.n, "particles,", d.w + "x" + d.h);
 }
-for (const name of NAMES) { const d = JSON.parse(readFileSync(new URL("../src/data/" + name + ".json", import.meta.url), "utf8")); ok(d.cellW <= 2.4 && d.cellH <= 3.6 && Math.abs(d.cellH / d.cellW - 1.5) < 0.01, name + " dense pitch " + d.cellW + "x" + d.cellH); }
+for (const name of NAMES) { const d = unpack(JSON.parse(readFileSync(new URL("../src/data/" + name + ".json", import.meta.url), "utf8"))); ok(d.cellW <= 2.4 && d.cellH <= 3.6 && Math.abs(d.cellH / d.cellW - 1.5) < 0.01, name + " dense pitch " + d.cellW + "x" + d.cellH); }
 ok(/function recentre/.test(readFileSync(new URL("../src/components/AsciiPortrait.astro", import.meta.url), "utf8")), "renderer centres drawn extents");
 // static checks on the component: selection before load, no flash, no intro, one fetch
 const src = readFileSync(new URL("../src/components/AsciiPortrait.astro", import.meta.url), "utf8");

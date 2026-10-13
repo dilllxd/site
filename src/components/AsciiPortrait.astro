@@ -76,6 +76,16 @@ const dimsJson = JSON.stringify(dims);
 <script>
 
   type PortraitData = { w: number; h: number; n: number; cellW: number; x: number[]; y: number[]; t: number[]; c: string; a?: number[]; cx?: number; eyeX?: number };
+  // packed file: x/y are delta-coded tenths, edge alpha is run-length pairs (mirror of scripts/particle-pack.mjs unpack)
+  type PackedData = Omit<PortraitData, "x" | "y" | "a"> & { xd: number[]; yd: number[]; ar?: number[] };
+  function unpackPortrait(p: PackedData): PortraitData {
+    const n = p.xd.length, x = new Array<number>(n), y = new Array<number>(n);
+    let sx = 0, sy = 0;
+    for (let i = 0; i < n; i++) { sx += p.xd[i]; sy += p.yd[i]; x[i] = sx / 10; y[i] = sy / 10; }
+    let a: number[] | undefined;
+    if (p.ar) { a = new Array<number>(n); let k = 0; for (let i = 0; i < p.ar.length; i += 2) a.fill(p.ar[i], k, k += p.ar[i + 1]); }
+    return { ...p, x, y, a };
+  }
 
   const fig = document.querySelector<HTMLElement>("[data-ascii-portrait]");
   // the early inline script already made the single choice (and started the one particle download); never re-roll or re-read the query here
@@ -141,7 +151,8 @@ const dimsJson = JSON.stringify(dims);
     const data: Promise<PortraitData> = (window as any).__apData ?? fetch(urlMap[choice][0]).then((r) => { if (!r.ok) throw new Error("portrait " + r.status); return r.json(); });
     const fontReady = Promise.race([document.fonts?.load("400 14px " + family).catch(() => []) ?? Promise.resolve([]), new Promise((r) => setTimeout(r, 1500))]);
     Promise.all([data, fontReady, new Promise<void>((r) => idle(r))])
-      .then(([d]) => {
+      .then(([raw]) => {
+        const d = raw && (raw as any).xd ? unpackPortrait(raw as unknown as PackedData) : raw;
         if (!d || !(d.n > 0) || d.x?.length !== d.n) throw new Error("portrait data invalid");
         initPortrait(fig, canvas, ctx, d);
       })
@@ -310,7 +321,11 @@ const dimsJson = JSON.stringify(dims);
     canvas.addEventListener("pointercancel", onLeave, passive);
     canvas.addEventListener("pointerleave", onLeave, passive);
 
-    function redraw() { resize(); draw(); }
+    // One full draw is ~19k glyphs, so redraw only when the pixels would differ: the canvas backing size or the palette/theme changed.
+    // The initial ResizeObserver / IntersectionObserver / fonts callbacks all land on the state that was just drawn and are skipped.
+    let drawnKey = "";
+    const stateKey = () => canvas.width + "x" + canvas.height + "|" + (document.documentElement.dataset.palette || "") + "|" + (reduce.matches ? 1 : 0);
+    function redraw(force = false) { resize(); const k = stateKey(); if (!force && k === drawnKey) return; draw(); drawnKey = k; }
     new ResizeObserver(() => redraw()).observe(canvas);
     new IntersectionObserver((es) => {
       visible = es.some((e) => e.isIntersecting);
@@ -319,12 +334,14 @@ const dimsJson = JSON.stringify(dims);
     const pause = () => { stop(); mx = my = -9999; };
     document.addEventListener("visibilitychange", () => { hiddenDoc = document.hidden; if (hiddenDoc) pause(); else { redraw(); kick(); } });
     window.addEventListener("pagehide", pause);
-    document.addEventListener("palette-changed", () => { theme(); redraw(); });
-    reduce.addEventListener("change", () => { if (reduce.matches) { stop(); settle(); } redraw(); });
-    document.fonts?.ready.then(() => { if (!raf) redraw(); });
+    document.addEventListener("palette-changed", () => { theme(); redraw(true); });
+    reduce.addEventListener("change", () => { if (reduce.matches) { stop(); settle(); } redraw(true); });
+    // the 400 face was awaited before init; only a font that arrived later changes glyph metrics
+    const fontAtInit = document.fonts?.check(FONT + "px " + mono) ?? true;
+    document.fonts?.ready.then(() => { if (!raf) redraw(!fontAtInit); });
 
     fig.classList.add("ap-js");
-    settle(); theme(); resize(); draw();
+    settle(); theme(); resize(); draw(); drawnKey = stateKey();
     fig.classList.remove("ap-loading");
     // test hook for the layout/renderer checks
     (fig as any).__ap = { count: () => N, drawnCount: () => live.reduce((a, b) => a + b, 0), extent, shift: () => shiftX, dw: DW, dh: DH };

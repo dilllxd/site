@@ -4,6 +4,7 @@
 // per-particle position, tone (0-255) and a 4-bit-per-channel colour. Background cells (mask alpha) emit nothing.
 import sharp from "sharp";
 import { readFile, writeFile } from "node:fs/promises";
+import { pack } from "./particle-pack.mjs";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 
@@ -117,7 +118,7 @@ if (eyeX != null) {
 }
 if (faceX != null) out.faceX = Math.round((faceX - region.left) / region.width * cols * P.cellW * 10) / 10;
 console.log("region", JSON.stringify(region), "frac", JSON.stringify({ left: region.left / W, top: region.top / H, width: region.width / W, height: region.height / H }), "faceX", out.faceX, "w/2", out.w / 2, "fade min/count", Math.min(...as), as.filter((v) => v < 255).length);
-await writeFile(path.join(root, process.env.ASCII_PORTRAIT_OUT || "src/data/portrait-particles.json"), JSON.stringify(out) + "\n");
+await writeFile(path.join(root, process.env.ASCII_PORTRAIT_OUT || "src/data/portrait-particles.json"), JSON.stringify(pack(out)) + "\n");
 console.log("particles", out.n, "grid", cols + "x" + rows, "design", out.w + "x" + out.h);
 if (process.argv.includes("--proof")) {
   const px = Buffer.alloc(cols * rows); for (let i = 0; i < xs.length; i++) px[Math.floor(ys[i] / P.cellH) * cols + Math.floor(xs[i] / P.cellW)] = 30 + ts[i] * 0.88 * as[i] / 255;
