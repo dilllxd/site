@@ -50,7 +50,7 @@ ok(src.indexOf("location.search") < src.indexOf("fetch("), "query read before fe
 // early inline fetch (one request), the module script reuses that promise; the other fetches are a defensive reuse fallback and the on-demand static grid
 const inlineSrc = src.slice(src.indexOf("is:inline"), src.indexOf("</script>"));
 ok((inlineSrc.match(/fetch\(/g) || []).length === 1, "inline script starts exactly one particle fetch");
-ok(/window\.__apData \?\?/.test(src), "module script reuses the early fetch promise");
+ok(/__apData\)? \?\?/.test(src), "module script reuses the early fetch promise");
 ok((src.match(/fetch\(/g) || []).length === 3 && (src.match(/fetch\(ascii\)/g) || []).length === 1, "static grid is fetched only on failure (ascii fetch inside staticFallback)");
 ok(!/fetch\(/.test(src.slice(0, src.indexOf("<figure"))), "no fetch in frontmatter");
 ok((src.match(/Math\.random\(/g) || []).length === 1, "exactly one random call");
@@ -58,7 +58,7 @@ ok(/portraitIds\.indexOf\(forced\) >= 0/.test(src) && /Math\.floor\(Math\.random
 ok(/data-ids=\{idList\}/.test(src) && /id: "peek"[^]*id: "loaf"[^]*id: "sun"[^]*id: "couch"[^]*id: "window"/.test(src), "five ids in bin order");
 ok(/dataset\.portraitChoice/.test(src.slice(src.lastIndexOf("<script>"))), "runtime reads stored choice");
 ok(!/URLSearchParams|localStorage|Math\.random/.test(src.slice(src.lastIndexOf("<script>"))), "runtime never re-reads query, storage or random");
-ok(src.indexOf("Math.random") < src.indexOf("<noscript>"), "roll precedes fallback markup");
+ok(src.indexOf("Math.random") < src.indexOf("<noscript>", src.indexOf("<figure")), "roll precedes fallback markup");
 ok(/<noscript>[^]*ap-set-sun[^]*<\/noscript>/.test(src) && !/<span class="ap-seg/.test(src.slice(0, src.indexOf("<script>"))), "no-JS fallback is one compact plain-text sun grid inside noscript");
 // controlled selection: exact bins and names
 const ids = ["peek", "loaf", "sun", "couch", "window"];

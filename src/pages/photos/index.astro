@@ -5,9 +5,12 @@ import SiteLayout from "../../layouts/SiteLayout.astro";
 import { siteConfig } from "../../data/site";
 import { toAbsoluteUrl } from "../../lib/seo";
 import { photoDims } from "../../lib/images";
+import { getThumb } from "../../lib/thumbs";
 
 const photos = (await getCollection("photos")).sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
 const dims = await photoDims(photos);
+const thumbs = await Promise.all(photos.map((p) => getThumb(p.data.image)));
+const THUMB_SIZES = "(max-width: 560px) calc(100vw - 2rem), (max-width: 1100px) 33vw, 17rem";
 const palettes = ["ink", "paper", "amber"];
 const fmt = (d: Date) => d.toISOString().slice(0, 10);
 const description = "Astrophotography from South Carolina: deep-sky targets stacked and processed from my back yard.";
@@ -31,7 +34,16 @@ const structuredData = {
         return (
           <li>
             <a class="gx-tile" href={`/photos/${p.id}/`} data-gx-tile data-title={p.data.title} data-caption={p.data.caption} data-image={p.data.image} data-alt={p.data.alt} data-meta={meta} data-w={d?.[0]} data-h={d?.[1]} aria-haspopup="dialog">
-              <span class="gx-thumb"><img src={p.data.image} alt={p.data.alt} width={d?.[0]} height={d?.[1]} loading={i < 3 ? "eager" : "lazy"} decoding="async" /></span>
+              <span class="gx-thumb">
+                {thumbs[i] ? (
+                  <picture>
+                    <source type="image/avif" srcset={thumbs[i].avif} sizes={THUMB_SIZES} />
+                    <img src={thumbs[i].src} srcset={thumbs[i].webp} sizes={THUMB_SIZES} alt={p.data.alt} width={d?.[0]} height={d?.[1]} loading={i < 3 ? "eager" : "lazy"} fetchpriority={i === 0 ? "high" : undefined} decoding="async" />
+                  </picture>
+                ) : (
+                  <img src={p.data.image} alt={p.data.alt} width={d?.[0]} height={d?.[1]} loading={i < 3 ? "eager" : "lazy"} decoding="async" />
+                )}
+              </span>
               <span class="gx-label"><span class="gx-idx">{String(i + 1).padStart(2, "0")}</span><span class="gx-name">{p.data.title}</span><span class="gx-date">{fmt(p.data.date)}</span></span>
             </a>
           </li>
