@@ -10,7 +10,7 @@ import { getThumb } from "../../lib/thumbs";
 const photos = (await getCollection("photos")).sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
 const dims = await photoDims(photos);
 const thumbs = await Promise.all(photos.map((p) => getThumb(p.data.image)));
-const THUMB_SIZES = "(max-width: 560px) calc(100vw - 2rem), (max-width: 1100px) 33vw, 17rem";
+const THUMB_SIZES = "(max-width: 451px) calc(100vw - 37px), (max-width: 679px) 45vw, (max-width: 915px) 30vw, (max-width: 1010px) 22vw, (max-width: 1700px) 224px, (max-width: 2200px) 250px, 282px";
 const palettes = ["ink", "paper", "amber"];
 const fmt = (d: Date) => d.toISOString().slice(0, 10);
 const description = "Astrophotography from South Carolina: deep-sky targets stacked and processed from my back yard.";
