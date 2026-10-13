@@ -80,7 +80,14 @@ const palettes = ["ink", "paper", "amber"];
     </div>
   </div>
   <script type="module" src="/scripts/home-commands.js"></script>
-  <script type="module" src="/scripts/live-widgets.js?v=20261012a"></script>
+  <script is:inline>
+    // live widgets (clock text is already in the HTML): load after the page has painted and the main thread is idle, never later than ~2.5s after load
+    (() => {
+      const go = () => import("/scripts/live-widgets.js?v=20261013a");
+      const idle = () => ("requestIdleCallback" in window ? requestIdleCallback(go, { timeout: 2500 }) : setTimeout(go, 200));
+      if (document.readyState === "complete") idle(); else addEventListener("load", idle, { once: true });
+    })();
+  </script>
   <script is:inline>
     (() => {
       let p = null;

@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { normalizeScheduleEvents, workStatus, spotifyView, discordView, parseScheduleTime } from "../public/scripts/status-logic.js";
+import { normalizeScheduleEvents, workStatus, spotifyView, discordView, parseScheduleTime } from "../src/scripts/status-logic.js";
 const tz = "America/New_York";
 const cfg = { timezone: tz, includedScheduleSources: ["walmart"], ignoredScheduleSources: ["lily"], ignoredScheduleSummaryPrefixes: ["Lily"] };
 const raw = [

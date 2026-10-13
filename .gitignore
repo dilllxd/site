@@ -34,3 +34,7 @@ old sites/
 
 # temp extract folders
 favicon-temp/
+public/scripts/live-widgets.js
+public/scripts/status-logic.js
+public/scripts/home-commands.js
+public/scripts/theme-toggle.js
