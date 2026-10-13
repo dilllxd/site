@@ -1,5 +1,6 @@
 ---
-import "../styles/global.css";
+import globalCss from "../styles/global.css?inline";
+import globalCssUrl from "../styles/global.css?url";
 import { Font } from "astro:assets";
 import { siteConfig } from "../data/site";
 import { stringifyStructuredData, toAbsoluteUrl } from "../lib/seo";
@@ -65,6 +66,7 @@ const structuredDataJson = stringifyStructuredData(structuredData);
     <title>{title}</title>
     <link rel="icon" href="/favicon.ico" sizes="any" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    {isHome ? <style is:inline set:html={globalCss}></style> : <link rel="stylesheet" href={globalCssUrl} />}
     <Font cssVariable="--font-plex-mono" preload />
     {structuredDataJson && (
       <script type="application/ld+json" set:html={structuredDataJson}></script>
