@@ -1,16 +1,14 @@
 import assert from "node:assert/strict";
 import { normalizeScheduleEvents, workStatus, spotifyView, discordView, parseScheduleTime } from "../src/scripts/status-logic.js";
 const tz = "America/New_York";
-const cfg = { timezone: tz, includedScheduleSources: ["walmart"], ignoredScheduleSources: ["lily"], ignoredScheduleSummaryPrefixes: ["Lily"] };
+const cfg = { timezone: tz };
 const raw = [
-  { summary: "Lily's Shift: 8:00 AM-4:30 PM", start: "2026-10-12T08:00:00", end: "2026-10-12T16:30:00", source: "lily" },
-  { summary: "Lily's Shift", start: "2026-10-12T09:00:00", end: "2026-10-12T10:00:00", source: "walmart" },
-  { summary: "Lynn-Marie's Shift", start: "2026-10-13T09:00:00", end: "2026-10-13T14:00:00", source: "lynn_marie" },
   { summary: "Dylan's Shift: 1:00 PM-10:00 PM", start: "2026-10-12T13:00:00", end: "2026-10-12T22:00:00", source: "walmart" },
   { summary: "Dylan's Shift", start: "2026-10-14T07:00:00", end: "2026-10-14T16:00:00", source: "walmart" },
 ];
 const ev = normalizeScheduleEvents(raw, cfg);
-assert.equal(ev.length, 2, "Lily/other sources filtered before any read");
+assert.equal(ev.length, 2, "all events from the Dylan-only endpoint are kept");
+assert.equal(normalizeScheduleEvents(raw, { timezone: tz, includedScheduleSources: ["x"] }).length, 0, "optional generic source filter still works");
 assert.equal(parseScheduleTime("2026-10-12T13:00:00", tz), Date.parse("2026-10-12T17:00:00Z"), "EDT offset");
 assert.equal(parseScheduleTime("2026-11-02T13:00:00", tz), Date.parse("2026-11-02T18:00:00Z"), "EST after DST end");
 assert.equal(parseScheduleTime("2026-11-01T13:00:00", tz), Date.parse("2026-11-01T18:00:00Z"));

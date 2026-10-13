@@ -18,7 +18,7 @@ const ws = new WebSocket(wsUrl); await new Promise((r) => (ws.onopen = r));
 let id = 0; const pend = new Map(); ws.onmessage = (m) => { const d = JSON.parse(m.data); if (d.id && pend.has(d.id)) { pend.get(d.id)(d); pend.delete(d.id); } };
 const send = (method, params = {}) => new Promise((r) => { const i = ++id; pend.set(i, r); ws.send(JSON.stringify({ id: i, method, params })); });
 const ev = async (e) => { const r = await send("Runtime.evaluate", { expression: e, awaitPromise: true, returnByValue: true }); if (r.result.exceptionDetails) throw new Error(JSON.stringify(r.result.exceptionDetails).slice(0, 300)); return r.result.result.value; };
-// 2026-10-12 11:35 UTC = 7:35 AM EDT. Shift 1:00 PM-10:00 PM EDT today; Lily's shift in feed must be ignored.
+// 2026-10-12 11:35 UTC = 7:35 AM EDT. Shift 1:00 PM-10:00 PM EDT today; Dylan-only endpoint.
 const START = Date.parse("2026-10-12T11:35:00Z");
 await send("Page.enable");
 await send("Page.addScriptToEvaluateOnNewDocument", { source: `(() => {
@@ -31,8 +31,7 @@ await send("Page.addScriptToEvaluateOnNewDocument", { source: `(() => {
   window.__discord = { data: { discord_status: "online", activities: [{ name: "Overwatch 2", type: 0, details: "<img src=x onerror=alert(1)>" }] } };
   const j = (o) => new Response(JSON.stringify(o), { status: 200, headers: { "content-type": "application/json" } });
   window.fetch = (u) => { u = String(u); window.__reqs.push(u);
-    if (u.includes("/schedule/events")) return Promise.resolve(j({ events: [
-      { summary: "Lily's Shift", start: "2026-10-12T08:00:00", end: "2026-10-12T20:00:00", source: "lily" },
+    if (u.includes("/schedule/dylan/events")) return Promise.resolve(j({ events: [
       { summary: "Dylan's Shift", start: "2026-10-12T13:00:00", end: "2026-10-12T22:00:00", source: "walmart" }] }));
     if (u.includes("/spotify/")) return Promise.resolve(j(window.__spotify));
     if (u.includes("lanyard")) return Promise.resolve(j(window.__discord));
@@ -44,7 +43,7 @@ const tick = async () => { await ev("window.__timers.forEach((f) => f())"); awai
 const adv = (ms) => ev("window.__off += " + ms);
 const log = []; const ok = (name, v) => { log.push("ok " + name); return v; };
 let s = await st();
-assert.equal(s.work, "Working in 5h 25m."); ok("initial uses Dylan only (Lily 8-8 ignored)");
+assert.equal(s.work, "Working in 5h 25m."); ok("initial uses Dylan only");
 assert.equal(s.spHidden, false); assert.equal(s.spHref, "https://open.spotify.com/track/1"); assert.equal(s.dcHidden, false); assert.equal(s.imgs, 0); assert.equal(s.dc, "Overwatch 2 - <img src=x onerror=alert(1)>"); ok("spotify+discord shown, discord text inert");
 assert.equal(s.timers, 1, "one 30s interval"); const n0 = s.n;
 await adv(30000); await tick(); s = await st(); assert.equal(s.work, "Working in 5h 25m."); assert.equal(s.n, n0 + 2, "tick fetched spotify+discord only"); ok("30s later: schedule not refetched, countdown unchanged inside same minute");

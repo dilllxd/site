@@ -31,7 +31,7 @@ if (process.env.STATUS) {
   const mode = process.env.STATUS;
   const src = "(() => { const mode = " + JSON.stringify(mode) + "; const real = window.fetch.bind(window); const long = 'x'.repeat(0); const j = (o) => new Response(JSON.stringify(o), { status: 200, headers: { 'content-type': 'application/json' } });" +
    "window.fetch = (u, o) => { u = String(u); const now = Date.now(); const fmt = (t) => new Date(t - 4 * 3600e3).toISOString().slice(0, 19);" +
-   "if (u.includes('/schedule/events')) return Promise.resolve(j({ events: mode === 'max' ? [{ summary: 'Dylan', source: 'walmart', start: fmt(now - 3600e3), end: fmt(now + 5.5 * 3600e3) }] : [] }));" +
+   "if (u.includes('/schedule/dylan/events')) return Promise.resolve(j({ events: mode === 'max' ? [{ summary: 'Dylan', source: 'walmart', start: fmt(now - 3600e3), end: fmt(now + 5.5 * 3600e3) }] : [] }));" +
    "if (u.includes('/spotify/now-playing')) return Promise.resolve(j({ spotify: mode === 'max' ? { track: 'An extremely long song title that keeps going and going well past any reasonable width ' + 'abcdefghij '.repeat(12), artist: 'Artist One; Artist Two; Artist Three', isPlaying: true, itemType: 'track', url: 'https://open.spotify.com/track/1' } : { track: 'a', artist: 'b', isPlaying: false } }));" +
    "if (u.includes('lanyard')) return Promise.resolve(j({ success: true, data: { discord_status: mode === 'max' ? 'online' : 'idle', activities: mode === 'max' ? [{ name: 'Some Very Long Game Name Edition', type: 0, details: 'In a very long match with a very long detail string ' + 'z'.repeat(80) }] : [] } }));" +
    "return real(u, o); }; })()";
